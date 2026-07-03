@@ -1,0 +1,49 @@
+models:
+  User:
+    id: id
+    name: string
+    email: string unique
+    provider_id: text nullable
+    provider_name: string nullable
+    password: string nullable
+    avatar_url: text nullable
+
+  Place:
+    id: id
+    name: string unique
+    coordinates: geography
+    image_url: text nullable
+    default_reward: integer
+
+  Sport:
+    id: id
+    name: string unique
+    icon_url: text
+    average_speed: float
+    max_speed: float
+    comb_mult_1: float
+    comb_mult_2: float
+    comb_mult_3: float
+    comb_mult_4: float
+
+  Visit:
+    id: id
+    reward: integer
+    user_id: bigInteger foreign:users.id
+    place_id: bigInteger foreign:places.id
+    sport_id: bigInteger foreign:sports.id
+    is_combination: boolean
+    timestamp: timestampTz
+
+  Cheat:
+    id: id
+    visit_id: bigInteger foreign:visits.id
+    visit_id_2: bigInteger nullable foreign:visits.id
+    user_message: text nullable
+    is_denied: boolean
+    cheat_description: text
+
+  VisitsPhoto:
+    id: id
+    visit_id: bigInteger foreign:visits.id
+    photo_url: text

@@ -1,0 +1,26 @@
+created:
+    - database/factories/UserFactory.php
+    - database/factories/PlaceFactory.php
+    - database/factories/SportFactory.php
+    - database/factories/VisitFactory.php
+    - database/factories/CheatFactory.php
+    - database/factories/VisitsPhotoFactory.php
+    - database/migrations/2026_07_03_180835_create_users_table.php
+    - database/migrations/2026_07_03_180836_create_places_table.php
+    - database/migrations/2026_07_03_180837_create_sports_table.php
+    - database/migrations/2026_07_03_180838_create_visits_table.php
+    - database/migrations/2026_07_03_180839_create_cheats_table.php
+    - database/migrations/2026_07_03_180840_create_visits_photos_table.php
+    - app/Models/User.php
+    - app/Models/Place.php
+    - app/Models/Sport.php
+    - app/Models/Visit.php
+    - app/Models/Cheat.php
+    - app/Models/VisitsPhoto.php
+models:
+    User: { id: id, name: string, email: 'string unique', provider_id: 'text nullable', provider_name: 'string nullable', password: 'string nullable', avatar_url: 'text nullable' }
+    Place: { id: id, name: 'string unique', coordinates: geography, image_url: 'text nullable', default_reward: integer }
+    Visit: { id: id, reward: integer, user_id: 'bigInteger foreign:users.id', place_id: 'bigInteger foreign:places.id', sport_id: 'bigInteger foreign:sports.id', is_combination: boolean, timestamp: timestampTz }
+    Sport: { id: id, name: 'string unique', icon_url: text, average_speed: float, max_speed: float, comb_mult_1: float, comb_mult_2: float, comb_mult_3: float, comb_mult_4: float }
+    Cheat: { id: id, visit_id: 'bigInteger foreign:visits.id', visit_id_2: 'bigInteger nullable foreign:visits.id', user_message: 'text nullable', is_denied: boolean, cheat_description: text }
+    VisitsPhoto: { id: id, visit_id: 'bigInteger foreign:visits.id', photo_url: text }

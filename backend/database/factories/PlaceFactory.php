@@ -4,7 +4,7 @@ namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-class UserFactory extends Factory
+class PlaceFactory extends Factory
 {
     /**
      * Define the model's default state.
@@ -13,11 +13,9 @@ class UserFactory extends Factory
     {
         return [
             'name' => fake()->name(),
-            'email' => fake()->safeEmail(),
-            'provider_id' => fake()->text(),
-            'provider_name' => fake()->word(),
-            'password' => fake()->password(),
-            'avatar_url' => fake()->text(),
+            'coordinates' => fake()->word(),
+            'image_url' => fake()->text(),
+            'default_reward' => fake()->numberBetween(-10000, 10000),
         ];
     }
 }
