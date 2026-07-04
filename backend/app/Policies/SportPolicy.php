@@ -2,10 +2,10 @@
 
 namespace App\Policies;
 
-use App\Models\Place;
+use App\Models\Sport;
 use App\Models\User;
 
-class PlacePolicy
+class SportPolicy
 {
     /**
      * Determine whether the user can view any models.
@@ -18,7 +18,7 @@ class PlacePolicy
     /**
      * Determine whether the user can view the model.
      */
-    public function view(User $user, Place $place): bool
+    public function view(User $user, Sport $sport): bool
     {
         return true;
     }
@@ -34,7 +34,7 @@ class PlacePolicy
     /**
      * Determine whether the user can update the model.
      */
-    public function update(User $user, Place $place): bool
+    public function update(User $user, Sport $sport): bool
     {
         return $user->role === 'admin';
     }
@@ -42,7 +42,7 @@ class PlacePolicy
     /**
      * Determine whether the user can delete the model.
      */
-    public function delete(User $user, Place $place): bool
+    public function delete(User $user, Sport $sport): bool
     {
         return false;
     }
@@ -50,7 +50,7 @@ class PlacePolicy
     /**
      * Determine whether the user can restore the model.
      */
-    public function restore(User $user, Place $place): bool
+    public function restore(User $user, Sport $sport): bool
     {
         return false;
     }
@@ -58,7 +58,7 @@ class PlacePolicy
     /**
      * Determine whether the user can permanently delete the model.
      */
-    public function forceDelete(User $user, Place $place): bool
+    public function forceDelete(User $user, Sport $sport): bool
     {
         return false;
     }

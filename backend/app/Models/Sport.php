@@ -24,6 +24,7 @@ class Sport extends Model
         'comb_mult_2',
         'comb_mult_3',
         'comb_mult_4',
+        'is_active',
     ];
 
     /**

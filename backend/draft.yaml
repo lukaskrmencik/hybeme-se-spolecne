@@ -28,6 +28,7 @@ models:
     comb_mult_2: float
     comb_mult_3: float
     comb_mult_4: float
+    is_active: boolean
 
   Visit:
     id: id

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Services\ImageModerationService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -83,13 +84,19 @@ class UserController extends Controller
         ]);
     }
 
-    public function uploadAvatar(Request $request, User $user)
+    public function uploadAvatar(Request $request, User $user, ImageModerationService $imageModerationService)
     {
         $this->authorize('update', $user);
 
         $request->validate([
             'avatar' => 'required|image|mimes:jpeg,png,jpg,webp|max:2048',
         ]);
+
+        $file = $request->file('avatar');
+
+        if (!$imageModerationService->isSafe($file)) {
+            return response()->error('Fotka nesplňuje podmínky aplikace.', 422);
+        }
 
         if ($user->avatar_url) {
             $oldPath = str_replace(url('storage/'), '', $user->avatar_url);
@@ -98,7 +105,11 @@ class UserController extends Controller
             }
         }
 
-        $path = $request->file('avatar')->store('avatars', 'public');
+        $filename = uniqid() . '.' . $file->getClientOriginalExtension();
+
+        Storage::disk('public')->putFileAs('avatars', $file, $filename);
+
+        $path = 'avatars/' . $filename;
 
         $publicUrl = url('storage/' . $path);
 

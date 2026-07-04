@@ -22,6 +22,7 @@ return new class extends Migration
             $table->float('comb_mult_2');
             $table->float('comb_mult_3');
             $table->float('comb_mult_4');
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
     }

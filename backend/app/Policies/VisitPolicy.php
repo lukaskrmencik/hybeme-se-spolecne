@@ -2,25 +2,26 @@
 
 namespace App\Policies;
 
-use App\Models\Place;
 use App\Models\User;
+use App\Models\Visit;
+use Illuminate\Auth\Access\Response;
 
-class PlacePolicy
+class VisitPolicy
 {
     /**
      * Determine whether the user can view any models.
      */
     public function viewAny(User $user): bool
     {
-        return true;
+        return false;
     }
 
     /**
      * Determine whether the user can view the model.
      */
-    public function view(User $user, Place $place): bool
+    public function view(User $user, Visit $visit): bool
     {
-        return true;
+        return false;
     }
 
     /**
@@ -28,21 +29,21 @@ class PlacePolicy
      */
     public function create(User $user): bool
     {
-        return $user->role === 'admin';
+        return false;
     }
 
     /**
      * Determine whether the user can update the model.
      */
-    public function update(User $user, Place $place): bool
+    public function update(User $user, Visit $visit): bool
     {
-        return $user->role === 'admin';
+        return false;
     }
 
     /**
      * Determine whether the user can delete the model.
      */
-    public function delete(User $user, Place $place): bool
+    public function delete(User $user, Visit $visit): bool
     {
         return false;
     }
@@ -50,7 +51,7 @@ class PlacePolicy
     /**
      * Determine whether the user can restore the model.
      */
-    public function restore(User $user, Place $place): bool
+    public function restore(User $user, Visit $visit): bool
     {
         return false;
     }
@@ -58,7 +59,7 @@ class PlacePolicy
     /**
      * Determine whether the user can permanently delete the model.
      */
-    public function forceDelete(User $user, Place $place): bool
+    public function forceDelete(User $user, Visit $visit): bool
     {
         return false;
     }
