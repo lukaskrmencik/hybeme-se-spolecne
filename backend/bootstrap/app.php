@@ -5,6 +5,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -26,4 +27,11 @@ return Application::configure(basePath: dirname(__DIR__))
                 return response()->error('Nejste přihlášen nebo platnost tokenu vypršela.', 401);
             }
         });
+
+        $exceptions->render(function (NotFoundHttpException $e, Request $request) {
+            if ($request->is('api/*')) {
+                return response()->error('Požadovaný záznam nebyl nalezen.', 404);
+            }
+        });
+
     })->create();

@@ -1,6 +1,7 @@
 models:
   User:
     id: id
+    role: enum('user', 'admin') default:user
     name: string
     email: string unique
     provider_id: text nullable
