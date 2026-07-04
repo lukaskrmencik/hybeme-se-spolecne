@@ -19,6 +19,7 @@ class Sport extends Model
         'icon_url',
         'average_speed',
         'max_speed',
+        'min_speed',
         'comb_mult_1',
         'comb_mult_2',
         'comb_mult_3',

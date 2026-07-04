@@ -19,9 +19,12 @@ class UserController extends Controller
     {
         $this->authorize('viewAny', User::class);
 
-        $perPage = (int) $request->input('per_page', 15);
-        if ($perPage <= 0 || $perPage > 100) {
-            $perPage = 15;
+        $perPage = (int) $request->input('per_page', config('pagination.per_page_default'));
+        if (
+            $perPage < config('pagination.per_page_min') ||
+            $perPage > config('pagination.per_page_max')
+        ){
+            $perPage = config('pagination.per_page_default');
         }
 
         $query = User::query();
@@ -80,9 +83,8 @@ class UserController extends Controller
         ]);
     }
 
-    public function uploadAvatar(Request $request)
+    public function uploadAvatar(Request $request, User $user)
     {
-        $user = $request->user();
         $this->authorize('update', $user);
 
         $request->validate([

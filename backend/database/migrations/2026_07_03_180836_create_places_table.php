@@ -17,6 +17,7 @@ return new class extends Migration
             $table->geography('coordinates');
             $table->text('image_url')->nullable();
             $table->integer('default_reward');
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
     }

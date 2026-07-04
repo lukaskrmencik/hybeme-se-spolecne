@@ -20,6 +20,7 @@ class Place extends Model
         'coordinates',
         'image_url',
         'default_reward',
+        'is_active',
     ];
 
     /**

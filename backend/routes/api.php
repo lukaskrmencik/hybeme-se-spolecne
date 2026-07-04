@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\PlaceController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -18,8 +19,16 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::group(['prefix' => 'users'], function () {
         Route::get('{user}', [UserController::class, 'show']);
         Route::patch('{user}', [UserController::class, 'update']);
-        Route::post('avatar', [UserController::class, 'uploadAvatar']);
+        Route::post('{user}/avatar', [UserController::class, 'uploadAvatar']);
         Route::delete('{user}', [UserController::class, 'destroy']);
         Route::get('', [UserController::class, 'index']);
+    });  
+
+    Route::group(['prefix' => 'places'], function () {
+        Route::post('', [PlaceController::class, 'store']);
+        Route::patch('{place}', [PlaceController::class, 'update']);
+        Route::get('{place}', [PlaceController::class, 'show']);
+        Route::get('', [PlaceController::class, 'index']);
+        Route::post('{place}/image', [PlaceController::class, 'uploadImage']);
     });
 });

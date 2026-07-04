@@ -15,6 +15,7 @@ models:
     coordinates: geography
     image_url: text nullable
     default_reward: integer
+    is_active: boolean
 
   Sport:
     id: id
@@ -22,6 +23,7 @@ models:
     icon_url: text
     average_speed: float
     max_speed: float
+    min_speed: float
     comb_mult_1: float
     comb_mult_2: float
     comb_mult_3: float

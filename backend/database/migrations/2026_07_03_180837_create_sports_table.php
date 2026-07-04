@@ -17,6 +17,7 @@ return new class extends Migration
             $table->text('icon_url');
             $table->float('average_speed');
             $table->float('max_speed');
+            $table->float('min_speed');
             $table->float('comb_mult_1');
             $table->float('comb_mult_2');
             $table->float('comb_mult_3');
