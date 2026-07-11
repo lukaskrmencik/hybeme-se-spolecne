@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PlaceController;
 use App\Http\Controllers\SportController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\VisitController;
 use Illuminate\Support\Facades\Route;
 
 // Public routes
@@ -39,5 +40,11 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::get('{sport}', [SportController::class, 'show']);
         Route::get('', [SportController::class, 'index']);
         Route::post('{sport}/icon', [SportController::class, 'uploadIcon']);
+    });
+
+    Route::group(['prefix' => 'visits'], function () {
+        Route::post('', [VisitController::class, 'store']);
+        Route::get('', [VisitController::class, 'index']);
+        Route::get('{visit}', [VisitController::class, 'show']);
     });
 });

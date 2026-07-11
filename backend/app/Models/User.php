@@ -2,9 +2,11 @@
 
 namespace App\Models;
 
-use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Collection;
 use PHPOpenSourceSaver\JWTAuth\Contracts\JWTSubject;
 
 class User extends Authenticatable implements JWTSubject
@@ -61,5 +63,54 @@ class User extends Authenticatable implements JWTSubject
             'user_email' => $this->email,
             'user_role'  => $this->role,
         ];
+    }
+
+    public function visits(): HasMany
+    {
+        return $this->hasMany(Visit::class);
+    }
+
+    public function visitsCombinations(): Collection
+    {
+        $this->visits->loadMissing(['place', 'sport']);
+
+        $sortedVisits = $this->visits->sortBy('timestamp')->values();
+
+        $visitsCombinations = collect();
+        $totalCount = $sortedVisits->count();
+
+        $actualOrder = null;
+
+        for ($i = 0; $i < $totalCount; $i++) {
+            $visit = $sortedVisits[$i];
+
+            $nextVisit = null;
+            if ($i + 1 < $totalCount) {
+                $nextVisit = $sortedVisits[$i + 1];
+            }
+
+            if ($visit->is_combination === true) {
+                $visit->combination_order = $actualOrder;
+                $actualOrder++;
+            }else{
+                if($nextVisit && $nextVisit->is_combination === true) {
+                    $actualOrder = 0;
+                    $visit->combination_order = $actualOrder;
+                    $actualOrder++;
+                } else {
+                    $actualOrder = null;
+                    $visit->combination_order = $actualOrder;
+                }
+            }
+
+            $visitsCombinations->push($visit);
+        }
+
+        return $visitsCombinations;
+    }
+
+    public function totalPoints(): int
+    {
+        return $this->visits->sum('reward');
     }
 }

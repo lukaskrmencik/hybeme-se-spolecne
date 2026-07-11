@@ -34,8 +34,8 @@ class UserController extends Controller
             $searchTerm = $request->input('search');
 
             $query->where(function ($q) use ($searchTerm) {
-                $q->where('name', 'LIKE', '%' . $searchTerm . '%')
-                ->orWhere('email', 'LIKE', '%' . $searchTerm . '%');
+                $q->where('name', 'ILIKE', '%' . $searchTerm . '%')
+                ->orWhere('email', 'ILIKE', '%' . $searchTerm . '%');
             });
         }
 
@@ -57,6 +57,8 @@ class UserController extends Controller
             'name' => $user->name,
             'email' => $user->email,
             'avatar_url' => $user->avatar_url,
+            'visitsCombinations' => $user->visitsCombinations(),
+            'totalPoints' => $user->totalPoints(),
         ]);
     }
 

@@ -44,7 +44,7 @@ class PlaceController extends Controller
             $searchTerm = $request->input('search');
 
             $query->where(function ($q) use ($searchTerm) {
-                $q->where('name', 'LIKE', '%' . $searchTerm . '%');
+                $q->where('name', 'ILIKE', '%' . $searchTerm . '%');
             });
         }
 

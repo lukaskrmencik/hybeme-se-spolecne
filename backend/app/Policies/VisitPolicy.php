@@ -4,7 +4,6 @@ namespace App\Policies;
 
 use App\Models\User;
 use App\Models\Visit;
-use Illuminate\Auth\Access\Response;
 
 class VisitPolicy
 {
@@ -13,7 +12,7 @@ class VisitPolicy
      */
     public function viewAny(User $user): bool
     {
-        return false;
+        return $user->role === 'admin';
     }
 
     /**
@@ -21,7 +20,7 @@ class VisitPolicy
      */
     public function view(User $user, Visit $visit): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -29,7 +28,7 @@ class VisitPolicy
      */
     public function create(User $user): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -37,7 +36,7 @@ class VisitPolicy
      */
     public function update(User $user, Visit $visit): bool
     {
-        return false;
+        return $user->role === 'admin';
     }
 
     /**
