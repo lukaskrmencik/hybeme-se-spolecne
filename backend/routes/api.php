@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CheatController;
 use App\Http\Controllers\PlaceController;
 use App\Http\Controllers\SportController;
 use App\Http\Controllers\UserController;
@@ -46,5 +47,14 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::post('', [VisitController::class, 'store']);
         Route::get('', [VisitController::class, 'index']);
         Route::get('{visit}', [VisitController::class, 'show']);
+        Route::post('{visit}/photo', [VisitController::class, 'uploadPhoto']);
+        Route::delete('/photo/{visitsPhoto}', [VisitController::class, 'deletePhoto']);
+    });
+
+    Route::group(['prefix' => 'cheats'], function () {
+        Route::get('', [CheatController::class, 'index']);
+        Route::get('{cheat}', [CheatController::class, 'show']);
+        Route::post('{cheat}/deny', [CheatController::class, 'denyCheat']);
+        Route::post('{cheat}/message', [CheatController::class, 'messageAdmin']);
     });
 });

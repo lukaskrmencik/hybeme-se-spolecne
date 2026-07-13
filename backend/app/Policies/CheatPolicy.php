@@ -2,10 +2,11 @@
 
 namespace App\Policies;
 
+use App\Models\Cheat;
 use App\Models\User;
-use App\Models\Visit;
+use Illuminate\Auth\Access\Response;
 
-class VisitPolicy
+class CheatPolicy
 {
     /**
      * Determine whether the user can view any models.
@@ -18,9 +19,9 @@ class VisitPolicy
     /**
      * Determine whether the user can view the model.
      */
-    public function view(User $user, Visit $visit): bool
+    public function view(User $user, Cheat $cheat): bool
     {
-        return true;
+        return $user->id === $cheat->visit->user_id || $user->role === 'admin';
     }
 
     /**
@@ -28,21 +29,34 @@ class VisitPolicy
      */
     public function create(User $user): bool
     {
-        return true;
+        return false;
     }
 
     /**
      * Determine whether the user can update the model.
      */
-    public function update(User $user, Visit $visit): bool
+    public function update(User $user, Cheat $cheat): bool
+    {
+        return false;
+    }
+
+    /**
+     * Determine whether the user can deny the cheat.
+     */
+    public function deny(User $user, Cheat $cheat): bool
     {
         return $user->role === 'admin';
+    }
+
+    public function messageAdmin(User $user, Cheat $cheat): bool
+    {
+        return $user->id === $cheat->visit->user_id;
     }
 
     /**
      * Determine whether the user can delete the model.
      */
-    public function delete(User $user, Visit $visit): bool
+    public function delete(User $user, Cheat $cheat): bool
     {
         return false;
     }
@@ -50,7 +64,7 @@ class VisitPolicy
     /**
      * Determine whether the user can restore the model.
      */
-    public function restore(User $user, Visit $visit): bool
+    public function restore(User $user, Cheat $cheat): bool
     {
         return false;
     }
@@ -58,18 +72,8 @@ class VisitPolicy
     /**
      * Determine whether the user can permanently delete the model.
      */
-    public function forceDelete(User $user, Visit $visit): bool
+    public function forceDelete(User $user, Cheat $cheat): bool
     {
         return false;
-    }
-
-    public function uploadPhoto(User $user, Visit $visit): bool
-    {
-        return $user->id === $visit->user_id;
-    }
-
-    public function deletePhoto(User $user, Visit $visit): bool
-    {
-        return $user->id === $visit->user_id || $user->role === 'admin';
     }
 }

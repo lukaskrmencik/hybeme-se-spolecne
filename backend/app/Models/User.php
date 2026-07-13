@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Collection;
@@ -70,9 +71,14 @@ class User extends Authenticatable implements JWTSubject
         return $this->hasMany(Visit::class);
     }
 
+    public function cheats(): HasManyThrough
+    {
+        return $this->hasManyThrough(Cheat::class, Visit::class);
+    }
+
     public function visitsCombinations(): Collection
     {
-        $this->visits->loadMissing(['place', 'sport']);
+        $this->visits->loadMissing(['place', 'sport', 'photos']);
 
         $sortedVisits = $this->visits->sortBy('timestamp')->values();
 

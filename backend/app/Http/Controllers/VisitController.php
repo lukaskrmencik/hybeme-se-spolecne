@@ -6,11 +6,14 @@ use App\Models\Cheat;
 use App\Models\Place;
 use App\Models\Sport;
 use App\Models\Visit;
+use App\Models\VisitsPhoto;
 use App\Services\AntiCheatService;
+use App\Services\ImageModerationService;
 use Clickbar\Magellan\Database\PostgisFunctions\ST;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class VisitController extends Controller
 {
@@ -31,7 +34,7 @@ class VisitController extends Controller
             $perPage = config('pagination.per_page_default');
         }
 
-        $query = Visit::query()->with(['user', 'place', 'sport']);
+        $query = Visit::query()->with(['user', 'place', 'sport', 'photos']);
 
         if ($request->filled('search')) {
             $searchTerm = $request->input('search');
@@ -69,6 +72,10 @@ class VisitController extends Controller
             'timestamp' => 'required|date',
         ]);
 
+        if($validatedData['is_combination'] === true && $user->visitsCombinations()->count() === 0) {
+            $validatedData['is_combination'] = false;
+        }
+
         $antiCheatResult = $antiCheatService->checkNewVisit($validatedData, $user);
         $validatedData['user_id'] = $user->id;
 
@@ -90,22 +97,9 @@ class VisitController extends Controller
 
         if($validatedData['is_combination'] === true) {
 
-            $visitSport = Sport::findOrFail($validatedData['sport_id']);
             $lastVisit = $user->visitsCombinations()->last();
-            $lastVisitComb = $lastVisit->combination_order;
-            $combMultLevel = min($lastVisitComb + 1, 4);
-            $combMultField = 'comb_mult_' . $combMultLevel;
-            $combMult = $visitSport->{$combMultField};
-            $visitCoords = Place::findOrFail($validatedData['place_id'])->coordinates;
-            $lastVisitCoords = $lastVisit->place->coordinates;
-            $distanceInMeters = DB::query()
-                ->select(ST::distanceSphere($visitCoords, $lastVisitCoords)->as('distance'))
-                ->first()
-                ->distance;
-            $distanceInKilometers = $distanceInMeters / 1000;
-            $pointsPerKilometer = config('general.pointsPerKilometer');
 
-            $reward = floor(($defaultReward + ($distanceInKilometers * $pointsPerKilometer)) * $combMult);
+            $reward = calc_combination_reward($user, $validatedData['sport_id'], $validatedData['place_id'], $defaultReward, $lastVisit);
 
         } else {
             $reward = $defaultReward;
@@ -144,7 +138,7 @@ class VisitController extends Controller
     {
         $this->authorize('view', $visit);
 
-        $visit->load(['user', 'place', 'sport']);
+        $visit->load(['user', 'place', 'sport', 'photos']);
 
         return response()->success([
             'id' => $visit->id,
@@ -153,6 +147,7 @@ class VisitController extends Controller
             'user_id' => $visit->user_id,
             'place' => $visit->place,
             'sport' => $visit->sport,
+            'photos' => $visit->photos,
             'user' => $visit->user,
             'reward' => $visit->reward,
             'is_combination' => $visit->is_combination,
@@ -160,4 +155,53 @@ class VisitController extends Controller
         ]);
     }
 
+    public function uploadPhoto(Request $request, Visit $visit, ImageModerationService $imageModerationService)
+    {
+        $this->authorize('uploadPhoto', $visit);
+
+        $request->validate([
+            'photo' => 'required|image|mimes:jpeg,png,jpg,webp|max:2048',
+        ]);
+
+        $file = $request->file('photo');
+
+        if (!$imageModerationService->isSafe($file)) {
+            return response()->error('Fotka nesplňuje podmínky aplikace.', 422);
+        }
+
+        $filename = uniqid() . '.' . $file->getClientOriginalExtension();
+
+        Storage::disk('public')->putFileAs('visits_photos', $file, $filename);
+
+        $path = 'visits_photos/' . $filename;
+
+        $publicUrl = url('storage/' . $path);
+
+        $visitsPhoto = VisitsPhoto::create([
+            'visit_id' => $visit->id,
+            'photo_url' => $publicUrl,
+        ]);
+
+        return response()->success([
+            'id' => $visitsPhoto->id,
+            'visit_id' => $visitsPhoto->visit_id,
+            'photo_url' => $visitsPhoto->photo_url,
+        ], 201);
+    }
+
+    public function deletePhoto(Request $request, VisitsPhoto $visitsPhoto){
+
+        $this->authorize('deletePhoto', $visitsPhoto->visit);
+
+        $path = str_replace(url('storage/'), '', $visitsPhoto->photo_url);
+        if (Storage::disk('public')->exists($path)) {
+            Storage::disk('public')->delete($path);
+        }
+
+        $visitsPhoto->delete();
+
+        return response()->success([
+            'message' => 'Fotka byla úspěšně smazána.',
+        ], 200);
+    }
 }

@@ -95,6 +95,8 @@ class PlaceController extends Controller
             'image_url' => $place->image_url,
             'default_reward' => $place->default_reward,
             'is_active' => $place->is_active,
+            'latest_visits' => $place->latestVisits(),
+            'photos' => $place->photos,
         ]);
     }
 
@@ -114,6 +116,8 @@ class PlaceController extends Controller
             'default_reward' => 'sometimes|integer|min:0',
             'is_active' => 'sometimes|boolean',
         ]);
+
+        
 
         $parser = app(GeojsonParser::class);
         $validatedData['coordinates'] = $parser->parse($request->input('coordinates'));

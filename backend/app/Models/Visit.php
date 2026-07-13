@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\VisitsPhoto;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -37,7 +38,7 @@ class Visit extends Model
             'place_id' => 'integer',
             'sport_id' => 'integer',
             'is_combination' => 'boolean',
-            'timestamp' => 'timestamp',
+            'timestamp' => 'datetime:d.m.Y H:i',
         ];
     }
 
@@ -54,5 +55,10 @@ class Visit extends Model
     public function sport(): BelongsTo
     {
         return $this->belongsTo(Sport::class);
+    }
+
+    public function photos()
+    {
+        return $this->hasMany(VisitsPhoto::class);
     }
 }

@@ -59,6 +59,7 @@ class UserController extends Controller
             'avatar_url' => $user->avatar_url,
             'visitsCombinations' => $user->visitsCombinations(),
             'totalPoints' => $user->totalPoints(),
+            'cheats' => $user->cheats()->where('is_denied', false)->get(),
         ]);
     }
 

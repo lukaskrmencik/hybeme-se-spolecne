@@ -6,4 +6,5 @@ return [
     'minimalTimeBetweenVisitsInMinutes' => 5,
     'placeCooldownInHours' => 72,
     'pointsPerKilometer' => 10,
+    'placeLatestVisitsCount' => 10,
 ];
