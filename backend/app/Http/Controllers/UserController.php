@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Services\ImageModerationService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
 
@@ -151,6 +152,37 @@ class UserController extends Controller
 
         return response()->success([
             'message' => 'Uživatel a všechna jeho data byla úspěšně smazána.'
+        ]);
+    }
+
+    public function leaderboard(Request $request)
+    {
+        $leaderboardMaxUsers = config('general.leaderboardMaxUsers', 20);
+
+        $subquery = User::query()
+            ->select('users.id', 'users.name', 'users.avatar_url')
+            ->selectRaw('COALESCE(SUM(visits.reward), 0) as total_points')
+            ->selectRaw('ROW_NUMBER() OVER (ORDER BY COALESCE(SUM(visits.reward), 0) DESC) as rank')
+            ->leftJoin('visits', 'users.id', '=', 'visits.user_id')
+            ->groupBy('users.id', 'users.name', 'users.avatar_url');
+
+        $allUsers = DB::table(DB::raw("({$subquery->toSql()}) as leaderboard"))
+            ->mergeBindings($subquery->getQuery())
+            ->get();
+
+        $topUsers = $allUsers->take($leaderboardMaxUsers);
+
+        $currentUser = null;
+        $authUserId = auth('api')->id();
+
+        if ($authUserId) {
+            $currentUser = $allUsers->firstWhere('id', $authUserId);
+        }
+
+        return response()->json([
+            'success' => true,
+            'leaderboard' => $topUsers,
+            'current_user' => $currentUser,
         ]);
     }
 }

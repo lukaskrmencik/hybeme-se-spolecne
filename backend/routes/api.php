@@ -15,6 +15,8 @@ Route::group(['prefix' => 'auth'], function () {
     Route::post('refresh', [AuthController::class, 'refresh']);
 });
 
+Route::get('users/leaderboard', [UserController::class, 'leaderboard']);
+
 // Protected routes
 Route::group(['middleware' => 'auth:api'], function () {
     Route::post('auth/logout', [AuthController::class, 'logout']);

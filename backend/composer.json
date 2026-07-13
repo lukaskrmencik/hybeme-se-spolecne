@@ -11,6 +11,7 @@
     "require": {
         "php": "^8.3",
         "clickbar/laravel-magellan": "^2.2",
+        "laravel-lang/lang": "^15.32",
         "laravel/framework": "^13.8",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^3.0",

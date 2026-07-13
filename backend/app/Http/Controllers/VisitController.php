@@ -4,15 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\Cheat;
 use App\Models\Place;
-use App\Models\Sport;
 use App\Models\Visit;
 use App\Models\VisitsPhoto;
 use App\Services\AntiCheatService;
 use App\Services\ImageModerationService;
-use Clickbar\Magellan\Database\PostgisFunctions\ST;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class VisitController extends Controller

@@ -7,4 +7,5 @@ return [
     'placeCooldownInHours' => 72,
     'pointsPerKilometer' => 10,
     'placeLatestVisitsCount' => 10,
+    'leaderboardMaxUsers' => 20,
 ];
