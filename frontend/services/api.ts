@@ -9,7 +9,7 @@ const getBaseUrl = (): string => {
 
     return Platform.OS === 'web'
         ? (process.env.EXPO_PUBLIC_API_URL_WEB || 'http://localhost/api/')
-        : (process.env.EXPO_PUBLIC_API_URL_MOBILE || 'http://192.168.1.50/api/');
+        : (process.env.EXPO_PUBLIC_API_URL_MOBILE || 'http://192.168.0.86/api/');
 };
 
 export const apiFetch = async (endpoint: string, options: RequestInit = {}, isRetry = false): Promise<any> => {
