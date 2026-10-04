@@ -8,7 +8,7 @@ import { colors, radius, shadows } from '../../utils/theme';
 export default function AdminHome() {
   const router = useRouter();
   return (
-    <AdminPage title="Vítej v administraci" description="Vyber, co chceš spravovat. Změny se v aplikaci projeví do hodiny.">
+    <AdminPage title="Vítej v administraci" description="Vyber, co chceš spravovat. Změny lidé uvidí, jakmile otevřou aplikaci.">
       <View style={styles.grid}>
         {ADMIN_SECTIONS.map((s) => (
           <Pressable

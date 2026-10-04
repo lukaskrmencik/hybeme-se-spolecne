@@ -84,7 +84,7 @@ function NewPlaceForm({ places, onCreated, onCancel }: { places: Place[]; onCrea
     setServerError(null);
     try {
       await createPlace({ name: trimmed, defaultReward: points, ...position });
-      showToast('Místo přidáno', `${trimmed} se v aplikaci objeví do hodiny.`, 'success');
+      showToast('Místo přidáno', `${trimmed} lidé uvidí, jakmile otevřou aplikaci.`, 'success');
       onCreated();
     } catch (err) {
       setServerError(describeValidationError(err, { name: 'Název', default_reward: 'Body', coordinates: 'Poloha' }, 'Místo se nepodařilo uložit.'));

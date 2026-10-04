@@ -3,7 +3,8 @@ import { Place, PlacesApiResponse } from '../types/place';
 import { useCachedResource } from './useCachedResource';
 
 const CACHE_KEY = 'cache_places_v2';
-const MAX_AGE_MS = 60 * 60 * 1000;
+// Always refreshed in the background (see useCachedResource); this only spaces out repeated fetches.
+const MIN_REFRESH_MS = 30 * 1000;
 const PER_PAGE = 100;
 const MAX_PAGES = 50;
 const EMPTY: Place[] = [];
@@ -21,7 +22,7 @@ async function fetchAllPlaces(): Promise<Place[]> {
 export function usePlaces() {
   const { data, loading, error, refresh } = useCachedResource(
     CACHE_KEY,
-    MAX_AGE_MS,
+    MIN_REFRESH_MS,
     fetchAllPlaces,
     EMPTY,
     'Nepodařilo se načíst místa.'

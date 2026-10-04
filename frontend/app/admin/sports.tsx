@@ -101,7 +101,7 @@ function NewSportForm({ sports, onCreated, onCancel }: { sports: Sport[]; onCrea
     setServerError(null);
     try {
       await createSport({ name: trimmed, ...n });
-      showToast('Sport přidán', `${trimmed} se v aplikaci objeví do hodiny.`, 'success');
+      showToast('Sport přidán', `${trimmed} lidé uvidí, jakmile otevřou aplikaci.`, 'success');
       onCreated();
     } catch (err) {
       setServerError(describeValidationError(err, LABELS, 'Sport se nepodařilo uložit.'));
