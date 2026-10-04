@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { usePlacePhotos } from '../hooks/usePlacePhotos';
+import { useUserStats } from '../context/UserStatsContext';
 import { PhotoViewer } from './PhotoViewer';
 import { colors, radius } from '../utils/theme';
 
@@ -10,6 +11,9 @@ const THUMB = 64;
 /** Photos other visitors took at the place, as one compact row of thumbnails. */
 export function PlacePhotoStrip({ placeId }: { placeId: number }) {
   const { photos } = usePlacePhotos(placeId);
+  const { visits } = useUserStats();
+  // Own photos cannot be reported, so they get no report button.
+  const myVisitIds = useMemo(() => new Set(visits.map((v) => v.id)), [visits]);
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   const count = photos?.length ?? 0;
 
@@ -34,7 +38,12 @@ export function PlacePhotoStrip({ placeId }: { placeId: number }) {
         <Text style={styles.count}>{count}</Text>
       </View>
       {body}
-      <PhotoViewer photos={photos ?? []} index={openIndex} onClose={() => setOpenIndex(null)} reportable />
+      <PhotoViewer
+        photos={photos ?? []}
+        index={openIndex}
+        onClose={() => setOpenIndex(null)}
+        canReport={(p) => p.visitId == null || !myVisitIds.has(p.visitId)}
+      />
     </View>
   );
 }

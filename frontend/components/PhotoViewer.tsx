@@ -13,12 +13,12 @@ interface PhotoViewerProps {
   /** Index of the photo to open, `null` keeps the viewer closed. */
   index: number | null;
   onClose: () => void;
-  /** Shows a button to report the photo to the admins (for photos from other users). */
-  reportable?: boolean;
+  /** Whether the photo can be reported to the admins; not shown when missing (e.g. in the administration). */
+  canReport?: (photo: PlacePhoto) => boolean;
 }
 
 /** Full-screen gallery, swiping goes to the next photo. */
-export function PhotoViewer({ photos, index, onClose, reportable }: PhotoViewerProps) {
+export function PhotoViewer({ photos, index, onClose, canReport }: PhotoViewerProps) {
   const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const [current, setCurrent] = useState(0);
@@ -59,7 +59,7 @@ export function PhotoViewer({ photos, index, onClose, reportable }: PhotoViewerP
             {Math.min(current + 1, photos.length)} / {photos.length}
           </Text>
           <View style={styles.topActions}>
-          {reportable && shown && (
+          {shown && canReport?.(shown) && (
             <TouchableOpacity
               onPress={() => setReportTarget({ kind: 'photo', photoId: shown.id })}
               style={styles.close}

@@ -29,6 +29,7 @@ export async function fetchPlacePhotos(placeId: number): Promise<PlacePhoto[]> {
       const visit = visits.get(p.visit_id);
       return {
         id: p.id,
+        visitId: p.visit_id,
         url: resolveMediaUrl(p.photo_url),
         author: visit?.user?.name ?? null,
         takenAt: visit?.timestamp ?? p.created_at ?? null,
