@@ -23,18 +23,7 @@
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/favicon.png",
-      "pwa": {
-        "enabled": true,
-        "manifest": {
-          "name": "Hýbeme se společně",
-          "short_name": "Hýbeme se společně",
-          "description": "Sportovní motivační aplikace",
-          "background_color": "#F5F7F2",
-          "theme_color": "#133F63",
-          "display": "standalone"
-        }
-      }
+      "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
       "expo-router",

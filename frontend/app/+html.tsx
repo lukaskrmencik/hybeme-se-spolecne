@@ -17,6 +17,18 @@ export default function Root({ children }: { children: ReactNode }) {
           Disable body scrolling on web. This makes ScrollView components work closer to how they do on native.
           However, body scrolling is often nice to have for mobile web. If you want to enable it, remove this line.
         */}
+        <meta name="description" content="Objevuj Benátecko, navštěvuj zajímavá místa, sbírej body a poměř síly s ostatními." />
+
+        {/* Installable app (PWA): manifest, icons and the look when started from the home screen. */}
+        <link rel="manifest" href="/manifest.webmanifest" />
+        <meta name="theme-color" content="#FFFFFF" />
+        <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="Hýbeme" />
+        {isProduction && <script dangerouslySetInnerHTML={{ __html: registerServiceWorker }} />}
+
         <ScrollViewStyleReset />
         <style dangerouslySetInnerHTML={{ __html: responsiveBackground }} />
         {/* Add any additional <head> elements that you want globally available on web... */}
@@ -25,6 +37,16 @@ export default function Root({ children }: { children: ReactNode }) {
     </html>
   );
 }
+
+// Only the production build: in development a service worker would keep serving old bundles.
+const isProduction = process.env.NODE_ENV === 'production';
+
+const registerServiceWorker = `
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('/sw.js').catch(function () {});
+  });
+}`;
 
 const responsiveBackground = `
 body {

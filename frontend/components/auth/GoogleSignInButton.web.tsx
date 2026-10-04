@@ -55,6 +55,8 @@ function takeRedirectError(): string | null {
 export function GoogleSignInButton({ onError, disabled }: GoogleSignInButtonProps) {
   const hostRef = useRef<View>(null);
   const [width, setWidth] = useState(0);
+  // Offline (e.g. the installed app without signal) Google cannot be reached; the button just stays hidden.
+  const [unavailable, setUnavailable] = useState(false);
   const onErrorRef = useRef(onError);
   onErrorRef.current = onError;
 
@@ -95,14 +97,14 @@ export function GoogleSignInButton({ onError, disabled }: GoogleSignInButtonProp
         });
       })
       .catch(() => {
-        if (!cancelled) onErrorRef.current('Přihlášení přes Google se nepodařilo načíst. Zkontroluj připojení.');
+        if (!cancelled) setUnavailable(true);
       });
     return () => {
       cancelled = true;
     };
   }, [width]);
 
-  if (!config.googleWebClientId) return null;
+  if (!config.googleWebClientId || unavailable) return null;
 
   return (
     <View

@@ -1,0 +1,20 @@
+{
+  "id": "/",
+  "name": "Hýbeme se společně",
+  "short_name": "Hýbeme",
+  "description": "Objevuj Benátecko, navštěvuj zajímavá místa, sbírej body a poměř síly s ostatními.",
+  "lang": "cs",
+  "start_url": "/map",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F5F7F2",
+  "theme_color": "#FFFFFF",
+  "categories": ["sports", "health", "travel"],
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
