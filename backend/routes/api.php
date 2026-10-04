@@ -21,6 +21,7 @@ Route::group(['prefix' => 'auth', 'middleware' => 'throttle:20,1'], function () 
 });
 
 Route::get('users/leaderboard', [UserController::class, 'leaderboard']);
+Route::get('users/leaderboard/weeks', [UserController::class, 'leaderboardWeeks']);
 
 // Protected routes
 Route::group(['middleware' => 'auth:api'], function () {

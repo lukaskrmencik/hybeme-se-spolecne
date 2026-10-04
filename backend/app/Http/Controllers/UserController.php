@@ -9,6 +9,7 @@ use App\Models\VisitsPhoto;
 use App\Services\ImageModerationService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -214,35 +215,98 @@ class UserController extends Controller
         ]);
     }
 
+    /** Weeks run Monday to Sunday in Czech time. */
+    private const LEADERBOARD_TZ = 'Europe/Prague';
+
+    /**
+     * Leaderboard of everybody (default) or of the current week (?period=week).
+     * Only users with points are ranked; equal points share a place (1, 1, 3).
+     */
     public function leaderboard(Request $request)
     {
         $leaderboardMaxUsers = config('general.leaderboardMaxUsers', 20);
+        $week = $request->input('period') === 'week';
 
-        $subquery = User::query()
-            ->select('users.id', 'users.name', 'users.avatar_url')
-            ->selectRaw('COALESCE(SUM(visits.reward), 0) as total_points')
-            ->selectRaw('ROW_NUMBER() OVER (ORDER BY COALESCE(SUM(visits.reward), 0) DESC) as rank')
-            ->leftJoin('visits', 'users.id', '=', 'visits.user_id')
-            ->groupBy('users.id', 'users.name', 'users.avatar_url');
+        $from = $week ? now(self::LEADERBOARD_TZ)->startOfWeek(Carbon::MONDAY) : null;
+        $to = $from?->copy()->addWeek();
 
-        $allUsers = DB::table(DB::raw("({$subquery->toSql()}) as leaderboard"))
-            ->mergeBindings($subquery->getQuery())
-            ->get();
-
-        $topUsers = $allUsers->take($leaderboardMaxUsers);
-
-        $currentUser = null;
+        $ranked = $this->rankedUsers($from, $to);
         $authUserId = auth('api')->id();
-
-        if ($authUserId) {
-            $currentUser = $allUsers->firstWhere('id', $authUserId);
-        }
 
         return response()->json([
             'success' => true,
-            'leaderboard' => $topUsers,
-            'current_user' => $currentUser,
-            'total_users' => $allUsers->count(),
+            'period' => $week ? 'week' : 'all',
+            'week_start' => $from?->toDateString(),
+            'week_end' => $to?->copy()->subDay()->toDateString(),
+            'leaderboard' => $ranked->filter(fn ($u) => $u->rank <= $leaderboardMaxUsers)->values(),
+            'current_user' => $authUserId ? $ranked->firstWhere('id', $authUserId) : null,
+            'total_users' => $ranked->count(),
         ]);
+    }
+
+    /** Finished weeks, newest first, each with its top three places (more people when they share one). */
+    public function leaderboardWeeks()
+    {
+        $currentWeekStart = now(self::LEADERBOARD_TZ)->startOfWeek(Carbon::MONDAY)->toDateString();
+
+        $rows = DB::select("
+            with weekly as (
+                select date_trunc('week', v.timestamp at time zone ?)::date as week_start,
+                       v.user_id,
+                       sum(v.reward)::int as points
+                from visits v
+                group by 1, 2
+                having sum(v.reward) > 0
+            ), ranked as (
+                select w.*, rank() over (partition by w.week_start order by w.points desc)::int as rank
+                from weekly w
+            )
+            select r.week_start, r.rank, r.points, u.id, u.name, u.avatar_url
+            from ranked r
+            join users u on u.id = r.user_id
+            where r.rank <= 3 and r.week_start < ?::date
+            order by r.week_start desc, r.rank, u.name
+        ", [self::LEADERBOARD_TZ, $currentWeekStart]);
+
+        $weeks = collect($rows)
+            ->groupBy(fn ($row) => (string) $row->week_start)
+            ->take(52)
+            ->map(fn ($podium, $weekStart) => [
+                'week_start' => $weekStart,
+                'week_end' => Carbon::parse($weekStart)->addDays(6)->toDateString(),
+                'podium' => $podium->map(fn ($row) => [
+                    'id' => $row->id,
+                    'name' => $row->name,
+                    'avatar_url' => $row->avatar_url,
+                    'points' => $row->points,
+                    'rank' => $row->rank,
+                ])->values(),
+            ])
+            ->values();
+
+        return response()->json(['success' => true, 'weeks' => $weeks]);
+    }
+
+    /** Users with points in the period (or ever), with a shared place for equal points. */
+    private function rankedUsers(?Carbon $from, ?Carbon $to): \Illuminate\Support\Collection
+    {
+        $where = '';
+        $bindings = [];
+        if ($from && $to) {
+            $where = 'where v.timestamp >= ? and v.timestamp < ?';
+            $bindings = [$from->toIso8601String(), $to->toIso8601String()];
+        }
+
+        return collect(DB::select("
+            select u.id, u.name, u.avatar_url,
+                   sum(v.reward)::int as total_points,
+                   rank() over (order by sum(v.reward) desc)::int as rank
+            from users u
+            join visits v on v.user_id = u.id
+            {$where}
+            group by u.id, u.name, u.avatar_url
+            having sum(v.reward) > 0
+            order by rank, u.name
+        ", $bindings));
     }
 }
