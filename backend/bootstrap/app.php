@@ -19,7 +19,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )   
     ->withMiddleware(function (Middleware $middleware): void {
-
+        // In production the app sits behind the server's nginx, which passes the real scheme and host.
+        // The container port is bound to 127.0.0.1 only, so no one else can send these headers.
+        $middleware->trustProxies(at: '*');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
 

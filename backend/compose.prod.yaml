@@ -1,0 +1,55 @@
+# Production stack. Run with: docker compose -f compose.prod.yaml --env-file .env.production up -d --build
+# The server's nginx proxies /api and /storage to 127.0.0.1:${APP_PORT}; nothing here is reachable from outside.
+name: hybeme-se-spolecne
+
+services:
+    app:
+        build: .
+        image: hybeme-se-spolecne/backend
+        restart: unless-stopped
+        ports:
+            - '127.0.0.1:${APP_PORT:-8081}:8080'
+        volumes:
+            # Laravel reads its config from this file, it lives only on the server.
+            - './.env.production:/var/www/html/.env:ro'
+            # Uploaded photos, avatars and logs survive new images.
+            - 'storage:/var/www/html/storage'
+        depends_on:
+            pgsql:
+                condition: service_healthy
+        networks:
+            - app
+
+    pgsql:
+        image: 'postgis/postgis:15-3.4-alpine'
+        restart: unless-stopped
+        environment:
+            POSTGRES_DB: '${DB_DATABASE}'
+            POSTGRES_USER: '${DB_USERNAME}'
+            POSTGRES_PASSWORD: '${DB_PASSWORD}'
+        volumes:
+            - 'pgdata:/var/lib/postgresql/data'
+        healthcheck:
+            # Over TCP: on the very first start the image initialises PostGIS on a socket-only server,
+            # which would look ready to a socket check before the real server is up.
+            test: ['CMD', 'pg_isready', '-q', '-h', '127.0.0.1', '-d', '${DB_DATABASE}', '-U', '${DB_USERNAME}']
+            interval: 5s
+            retries: 10
+            timeout: 5s
+        networks:
+            - app
+
+    # Image moderation for uploaded photos (ImageModerationService calls http://nsfw-api:3333).
+    nsfw-api:
+        image: andresribeiroo/nsfwjs:latest
+        restart: unless-stopped
+        mem_limit: 1g
+        networks:
+            - app
+
+volumes:
+    storage:
+    pgdata:
+
+networks:
+    app:
