@@ -49,6 +49,14 @@ class UserPolicy
     /**
      * Determine whether the user can restore the model.
      */
+    /**
+     * Only an admin may change roles, and never their own: an admin cannot lock themselves out.
+     */
+    public function changeRole(User $user, User $model): bool
+    {
+        return $user->role === 'admin' && $user->id !== $model->id;
+    }
+
     public function restore(User $user, User $model): bool
     {
         return $user->role === 'admin';

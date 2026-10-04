@@ -57,7 +57,7 @@ const buildHtml = (tiles: TileSource, lat: number, lng: number, colorsJson: stri
       new Logo().addTo(map);
     }
     var Hint = L.Control.extend({ options: { position: 'topright' }, onAdd: function () {
-      var d = L.DomUtil.create('div', 'hint'); d.innerHTML = 'Klikni do mapy na místo'; return d; } });
+      var d = L.DomUtil.create('div', 'hint'); d.innerHTML = 'Klikněte do mapy na místo'; return d; } });
     new Hint().addTo(map);
 
     var existingLayer = L.layerGroup().addTo(map);

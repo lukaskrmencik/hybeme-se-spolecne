@@ -9,6 +9,7 @@ use App\Models\VisitsPhoto;
 use App\Services\ImageModerationService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
@@ -96,6 +97,26 @@ class UserController extends Controller
             'name' => $user->name,
             'email' => $user->email,
             'avatar_url' => $user->avatar_url,
+        ]);
+    }
+
+    /** Admin: makes a user an admin, or back an ordinary user. */
+    public function updateRole(Request $request, User $user)
+    {
+        $this->authorize('changeRole', $user);
+
+        $validatedData = $request->validate([
+            'role' => ['required', Rule::in(['user', 'admin'])],
+        ]);
+
+        $user->role = $validatedData['role'];
+        $user->save();
+
+        return response()->success([
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'role' => $user->role,
         ]);
     }
 

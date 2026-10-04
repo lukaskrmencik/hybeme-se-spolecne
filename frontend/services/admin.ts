@@ -123,15 +123,17 @@ export interface AdminPhoto {
 }
 
 export interface PhotoFilters {
+  /** Author name or e-mail. */
   search?: string;
-  placeId?: number | null;
+  /** Part of the place name. */
+  place?: string;
   /** Y-m-d */
   from?: string | null;
 }
 
-export async function fetchPhotos(page: number, filters: PhotoFilters): Promise<Page<AdminPhoto>> {
+export async function fetchPhotos(page: number, filters: PhotoFilters, perPage = 24): Promise<Page<AdminPhoto>> {
   const res = await apiFetch<PaginationResponse<AdminPhoto>>(
-    `photos${query({ page, per_page: 24, search: filters.search?.trim(), place_id: filters.placeId, from: filters.from })}`
+    `photos${query({ page, per_page: perPage, search: filters.search?.trim(), place: filters.place?.trim(), from: filters.from })}`
   );
   return toPage(res, (p) => ({ ...p, photo_url: resolveMediaUrl(p.photo_url) }));
 }
@@ -160,11 +162,16 @@ export interface UserFilters {
   role?: 'user' | 'admin' | null;
 }
 
-export async function fetchUsers(page: number, filters: UserFilters): Promise<Page<AdminUser>> {
+export async function fetchUsers(page: number, filters: UserFilters, perPage = 25): Promise<Page<AdminUser>> {
   const res = await apiFetch<PaginationResponse<AdminUser>>(
-    `users${query({ page, per_page: 25, search: filters.search?.trim(), role: filters.role })}`
+    `users${query({ page, per_page: perPage, search: filters.search?.trim(), role: filters.role })}`
   );
   return toPage(res, (u) => ({ ...u, avatar_url: u.avatar_url ? resolveMediaUrl(u.avatar_url) : null }));
+}
+
+/** The user gets (or loses) the administration; their own role cannot be changed. */
+export async function setUserRole(id: number, role: 'user' | 'admin'): Promise<void> {
+  await apiFetch(`users/${id}/role`, { method: 'PATCH', body: JSON.stringify({ role }) });
 }
 
 export async function deleteUser(id: number): Promise<void> {

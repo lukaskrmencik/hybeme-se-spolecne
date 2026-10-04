@@ -2,6 +2,7 @@ import React, { ComponentProps, useCallback, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Modal,
+  useWindowDimensions,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -11,7 +12,7 @@ import {
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, radius, shadows } from '../../utils/theme';
+import { colors, radius } from '../../utils/theme';
 
 type IconName = ComponentProps<typeof Ionicons>['name'];
 
@@ -100,8 +101,10 @@ export function Field({
   suffix,
   half,
   style,
+  ref,
   ...input
 }: TextInputProps & {
+  ref?: React.Ref<TextInput>;
   label: string;
   help?: string;
   error?: string | null;
@@ -115,6 +118,7 @@ export function Field({
       <Text style={styles.fieldLabel}>{label}</Text>
       <View style={[styles.inputWrap, focused && styles.inputFocus, !!error && styles.inputError]}>
         <TextInput
+          ref={ref}
           placeholderTextColor={colors.inactive}
           {...input}
           onFocus={(e) => {
@@ -290,6 +294,92 @@ export function useConfirm(): [React.ReactNode, (options: ConfirmOptions) => Pro
   return [dialog, confirm];
 }
 
+export interface Column<T> {
+  key: string;
+  title: string;
+  /** Share of the row width on a computer. */
+  flex?: number;
+  align?: 'left' | 'right';
+  render: (row: T) => React.ReactNode;
+}
+
+/** Table with a header on a computer; on a phone every row becomes a small card with labels. */
+export function DataTable<T>({
+  columns,
+  rows,
+  rowKey,
+  actions,
+  actionsWidth = 150,
+}: {
+  columns: Column<T>[];
+  rows: T[];
+  rowKey: (row: T) => string | number;
+  actions?: (row: T) => React.ReactNode;
+  /** Width of the buttons column on a computer, wide enough to keep its buttons on one line. */
+  actionsWidth?: number;
+}) {
+  const { width } = useWindowDimensions();
+  const wide = width >= 760;
+  const [first, ...rest] = columns;
+
+  if (!wide) {
+    return (
+      <View style={styles.table}>
+        {rows.map((row, i) => (
+          <View key={rowKey(row)} style={[styles.mRow, i > 0 && styles.rowBorder]}>
+            <View>{first.render(row)}</View>
+            <View style={styles.mCells}>
+              {rest.map((c) => (
+                <View key={c.key} style={styles.mCell}>
+                  <Text style={styles.th}>{c.title}</Text>
+                  <View>{c.render(row)}</View>
+                </View>
+              ))}
+            </View>
+            {actions && <View style={styles.mActions}>{actions(row)}</View>}
+          </View>
+        ))}
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.table}>
+      <View style={[styles.tr, styles.thead]}>
+        {columns.map((c) => (
+          <Text key={c.key} style={[styles.th, { flex: c.flex ?? 1 }, c.align === 'right' && styles.right]}>
+            {c.title}
+          </Text>
+        ))}
+        {actions && <View style={{ width: actionsWidth }} />}
+      </View>
+      {rows.map((row, i) => (
+        <View key={rowKey(row)} style={[styles.tr, i > 0 && styles.rowBorder]}>
+          {columns.map((c) => (
+            <View key={c.key} style={[{ flex: c.flex ?? 1 }, c.align === 'right' && styles.cellRight]}>
+              {c.render(row)}
+            </View>
+          ))}
+          {actions && <View style={[styles.actionsCell, { width: actionsWidth }]}>{actions(row)}</View>}
+        </View>
+      ))}
+    </View>
+  );
+}
+
+export function StatCard({ label, value, note, icon }: { label: string; value: string; note?: string; icon: IconName }) {
+  return (
+    <View style={styles.stat}>
+      <View style={styles.statHead}>
+        <Text style={styles.statLabel}>{label}</Text>
+        <Ionicons name={icon} size={18} color={colors.inactive} />
+      </View>
+      <Text style={styles.statValue}>{value}</Text>
+      {!!note && <Text style={styles.statNote}>{note}</Text>}
+    </View>
+  );
+}
+
 export const adminStyles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   wrapRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 },
@@ -304,23 +394,30 @@ const styles = StyleSheet.create({
   pageInner: { width: '100%', maxWidth: 1000, alignSelf: 'center', gap: 16 },
   pageHead: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 },
   pageHeadText: { flex: 1, minWidth: 220, gap: 4 },
-  pageTitle: { color: colors.navy, fontSize: 24, fontWeight: '900' },
+  pageTitle: { color: colors.navy, fontSize: 22, fontWeight: '900', letterSpacing: -0.2 },
   pageDescription: { color: colors.muted, fontSize: 14, lineHeight: 20, fontWeight: '600' },
-  card: { backgroundColor: colors.surface, borderRadius: radius.lg, padding: 16, gap: 12, ...shadows.card },
+  card: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: 16,
+    gap: 12,
+  },
   pressed: { opacity: 0.85 },
 
   button: {
-    minHeight: 46,
-    paddingHorizontal: 18,
-    borderRadius: radius.md,
+    minHeight: 42,
+    paddingHorizontal: 16,
+    borderRadius: 8,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
   },
-  buttonSmall: { minHeight: 36, paddingHorizontal: 12, borderRadius: radius.sm },
+  buttonSmall: { minHeight: 34, paddingHorizontal: 11, borderRadius: 8 },
   button_primary: { backgroundColor: colors.primary },
-  button_secondary: { backgroundColor: colors.surface, borderWidth: 1.5, borderColor: colors.border },
+  button_secondary: { backgroundColor: colors.surface, borderWidth: 1, borderColor: '#D3DACB' },
   button_danger: { backgroundColor: colors.danger },
   button_ghost: { backgroundColor: 'transparent' },
   buttonDisabled: { opacity: 0.5 },
@@ -333,14 +430,14 @@ const styles = StyleSheet.create({
   inputWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    backgroundColor: colors.background,
+    borderWidth: 1,
+    borderColor: '#D3DACB',
+    borderRadius: 8,
+    backgroundColor: colors.white,
     paddingHorizontal: 12,
-    minHeight: 46,
+    minHeight: 42,
   },
-  inputFocus: { borderColor: '#C3CDB9', backgroundColor: colors.white },
+  inputFocus: { borderColor: colors.navy },
   inputError: { borderColor: colors.danger },
   input: { flex: 1, fontSize: 15, fontWeight: '600', color: colors.navy, paddingVertical: 10, outlineWidth: 0 },
   suffix: { color: colors.muted, fontSize: 13, fontWeight: '800', marginLeft: 6 },
@@ -352,11 +449,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
     backgroundColor: colors.surface,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: '#D3DACB',
+    borderRadius: 8,
     paddingHorizontal: 12,
-    minHeight: 46,
+    minHeight: 42,
     flexGrow: 1,
     flexBasis: 240,
   },
@@ -364,12 +461,12 @@ const styles = StyleSheet.create({
 
   segmented: { gap: 6 },
   segment: {
-    height: 36,
-    paddingHorizontal: 14,
-    borderRadius: radius.full,
+    height: 34,
+    paddingHorizontal: 13,
+    borderRadius: 8,
     backgroundColor: colors.surface,
-    borderWidth: 1.5,
-    borderColor: colors.border,
+    borderWidth: 1,
+    borderColor: '#D3DACB',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -377,7 +474,7 @@ const styles = StyleSheet.create({
   segmentText: { color: colors.navy, fontSize: 13, fontWeight: '800' },
   segmentTextActive: { color: colors.white },
 
-  badge: { flexDirection: 'row', alignItems: 'center', gap: 4, borderRadius: radius.full, paddingHorizontal: 9, paddingVertical: 3 },
+  badge: { flexDirection: 'row', alignItems: 'center', gap: 4, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3, alignSelf: 'flex-start' },
   badgeText: { fontSize: 12, fontWeight: '800' },
 
   empty: { alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 40, paddingHorizontal: 16 },
@@ -389,8 +486,36 @@ const styles = StyleSheet.create({
   noticeDanger: { backgroundColor: colors.dangerBg },
   noticeText: { flex: 1, fontSize: 13, lineHeight: 19, fontWeight: '600' },
 
+  table: { backgroundColor: colors.surface, borderRadius: radius.sm, borderWidth: 1, borderColor: colors.border, overflow: 'hidden' },
+  thead: { backgroundColor: '#F8FAF6', paddingVertical: 10 },
+  tr: { flexDirection: 'row', alignItems: 'center', gap: 16, paddingHorizontal: 16, paddingVertical: 12 },
+  rowBorder: { borderTopWidth: 1, borderTopColor: colors.border },
+  th: { color: colors.muted, fontSize: 11, fontWeight: '800', letterSpacing: 0.6, textTransform: 'uppercase' },
+  right: { textAlign: 'right' },
+  cellRight: { alignItems: 'flex-end' },
+  actionsCell: { flexDirection: 'row', justifyContent: 'flex-end', gap: 6, flexWrap: 'wrap' },
+  mRow: { padding: 14, gap: 10 },
+  mCells: { flexDirection: 'row', flexWrap: 'wrap', gap: 14 },
+  mCell: { gap: 3, minWidth: 110 },
+  mActions: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+
+  stat: {
+    flexGrow: 1,
+    flexBasis: 180,
+    backgroundColor: colors.surface,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: 16,
+    gap: 4,
+  },
+  statHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  statLabel: { color: colors.muted, fontSize: 12, fontWeight: '800', letterSpacing: 0.4, textTransform: 'uppercase' },
+  statValue: { color: colors.navy, fontSize: 28, fontWeight: '900' },
+  statNote: { color: colors.muted, fontSize: 12, fontWeight: '600' },
+
   backdrop: { flex: 1, backgroundColor: 'rgba(5, 16, 26, 0.5)', alignItems: 'center', justifyContent: 'center', padding: 20 },
-  dialog: { width: '100%', maxWidth: 420, backgroundColor: colors.surface, borderRadius: radius.lg, padding: 20, gap: 12 },
+  dialog: { width: '100%', maxWidth: 440, backgroundColor: colors.surface, borderRadius: radius.sm, padding: 22, gap: 12 },
   dialogTitle: { color: colors.navy, fontSize: 18, fontWeight: '900' },
   dialogText: { color: colors.muted, fontSize: 14, lineHeight: 20, fontWeight: '600' },
   dialogActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 8, marginTop: 6 },

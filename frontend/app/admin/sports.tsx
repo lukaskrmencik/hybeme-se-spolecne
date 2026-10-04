@@ -1,11 +1,14 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useLocalSearchParams } from 'expo-router';
 import {
   AdminPage,
   adminStyles,
   Badge,
   Button,
   Card,
+  Column,
+  DataTable,
   EmptyState,
   ErrorBlock,
   Field,
@@ -17,21 +20,21 @@ import { createSport, describeValidationError, fetchAllSports, NewSport, setSpor
 import { getErrorMessage } from '../../services/api';
 import { showToast } from '../../utils/alert';
 import { Sport } from '../../types/sport';
-import { colors, radius } from '../../utils/theme';
+import { colors } from '../../utils/theme';
 
 type NumberKey = Exclude<keyof NewSport, 'name'>;
 
 const SPEEDS: { key: NumberKey; label: string; help: string }[] = [
   {
     key: 'min_speed',
-    label: 'Nejnižší rychlost',
-    help: 'Když se člověk mezi místy přesouvá pomaleji, kombinace se nezapočítá (asi si mezitím dal pauzu).',
+    label: 'Minimální rychlost',
+    help: 'Při pomalejším přesunu mezi místy se kombinace nezapočítá (přesun byl přerušen).',
   },
-  { key: 'average_speed', label: 'Běžná rychlost', help: 'Obvyklé tempo tímhle sportem. Zatím jen pro informaci.' },
+  { key: 'average_speed', label: 'Obvyklá rychlost', help: 'Běžné tempo daného sportu. Údaj je informativní.' },
   {
     key: 'max_speed',
-    label: 'Nejvyšší rychlost',
-    help: 'Když je přesun rychlejší, kombinace se nezapočítá (nejspíš autem).',
+    label: 'Maximální rychlost',
+    help: 'Při rychlejším přesunu se kombinace nezapočítá (pravděpodobně dopravním prostředkem).',
   },
 ];
 
@@ -83,16 +86,16 @@ function NewSportForm({ sports, onCreated, onCancel }: { sports: Sport[]; onCrea
   const save = async () => {
     const next: Record<string, string> = {};
     const trimmed = name.trim();
-    if (!trimmed) next.name = 'Napiš název sportu.';
-    else if (sports.some((s) => s.name.toLowerCase() === trimmed.toLowerCase())) next.name = 'Sport s tímhle názvem už existuje.';
+    if (!trimmed) next.name = 'Vyplňte název sportu.';
+    else if (sports.some((s) => s.name.toLowerCase() === trimmed.toLowerCase())) next.name = 'Sport s tímto názvem již existuje.';
 
     const n = Object.fromEntries(Object.entries(values).map(([k, v]) => [k, toNumber(v)])) as Record<NumberKey, number>;
-    for (const f of SPEEDS) if (!(n[f.key] > 0)) next[f.key] = 'Zadej rychlost v km/h.';
-    if (!next.min_speed && !next.max_speed && n.min_speed >= n.max_speed) next.max_speed = 'Musí být vyšší než nejnižší rychlost.';
+    for (const f of SPEEDS) if (!(n[f.key] > 0)) next[f.key] = 'Zadejte rychlost v km/h.';
+    if (!next.min_speed && !next.max_speed && n.min_speed >= n.max_speed) next.max_speed = 'Musí být vyšší než minimální rychlost.';
     if (!next.average_speed && (n.average_speed < n.min_speed || n.average_speed > n.max_speed)) {
-      next.average_speed = 'Musí být mezi nejnižší a nejvyšší rychlostí.';
+      next.average_speed = 'Musí ležet mezi minimální a maximální rychlostí.';
     }
-    for (const f of MULTIPLIERS) if (!(n[f.key] >= 1)) next[f.key] = 'Aspoň 1 (×1 = body se nenásobí).';
+    for (const f of MULTIPLIERS) if (!(n[f.key] >= 1)) next[f.key] = 'Nejméně 1 (hodnota 1 body nenásobí).';
 
     setErrors(next);
     if (Object.values(next).some(Boolean)) return;
@@ -101,7 +104,7 @@ function NewSportForm({ sports, onCreated, onCancel }: { sports: Sport[]; onCrea
     setServerError(null);
     try {
       await createSport({ name: trimmed, ...n });
-      showToast('Sport přidán', `${trimmed} lidé uvidí, jakmile otevřou aplikaci.`, 'success');
+      showToast('Sport byl přidán', `${trimmed} se uživatelům zobrazí při příštím otevření aplikace.`, 'success');
       onCreated();
     } catch (err) {
       setServerError(describeValidationError(err, LABELS, 'Sport se nepodařilo uložit.'));
@@ -127,11 +130,11 @@ function NewSportForm({ sports, onCreated, onCancel }: { sports: Sport[]; onCrea
 
       {sports.length > 0 && (
         <View style={styles.copy}>
-          <Text style={adminStyles.muted}>Nevíš si rady s hodnotami? Zkopíruj je z podobného sportu a uprav:</Text>
+          <Text style={adminStyles.muted}>Hodnoty lze převzít z existujícího sportu a následně upravit:</Text>
           <View style={adminStyles.wrapRow}>
             {sports.map((s) => (
               <Pressable key={s.id} onPress={() => copyFrom(s)} style={styles.copyChip} accessibilityRole="button">
-                <Text style={styles.copyChipText}>{s.name}</Text>
+                <Text style={styles.copyChipText}>Převzít z: {s.name}</Text>
               </Pressable>
             ))}
           </View>
@@ -155,8 +158,8 @@ function NewSportForm({ sports, onCreated, onCancel }: { sports: Sport[]; onCrea
         ))}
       </View>
 
-      <Text style={styles.groupTitle}>Násobení bodů v kombinaci</Text>
-      <Notice text="Když člověk naváže na předchozí návštěvu stejným sportem, body za další místo se vynásobí. Čím delší řada, tím vyšší násobek. U rychlejších sportů dávej nižší násobky: lidé ujedou víc kilometrů a za kilometry dostávají body navíc." />
+      <Text style={styles.groupTitle}>Násobitele bodů v kombinaci</Text>
+      <Notice text="Pokud uživatel naváže na předchozí návštěvu stejným sportem, body za další místo se vynásobí. Násobitel roste s délkou řady. Náročnějším sportům (např. běh) nastavte vyšší násobitele, méně náročným (např. cyklistika) nižší – body za ujeté kilometry se přičítají u všech sportů stejně." />
       <View style={adminStyles.wrapRow}>
         {MULTIPLIERS.map((f) => (
           <Field
@@ -182,10 +185,48 @@ function NewSportForm({ sports, onCreated, onCancel }: { sports: Sport[]; onCrea
   );
 }
 
+const sportColumns: Column<Sport>[] = [
+  { key: 'name', title: 'Sport', flex: 1.6, render: (s) => <Text style={adminStyles.strong}>{s.name}</Text> },
+  {
+    key: 'speed',
+    title: 'Povolená rychlost',
+    flex: 1.6,
+    render: (s) => (
+      <View>
+        <Text style={styles.cell}>
+          {fmt(s.min_speed)}–{fmt(s.max_speed)} km/h
+        </Text>
+        <Text style={adminStyles.muted}>obvykle {fmt(s.average_speed)} km/h</Text>
+      </View>
+    ),
+  },
+  {
+    key: 'mult',
+    title: 'Násobitele (2. / 3. / 4. / 5.+ místo)',
+    flex: 2.4,
+    render: (s) => (
+      <View style={styles.mults}>
+        {MULTIPLIERS.map((m) => (
+          <Text key={m.key} style={styles.mult}>
+            ×{fmt(s[m.key])}
+          </Text>
+        ))}
+      </View>
+    ),
+  },
+  {
+    key: 'status',
+    title: 'Stav',
+    flex: 1,
+    render: (s) => (s.is_active ? <Badge label="Aktivní" tone="green" /> : <Badge label="Vyřazený" tone="grey" />),
+  },
+];
+
 export default function AdminSports() {
+  const params = useLocalSearchParams<{ new?: string }>();
   const [sports, setSports] = useState<Sport[] | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [adding, setAdding] = useState(false);
+  const [adding, setAdding] = useState(params.new === '1');
   const [busyId, setBusyId] = useState<number | null>(null);
   const [dialog, confirm] = useConfirm();
 
@@ -207,21 +248,25 @@ export default function AdminSports() {
     const ok = await confirm(
       turnOff
         ? {
-            title: `Vypnout sport „${sport.name}“?`,
-            message: 'Sport zmizí z výběru v aplikaci. Návštěvy, které s ním lidé už mají, i jejich body zůstanou.',
-            confirmLabel: 'Vypnout',
+            title: `Vyřadit sport „${sport.name}“?`,
+            message: 'Sport přestane být nabízen ve výběru v aplikaci. Dosavadní návštěvy s tímto sportem i získané body zůstanou zachovány.',
+            confirmLabel: 'Vyřadit',
             danger: true,
           }
-        : { title: `Zapnout sport „${sport.name}“?`, message: 'Sport se znovu objeví ve výběru v aplikaci.', confirmLabel: 'Zapnout' }
+        : {
+            title: `Aktivovat sport „${sport.name}“?`,
+            message: 'Sport bude znovu nabízen ve výběru v aplikaci.',
+            confirmLabel: 'Aktivovat',
+          }
     );
     if (!ok) return;
     setBusyId(sport.id);
     try {
       await setSportActive(sport.id, !turnOff);
       setSports((list) => list?.map((s) => (s.id === sport.id ? { ...s, is_active: !turnOff } : s)) ?? list);
-      showToast(turnOff ? 'Sport vypnut' : 'Sport zapnut', sport.name, 'success');
+      showToast(turnOff ? 'Sport byl vyřazen' : 'Sport byl aktivován', sport.name, 'success');
     } catch (err) {
-      showToast('Nepovedlo se', getErrorMessage(err, 'Zkus to prosím znovu.'), 'danger');
+      showToast('Změnu se nepodařilo uložit', getErrorMessage(err, 'Zkuste to prosím znovu.'), 'danger');
     } finally {
       setBusyId(null);
     }
@@ -230,7 +275,7 @@ export default function AdminSports() {
   return (
     <AdminPage
       title="Sporty"
-      description="Sporty, které si lidé vybírají v aplikaci. Vypnutý sport nejde vybrat, ale starší návštěvy s ním zůstávají."
+      description="Sporty nabízené uživatelům při zaznamenání návštěvy. Vyřazený sport nelze zvolit, dosavadní návštěvy zůstávají zachovány."
       actions={!adding && <Button label="Přidat sport" icon="add" onPress={() => setAdding(true)} />}
     >
       {dialog}
@@ -250,46 +295,25 @@ export default function AdminSports() {
       ) : !sports ? (
         <LoadingBlock />
       ) : sports.length === 0 ? (
-        <EmptyState icon="bicycle-outline" title="Zatím žádný sport" text="Přidej první tlačítkem nahoře." />
+        <EmptyState icon="bicycle-outline" title="Zatím nebyl přidán žádný sport" text="Použijte tlačítko Přidat sport." />
       ) : (
-        <View style={styles.cards}>
-          {sports.map((s) => (
-            <Card key={s.id} style={styles.sportCard}>
-              <View style={styles.sportHead}>
-                <Text style={[adminStyles.strong, styles.sportName]}>{s.name}</Text>
-                {s.is_active ? <Badge label="Aktivní" tone="green" /> : <Badge label="Vypnutý" tone="grey" />}
-              </View>
-              <View style={styles.stats}>
-                <Stat label="Rychlost" value={`${fmt(s.min_speed)}–${fmt(s.max_speed)} km/h`} />
-                <Stat label="Běžně" value={`${fmt(s.average_speed)} km/h`} />
-              </View>
-              <View style={styles.stats}>
-                {MULTIPLIERS.map((m, i) => (
-                  <Stat key={m.key} label={`${i + 2}.${i === 3 ? '+' : ''} místo`} value={`×${fmt(s[m.key])}`} />
-                ))}
-              </View>
-              <Button
-                small
-                label={s.is_active ? 'Vypnout' : 'Zapnout'}
-                icon={s.is_active ? 'eye-off-outline' : 'eye-outline'}
-                variant="secondary"
-                loading={busyId === s.id}
-                onPress={() => void toggle(s)}
-              />
-            </Card>
-          ))}
-        </View>
+        <DataTable<Sport>
+          rows={sports}
+          rowKey={(s) => s.id}
+          columns={sportColumns}
+          actions={(s) => (
+            <Button
+              small
+              label={s.is_active ? 'Vyřadit' : 'Aktivovat'}
+              icon={s.is_active ? 'eye-off-outline' : 'eye-outline'}
+              variant="secondary"
+              loading={busyId === s.id}
+              onPress={() => void toggle(s)}
+            />
+          )}
+        />
       )}
     </AdminPage>
-  );
-}
-
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <View style={styles.stat}>
-      <Text style={styles.statLabel}>{label}</Text>
-      <Text style={styles.statValue}>{value}</Text>
-    </View>
   );
 }
 
@@ -298,19 +322,25 @@ const styles = StyleSheet.create({
   copy: { gap: 8 },
   copyChip: {
     paddingHorizontal: 12,
-    height: 34,
+    height: 32,
     justifyContent: 'center',
-    borderRadius: radius.full,
-    backgroundColor: colors.skyBg,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#D3DACB',
+    backgroundColor: colors.white,
   },
-  copyChipText: { color: colors.skyText, fontSize: 13, fontWeight: '800' },
+  copyChipText: { color: colors.navy, fontSize: 13, fontWeight: '700' },
   formActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 8, flexWrap: 'wrap' },
-  cards: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  sportCard: { flexGrow: 1, flexBasis: 280 },
-  sportHead: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  sportName: { flex: 1, fontSize: 17 },
-  stats: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  stat: { backgroundColor: colors.background, borderRadius: radius.sm, paddingHorizontal: 10, paddingVertical: 6, minWidth: 74 },
-  statLabel: { color: colors.muted, fontSize: 11, fontWeight: '800' },
-  statValue: { color: colors.navy, fontSize: 14, fontWeight: '900' },
+  cell: { color: colors.navy, fontSize: 14, fontWeight: '700' },
+  mults: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  mult: {
+    color: colors.navy,
+    fontSize: 13,
+    fontWeight: '800',
+    backgroundColor: colors.background,
+    borderRadius: 6,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    overflow: 'hidden',
+  },
 });

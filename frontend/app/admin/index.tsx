@@ -1,52 +1,188 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { useCallback, useEffect, useState } from 'react';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { AdminPage } from '../../components/admin/ui';
-import { ADMIN_SECTIONS } from '../../components/admin/AdminShell';
-import { colors, radius, shadows } from '../../utils/theme';
+import { AdminPage, adminStyles, Badge, Button, Card, ErrorBlock, LoadingBlock, StatCard } from '../../components/admin/ui';
+import { Avatar } from '../../components/Avatar';
+import { AdminPhoto, AdminUser, fetchAllPlaces, fetchAllSports, fetchPhotos, fetchUsers } from '../../services/admin';
+import { formatNumber } from '../../utils/format';
+import { formatVisitTime } from '../../utils/dates';
+import { colors } from '../../utils/theme';
+
+interface Overview {
+  placesActive: number;
+  placesTotal: number;
+  sportsActive: number;
+  sportsTotal: number;
+  photosTotal: number;
+  photosWeek: number;
+  usersTotal: number;
+  admins: number;
+  recentPhotos: AdminPhoto[];
+  newestUsers: AdminUser[];
+}
+
+function weekAgo(): string {
+  const d = new Date();
+  d.setDate(d.getDate() - 6);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+async function loadOverview(): Promise<Overview> {
+  const [places, sports, photos, photosWeek, users, admins] = await Promise.all([
+    fetchAllPlaces(),
+    fetchAllSports(),
+    fetchPhotos(1, {}, 6),
+    fetchPhotos(1, { from: weekAgo() }, 1),
+    fetchUsers(1, {}, 5),
+    fetchUsers(1, { role: 'admin' }, 1),
+  ]);
+  return {
+    placesActive: places.filter((p) => p.is_active).length,
+    placesTotal: places.length,
+    sportsActive: sports.filter((s) => s.is_active).length,
+    sportsTotal: sports.length,
+    photosTotal: photos.totalItems,
+    photosWeek: photosWeek.totalItems,
+    usersTotal: users.totalItems,
+    admins: admins.totalItems,
+    recentPhotos: photos.items,
+    newestUsers: users.items,
+  };
+}
+
+const formatDate = (iso: string) => {
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString('cs-CZ');
+};
 
 export default function AdminHome() {
   const router = useRouter();
+  const [data, setData] = useState<Overview | null>(null);
+  const [error, setError] = useState(false);
+
+  const load = useCallback(async () => {
+    setError(false);
+    try {
+      setData(await loadOverview());
+    } catch {
+      setError(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  const go = (href: string) => router.replace(href as '/admin');
+
   return (
-    <AdminPage title="Vítej v administraci" description="Vyber, co chceš spravovat. Změny lidé uvidí, jakmile otevřou aplikaci.">
-      <View style={styles.grid}>
-        {ADMIN_SECTIONS.map((s) => (
-          <Pressable
-            key={s.href}
-            onPress={() => router.replace(s.href as '/admin')}
-            style={({ pressed }) => [styles.tile, pressed && { opacity: 0.9 }]}
-            accessibilityRole="link"
-          >
-            <View style={styles.icon}>
-              <Ionicons name={s.icon} size={24} color={colors.primary} />
-            </View>
-            <View style={styles.texts}>
-              <Text style={styles.title}>{s.label}</Text>
-              <Text style={styles.text}>{s.text}</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color={colors.inactive} />
-          </Pressable>
-        ))}
-      </View>
+    <AdminPage
+      title="Přehled"
+      description="Souhrn obsahu aplikace a poslední aktivita uživatelů."
+      actions={
+        <View style={adminStyles.wrapRow}>
+          <Button label="Nové místo" icon="add" variant="secondary" onPress={() => go('/admin/places?new=1')} />
+          <Button label="Nový sport" icon="add" variant="secondary" onPress={() => go('/admin/sports?new=1')} />
+        </View>
+      }
+    >
+      {error ? (
+        <ErrorBlock message="Přehled se nepodařilo načíst." onRetry={() => void load()} />
+      ) : !data ? (
+        <LoadingBlock />
+      ) : (
+        <>
+          <View style={styles.stats}>
+            <StatCard
+              icon="location-outline"
+              label="Místa"
+              value={formatNumber(data.placesActive)}
+              note={`aktivních z ${formatNumber(data.placesTotal)}`}
+            />
+            <StatCard
+              icon="bicycle-outline"
+              label="Sporty"
+              value={formatNumber(data.sportsActive)}
+              note={`aktivních z ${formatNumber(data.sportsTotal)}`}
+            />
+            <StatCard
+              icon="images-outline"
+              label="Fotografie"
+              value={formatNumber(data.photosTotal)}
+              note={`${formatNumber(data.photosWeek)} za posledních 7 dní`}
+            />
+            <StatCard
+              icon="people-outline"
+              label="Uživatelé"
+              value={formatNumber(data.usersTotal)}
+              note={`z toho ${formatNumber(data.admins)} správců`}
+            />
+          </View>
+
+          <View style={styles.columns}>
+            <Card style={styles.column}>
+              <View style={styles.cardHead}>
+                <Text style={adminStyles.sectionTitle}>Nejnovější fotografie</Text>
+                <Button small label="Všechny" variant="ghost" onPress={() => go('/admin/photos')} />
+              </View>
+              {data.recentPhotos.length === 0 ? (
+                <Text style={adminStyles.muted}>Zatím nebyla nahrána žádná fotografie.</Text>
+              ) : (
+                <View style={styles.photos}>
+                  {data.recentPhotos.map((p) => (
+                    <Pressable key={p.id} onPress={() => go('/admin/photos')} style={styles.photo} accessibilityRole="link">
+                      <Image source={{ uri: p.photo_url }} style={styles.photoImage} />
+                      <Text style={styles.photoPlace} numberOfLines={1}>
+                        {p.visit?.place?.name ?? 'Neznámé místo'}
+                      </Text>
+                      <Text style={styles.photoMeta} numberOfLines={1}>
+                        {formatVisitTime(p.created_at)}
+                      </Text>
+                    </Pressable>
+                  ))}
+                </View>
+              )}
+            </Card>
+
+            <Card style={styles.column}>
+              <View style={styles.cardHead}>
+                <Text style={adminStyles.sectionTitle}>Nové registrace</Text>
+                <Button small label="Všichni" variant="ghost" onPress={() => go('/admin/users')} />
+              </View>
+              {data.newestUsers.map((u, i) => (
+                <View key={u.id} style={[styles.user, i > 0 && styles.userBorder]}>
+                  <Avatar name={u.name} url={u.avatar_url} size={36} />
+                  <View style={styles.userText}>
+                    <Text style={styles.userName} numberOfLines={1}>
+                      {u.name}
+                    </Text>
+                    <Text style={adminStyles.muted} numberOfLines={1}>
+                      {u.email}
+                    </Text>
+                  </View>
+                  {u.role === 'admin' ? <Badge label="Správce" tone="navy" /> : <Text style={adminStyles.muted}>{formatDate(u.created_at)}</Text>}
+                </View>
+              ))}
+            </Card>
+          </View>
+        </>
+      )}
     </AdminPage>
   );
 }
 
 const styles = StyleSheet.create({
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  tile: {
-    flexGrow: 1,
-    flexBasis: 300,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    padding: 18,
-    ...shadows.card,
-  },
-  icon: { width: 48, height: 48, borderRadius: 14, backgroundColor: colors.primaryBg, alignItems: 'center', justifyContent: 'center' },
-  texts: { flex: 1, gap: 2 },
-  title: { color: colors.navy, fontSize: 17, fontWeight: '900' },
-  text: { color: colors.muted, fontSize: 13, lineHeight: 18, fontWeight: '600' },
+  stats: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  columns: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, alignItems: 'flex-start' },
+  column: { flexGrow: 1, flexBasis: 340 },
+  cardHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  photos: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  photo: { width: '31%', flexGrow: 1, minWidth: 90, gap: 3 },
+  photoImage: { width: '100%', aspectRatio: 1, borderRadius: 6, backgroundColor: colors.background },
+  photoPlace: { color: colors.navy, fontSize: 12, fontWeight: '800' },
+  photoMeta: { color: colors.muted, fontSize: 11, fontWeight: '600' },
+  user: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 8 },
+  userBorder: { borderTopWidth: 1, borderTopColor: colors.border },
+  userText: { flex: 1 },
+  userName: { color: colors.navy, fontSize: 14, fontWeight: '800' },
 });

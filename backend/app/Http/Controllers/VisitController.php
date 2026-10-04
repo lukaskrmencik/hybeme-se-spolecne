@@ -162,7 +162,7 @@ class VisitController extends Controller
 
     /**
      * All visit photos for the admin, newest first. Filters: search (author name or e-mail),
-     * user_id, place_id, from / to (upload date, Y-m-d).
+     * place (place name), user_id, place_id, from / to (upload date, Y-m-d).
      */
     public function photos(Request $request)
     {
@@ -170,6 +170,7 @@ class VisitController extends Controller
 
         $validated = $request->validate([
             'search' => 'sometimes|nullable|string|max:255',
+            'place' => 'sometimes|nullable|string|max:255',
             'user_id' => 'sometimes|nullable|integer',
             'place_id' => 'sometimes|nullable|integer',
             'from' => 'sometimes|nullable|date',
@@ -190,6 +191,10 @@ class VisitController extends Controller
             $query->whereHas('visit.user', function ($q) use ($term) {
                 $q->where('name', 'ILIKE', $term)->orWhere('email', 'ILIKE', $term);
             });
+        }
+        if (!empty($validated['place'])) {
+            $placeTerm = '%' . $validated['place'] . '%';
+            $query->whereHas('visit.place', fn ($q) => $q->where('name', 'ILIKE', $placeTerm));
         }
         if (!empty($validated['user_id'])) {
             $query->whereHas('visit', fn ($q) => $q->where('user_id', $validated['user_id']));

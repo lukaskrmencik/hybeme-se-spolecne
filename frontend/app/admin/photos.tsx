@@ -13,13 +13,12 @@ import {
   useConfirm,
 } from '../../components/admin/ui';
 import { PhotoViewer } from '../../components/PhotoViewer';
-import { AdminPhoto, deletePhoto, fetchAllPlaces, fetchPhotos } from '../../services/admin';
+import { AdminPhoto, deletePhoto, fetchPhotos } from '../../services/admin';
 import { getErrorMessage } from '../../services/api';
 import { showToast } from '../../utils/alert';
 import { formatVisitTime } from '../../utils/dates';
 import { plural } from '../../utils/plural';
-import { colors, radius } from '../../utils/theme';
-import { Place } from '../../types/place';
+import { colors } from '../../utils/theme';
 
 type Period = 'all' | 'today' | 'week' | 'month';
 
@@ -44,8 +43,7 @@ function useDebounced<T>(value: T, ms: number): T {
 export default function AdminPhotos() {
   const [search, setSearch] = useState('');
   const [period, setPeriod] = useState<Period>('all');
-  const [placeId, setPlaceId] = useState<number | null>(null);
-  const [places, setPlaces] = useState<Place[]>([]);
+  const [place, setPlace] = useState('');
   const [photos, setPhotos] = useState<AdminPhoto[] | null>(null);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -56,17 +54,12 @@ export default function AdminPhotos() {
   const [viewIndex, setViewIndex] = useState<number | null>(null);
   const [dialog, confirm] = useConfirm();
   const debouncedSearch = useDebounced(search, 400);
+  const debouncedPlace = useDebounced(place, 400);
   const requestId = useRef(0);
 
-  useEffect(() => {
-    fetchAllPlaces()
-      .then(setPlaces)
-      .catch(() => setPlaces([]));
-  }, []);
-
   const filters = useMemo(
-    () => ({ search: debouncedSearch, placeId, from: periodStart(period) }),
-    [debouncedSearch, placeId, period]
+    () => ({ search: debouncedSearch, place: debouncedPlace, from: periodStart(period) }),
+    [debouncedSearch, debouncedPlace, period]
   );
 
   const load = useCallback(
@@ -98,9 +91,9 @@ export default function AdminPhotos() {
   const remove = async (photo: AdminPhoto) => {
     const author = photo.visit?.user?.name ?? 'neznámý uživatel';
     const ok = await confirm({
-      title: 'Smazat fotku?',
-      message: `Fotku od uživatele ${author} u místa ${photo.visit?.place?.name ?? '?'} už nikdo neuvidí. Nejde to vrátit.`,
-      confirmLabel: 'Smazat fotku',
+      title: 'Odstranit fotografii?',
+      message: `Fotografie uživatele ${author} u místa ${photo.visit?.place?.name ?? '?'} bude trvale odstraněna. Návštěva a získané body uživateli zůstanou. Akci nelze vrátit.`,
+      confirmLabel: 'Odstranit',
       danger: true,
     });
     if (!ok) return;
@@ -109,9 +102,9 @@ export default function AdminPhotos() {
       await deletePhoto(photo.id);
       setPhotos((list) => list?.filter((p) => p.id !== photo.id) ?? list);
       setTotal((t) => t - 1);
-      showToast('Fotka smazána', undefined, 'success');
+      showToast('Fotografie byla odstraněna', undefined, 'success');
     } catch (err) {
-      showToast('Nepovedlo se', getErrorMessage(err, 'Zkus to prosím znovu.'), 'danger');
+      showToast('Fotografii se nepodařilo odstranit', getErrorMessage(err, 'Zkuste to prosím znovu.'), 'danger');
     } finally {
       setDeletingId(null);
     }
@@ -129,10 +122,17 @@ export default function AdminPhotos() {
   );
 
   return (
-    <AdminPage title="Fotky" description="Fotky, které lidé přidali k návštěvám. Nevhodnou fotku smaž, uživateli zůstane návštěva i body.">
+    <AdminPage
+      title="Fotografie"
+      description="Fotografie, které uživatelé přiložili k návštěvám. Nevhodné fotografie lze odstranit, návštěva a body uživateli zůstanou."
+    >
       {dialog}
       <View style={adminStyles.wrapRow}>
-        <SearchBox value={search} onChange={setSearch} placeholder="Hledat podle jména nebo e-mailu autora" />
+        <SearchBox value={search} onChange={setSearch} placeholder="Autor (jméno nebo e-mail)" />
+        <SearchBox value={place} onChange={setPlace} placeholder="Místo (název)" />
+      </View>
+      <View style={adminStyles.wrapRow}>
+        <Text style={styles.filterLabel}>Nahráno:</Text>
         <Segmented<Period>
           value={period}
           onChange={setPeriod}
@@ -144,29 +144,22 @@ export default function AdminPhotos() {
           ]}
         />
       </View>
-      {places.length > 0 && (
-        <Segmented<number | null>
-          value={placeId}
-          onChange={setPlaceId}
-          options={[{ value: null, label: 'Všechna místa' }, ...places.map((p) => ({ value: p.id, label: p.name }))]}
-        />
-      )}
 
       {error ? (
         <ErrorBlock message={error} onRetry={() => void load(1)} />
       ) : !photos ? (
         <LoadingBlock />
       ) : photos.length === 0 ? (
-        <EmptyState icon="images-outline" title="Žádné fotky" text="S těmito filtry nic nenacházím." />
+        <EmptyState icon="images-outline" title="Žádné fotografie" text="Zadaným filtrům neodpovídá žádná fotografie." />
       ) : (
         <>
           <Text style={adminStyles.muted}>
-            {total} {plural(total, ['fotka', 'fotky', 'fotek'])}
+            Nalezeno: {total} {plural(total, ['fotografie', 'fotografie', 'fotografií'])}
           </Text>
           <View style={styles.grid}>
             {photos.map((p, i) => (
               <Card key={p.id} style={styles.photoCard}>
-                <Pressable onPress={() => setViewIndex(i)} accessibilityLabel="Zvětšit fotku">
+                <Pressable onPress={() => setViewIndex(i)} accessibilityLabel="Zvětšit fotografii">
                   <Image source={{ uri: p.photo_url }} style={styles.image} resizeMode="cover" />
                 </Pressable>
                 <View style={styles.meta}>
@@ -185,7 +178,7 @@ export default function AdminPhotos() {
                 </View>
                 <Button
                   small
-                  label="Smazat"
+                  label="Odstranit"
                   icon="trash-outline"
                   variant="secondary"
                   loading={deletingId === p.id}
@@ -209,8 +202,9 @@ export default function AdminPhotos() {
 
 const styles = StyleSheet.create({
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  filterLabel: { color: colors.muted, fontSize: 13, fontWeight: '700' },
   photoCard: { flexGrow: 1, flexBasis: 160, maxWidth: 260, padding: 10, gap: 10 },
-  image: { width: '100%', aspectRatio: 1, borderRadius: radius.md, backgroundColor: colors.background },
+  image: { width: '100%', aspectRatio: 1, borderRadius: 6, backgroundColor: colors.background },
   meta: { gap: 2 },
   author: { color: colors.navy, fontSize: 13, fontWeight: '700' },
   more: { alignItems: 'center' },

@@ -9,16 +9,16 @@ const logo = require('../../assets/images/logos/logo_hss_mark.png');
 
 type IconName = ComponentProps<typeof Ionicons>['name'];
 
-export const ADMIN_SECTIONS: { href: string; label: string; icon: IconName; text: string }[] = [
-  { href: '/admin/places', label: 'Místa', icon: 'location', text: 'Přidávej nová místa a vypínej ta, která už nechceš.' },
-  { href: '/admin/sports', label: 'Sporty', icon: 'bicycle', text: 'Přidávej sporty a nastav jejich rychlosti a násobitele.' },
-  { href: '/admin/photos', label: 'Fotky', icon: 'images', text: 'Prohlížej fotky od uživatelů a mazej nevhodné.' },
-  { href: '/admin/users', label: 'Uživatelé', icon: 'people', text: 'Hledej uživatele a mazej jejich účty.' },
+const ADMIN_SECTIONS: { href: string; label: string; icon: IconName }[] = [
+  { href: '/admin/places', label: 'Místa', icon: 'location-outline' },
+  { href: '/admin/sports', label: 'Sporty', icon: 'bicycle-outline' },
+  { href: '/admin/photos', label: 'Fotografie', icon: 'images-outline' },
+  { href: '/admin/users', label: 'Uživatelé', icon: 'people-outline' },
 ];
 
 const NAV: { href: string; label: string; icon: IconName }[] = [
-  { href: '/admin', label: 'Přehled', icon: 'grid' },
-  ...ADMIN_SECTIONS.map(({ href, label, icon }) => ({ href, label, icon })),
+  { href: '/admin', label: 'Přehled', icon: 'speedometer-outline' },
+  ...ADMIN_SECTIONS,
 ];
 
 /** Frame of the administration: header with the way back to the app, and the section navigation. */
