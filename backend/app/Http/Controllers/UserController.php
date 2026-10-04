@@ -120,6 +120,22 @@ class UserController extends Controller
         ]);
     }
 
+    /** Removes the profile photo (the user themselves, or an admin after a report). */
+    public function deleteAvatar(User $user)
+    {
+        $this->authorize('update', $user);
+
+        if ($user->avatar_url) {
+            $path = str_replace(url('storage/'), '', $user->avatar_url);
+            if (Storage::disk('public')->exists($path)) {
+                Storage::disk('public')->delete($path);
+            }
+            $user->update(['avatar_url' => null]);
+        }
+
+        return response()->success(['avatar_url' => null]);
+    }
+
     public function uploadAvatar(Request $request, User $user, ImageModerationService $imageModerationService)
     {
         $this->authorize('update', $user);

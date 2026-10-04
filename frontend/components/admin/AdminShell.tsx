@@ -1,9 +1,10 @@
-import React, { ComponentProps } from 'react';
+import React, { ComponentProps, useEffect, useState } from 'react';
 import { Image, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { usePathname, useRouter } from 'expo-router';
 import { colors, radius } from '../../utils/theme';
+import { fetchReports } from '../../services/reports';
 
 const logo = require('../../assets/images/logos/logo_hss_mark.png');
 
@@ -14,7 +15,26 @@ const ADMIN_SECTIONS: { href: string; label: string; icon: IconName }[] = [
   { href: '/admin/sports', label: 'Sporty', icon: 'bicycle-outline' },
   { href: '/admin/photos', label: 'Fotografie', icon: 'images-outline' },
   { href: '/admin/users', label: 'Uživatelé', icon: 'people-outline' },
+  { href: '/admin/reports', label: 'Nahlášení', icon: 'flag-outline' },
 ];
+
+/** Number of reported things waiting for a decision (several reports of one thing count once). */
+function useOpenReports(pathname: string): number {
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    let active = true;
+    fetchReports('open')
+      .then(({ items }) => {
+        const targets = new Set(items.map((r) => `${r.type}:${r.reported_user_id}:${r.visits_photo_id ?? ''}`));
+        if (active) setCount(targets.size);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [pathname]);
+  return count;
+}
 
 const NAV: { href: string; label: string; icon: IconName }[] = [
   { href: '/admin', label: 'Přehled', icon: 'speedometer-outline' },
@@ -28,6 +48,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const wide = width >= 900;
+  const openReports = useOpenReports(pathname);
 
   const isActive = (href: string) => (href === '/admin' ? pathname === '/admin' : pathname.startsWith(href));
 
@@ -43,6 +64,11 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       >
         <Ionicons name={item.icon} size={18} color={active ? (wide ? colors.primary : colors.white) : colors.muted} />
         <Text style={[styles.navText, active && (wide ? styles.sideTextActive : styles.tabTextActive)]}>{item.label}</Text>
+        {item.href === '/admin/reports' && openReports > 0 && (
+          <View style={styles.count}>
+            <Text style={styles.countText}>{openReports}</Text>
+          </View>
+        )}
       </Pressable>
     );
   });
@@ -132,4 +158,6 @@ const styles = StyleSheet.create({
   tabItemActive: { backgroundColor: colors.navy },
   tabTextActive: { color: colors.white },
   navText: { color: colors.muted, fontSize: 14, fontWeight: '800' },
+  count: { minWidth: 20, height: 20, borderRadius: 10, paddingHorizontal: 6, backgroundColor: colors.danger, alignItems: 'center', justifyContent: 'center', marginLeft: 'auto' },
+  countText: { color: colors.white, fontSize: 11, fontWeight: '900' },
 });

@@ -36,6 +36,11 @@ return [
         'web_redirect_url' => env('GOOGLE_WEB_REDIRECT_URL', 'http://localhost:8081/login'),
     ],
 
+    // The web app (links in e-mails to the administration).
+    'frontend' => [
+        'url' => env('FRONTEND_URL', env('APP_URL')),
+    ],
+
     'slack' => [
         'notifications' => [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),

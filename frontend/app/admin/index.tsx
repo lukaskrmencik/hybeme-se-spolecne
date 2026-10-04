@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { AdminPage, adminStyles, Badge, Button, Card, ErrorBlock, LoadingBlock, StatCard } from '../../components/admin/ui';
+import { fetchReports } from '../../services/reports';
+import { Ionicons } from '@expo/vector-icons';
 import { Avatar } from '../../components/Avatar';
 import { AdminPhoto, AdminUser, fetchAllPlaces, fetchAllSports, fetchPhotos, fetchUsers } from '../../services/admin';
 import { formatNumber } from '../../utils/format';
@@ -19,6 +21,7 @@ interface Overview {
   admins: number;
   recentPhotos: AdminPhoto[];
   newestUsers: AdminUser[];
+  openReports: number;
 }
 
 function weekAgo(): string {
@@ -28,13 +31,14 @@ function weekAgo(): string {
 }
 
 async function loadOverview(): Promise<Overview> {
-  const [places, sports, photos, photosWeek, users, admins] = await Promise.all([
+  const [places, sports, photos, photosWeek, users, admins, reports] = await Promise.all([
     fetchAllPlaces(),
     fetchAllSports(),
     fetchPhotos(1, {}, 6),
     fetchPhotos(1, { from: weekAgo() }, 1),
     fetchUsers(1, {}, 5),
     fetchUsers(1, { role: 'admin' }, 1),
+    fetchReports('open'),
   ]);
   return {
     placesActive: places.filter((p) => p.is_active).length,
@@ -47,6 +51,7 @@ async function loadOverview(): Promise<Overview> {
     admins: admins.totalItems,
     recentPhotos: photos.items,
     newestUsers: users.items,
+    openReports: new Set(reports.items.map((r) => `${r.type}:${r.reported_user_id}:${r.visits_photo_id ?? ''}`)).size,
   };
 }
 
@@ -92,6 +97,15 @@ export default function AdminHome() {
         <LoadingBlock />
       ) : (
         <>
+          {data.openReports > 0 && (
+            <Pressable onPress={() => go('/admin/reports')} style={styles.alert} accessibilityRole="link">
+              <Ionicons name="flag" size={20} color={colors.dangerText} />
+              <Text style={styles.alertText}>
+                Čeká na posouzení: {data.openReports}
+              </Text>
+              <Text style={styles.alertLink}>Zobrazit</Text>
+            </Pressable>
+          )}
           <View style={styles.stats}>
             <StatCard
               icon="location-outline"
@@ -173,6 +187,19 @@ export default function AdminHome() {
 
 const styles = StyleSheet.create({
   stats: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  alert: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: colors.dangerBg,
+    borderWidth: 1,
+    borderColor: colors.dangerBorder,
+    borderRadius: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  alertText: { flex: 1, color: colors.dangerText, fontSize: 14, fontWeight: '800' },
+  alertLink: { color: colors.dangerText, fontSize: 14, fontWeight: '900', textDecorationLine: 'underline' },
   columns: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, alignItems: 'flex-start' },
   column: { flexGrow: 1, flexBasis: 340 },
   cardHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },

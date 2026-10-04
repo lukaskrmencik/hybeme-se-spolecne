@@ -34,7 +34,7 @@ export function PlacePhotoStrip({ placeId }: { placeId: number }) {
         <Text style={styles.count}>{count}</Text>
       </View>
       {body}
-      <PhotoViewer photos={photos ?? []} index={openIndex} onClose={() => setOpenIndex(null)} />
+      <PhotoViewer photos={photos ?? []} index={openIndex} onClose={() => setOpenIndex(null)} reportable />
     </View>
   );
 }

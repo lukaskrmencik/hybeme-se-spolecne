@@ -4,6 +4,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { PlacePhoto } from '../types/photo';
 import { formatVisitTime } from '../utils/dates';
+import { ReportDialog } from './ReportDialog';
+import { ReportTarget } from '../services/reports';
 import { colors } from '../utils/theme';
 
 interface PhotoViewerProps {
@@ -11,13 +13,16 @@ interface PhotoViewerProps {
   /** Index of the photo to open, `null` keeps the viewer closed. */
   index: number | null;
   onClose: () => void;
+  /** Shows a button to report the photo to the admins (for photos from other users). */
+  reportable?: boolean;
 }
 
 /** Full-screen gallery, swiping goes to the next photo. */
-export function PhotoViewer({ photos, index, onClose }: PhotoViewerProps) {
+export function PhotoViewer({ photos, index, onClose, reportable }: PhotoViewerProps) {
   const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const [current, setCurrent] = useState(0);
+  const [reportTarget, setReportTarget] = useState<ReportTarget | null>(null);
   const open = index != null && photos.length > 0;
 
   useEffect(() => {
@@ -53,9 +58,21 @@ export function PhotoViewer({ photos, index, onClose }: PhotoViewerProps) {
           <Text style={styles.counter}>
             {Math.min(current + 1, photos.length)} / {photos.length}
           </Text>
+          <View style={styles.topActions}>
+          {reportable && shown && (
+            <TouchableOpacity
+              onPress={() => setReportTarget({ kind: 'photo', photoId: shown.id })}
+              style={styles.close}
+              hitSlop={10}
+              accessibilityLabel="Nahlásit fotku"
+            >
+              <Ionicons name="flag-outline" size={20} color={colors.white} />
+            </TouchableOpacity>
+          )}
           <TouchableOpacity onPress={onClose} style={styles.close} hitSlop={10} accessibilityLabel="Zavřít fotky">
             <Ionicons name="close" size={24} color={colors.white} />
           </TouchableOpacity>
+          </View>
         </View>
 
         {shown && (shown.author || shown.takenAt) && (
@@ -64,6 +81,7 @@ export function PhotoViewer({ photos, index, onClose }: PhotoViewerProps) {
             {!!shown.takenAt && <Text style={styles.date}>{formatVisitTime(shown.takenAt)}</Text>}
           </View>
         )}
+        <ReportDialog target={reportTarget} onClose={() => setReportTarget(null)} />
       </View>
     </Modal>
   );
@@ -82,6 +100,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
   },
+  topActions: { flexDirection: 'row', gap: 10 },
   counter: { color: colors.white, fontSize: 14, fontWeight: '800' },
   close: {
     width: 40,

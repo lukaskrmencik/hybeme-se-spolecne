@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CheatController;
 use App\Http\Controllers\PlaceController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SportController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VisitController;
@@ -30,6 +31,7 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::patch('{user}', [UserController::class, 'update']);
         Route::patch('{user}/role', [UserController::class, 'updateRole']);
         Route::post('{user}/avatar', [UserController::class, 'uploadAvatar']);
+        Route::delete('{user}/avatar', [UserController::class, 'deleteAvatar']);
         Route::delete('{user}', [UserController::class, 'destroy']);
         Route::get('', [UserController::class, 'index']);
     });
@@ -57,6 +59,11 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::post('{visit}/photo', [VisitController::class, 'uploadPhoto']);
         Route::delete('/photo/{visitsPhoto}', [VisitController::class, 'deletePhoto']);
     });
+
+    // Reporting inappropriate content; listing and resolving is for admins.
+    Route::post('reports', [ReportController::class, 'store'])->middleware('throttle:10,1');
+    Route::get('reports', [ReportController::class, 'index']);
+    Route::post('reports/{report}/resolve', [ReportController::class, 'resolve']);
 
     // Admin: every visit photo with filters (deleting is visits/photo/{id}).
     Route::get('photos', [VisitController::class, 'photos']);

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, FlatList, ActivityIndicator, RefreshControl, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useIsFocused } from 'expo-router';
@@ -6,14 +6,18 @@ import { StatusBar } from 'expo-status-bar';
 import { useAuth } from '../../../context/AuthContext';
 import { useLeaderboard, LeaderboardEntry } from '../../../hooks/useLeaderboard';
 import { Avatar } from '../../../components/Avatar';
+import { Ionicons } from '@expo/vector-icons';
 import { colors, radius } from '../../../utils/theme';
 import { formatNumber } from '../../../utils/format';
+import { ReportDialog } from '../../../components/ReportDialog';
+import { ReportTarget } from '../../../services/reports';
 
 export default function LeaderboardScreen() {
     const { entries, currentUser, totalUsers, loading, refreshing, error, refresh } = useLeaderboard();
     const { userId } = useAuth();
     const insets = useSafeAreaInsets();
     const focused = useIsFocused();
+    const [reportTarget, setReportTarget] = useState<ReportTarget | null>(null);
 
     if (loading && entries.length === 0) {
         return (
@@ -36,6 +40,19 @@ export default function LeaderboardScreen() {
                     {isMe ? `${item.name} (ty)` : item.name}
                 </Text>
                 <Text style={styles.points}>{formatNumber(item.total_points)}</Text>
+                {!isMe && (
+                    <TouchableOpacity
+                        onPress={() =>
+                            setReportTarget({ kind: 'user', userId: item.id, name: item.name, hasAvatar: !!item.avatar_url })
+                        }
+                        hitSlop={10}
+                        style={styles.report}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Nahlásit uživatele ${item.name}`}
+                    >
+                        <Ionicons name="flag-outline" size={15} color={colors.inactive} />
+                    </TouchableOpacity>
+                )}
             </View>
         );
     };
@@ -82,6 +99,7 @@ export default function LeaderboardScreen() {
                     </View>
                 }
             />
+            <ReportDialog target={reportTarget} onClose={() => setReportTarget(null)} />
         </View>
     );
 }
@@ -127,6 +145,7 @@ const styles = StyleSheet.create({
     rankFirst: { color: colors.primary },
     name: { flex: 1, fontSize: 15, fontWeight: '800', color: colors.navy },
     points: { fontWeight: '900', fontSize: 16, color: colors.navy },
+    report: { marginLeft: 2, paddingLeft: 4 },
     emptyBox: {
         backgroundColor: colors.surface,
         borderRadius: radius.md,
