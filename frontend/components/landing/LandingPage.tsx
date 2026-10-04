@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import QRCode from 'react-native-qrcode-svg';
 import { useAuth } from '../../context/AuthContext';
 import { PartnerLogos } from '../PartnerLogos';
+import { LandingLeaderboard } from './LandingLeaderboard';
 import Svg, { Path } from 'react-native-svg';
 import { colors, radius, shadows } from '../../utils/theme';
 
@@ -227,6 +228,21 @@ export function LandingPage() {
         </View>
       </View>
 
+      {/* Public leaderboards */}
+      <View style={[styles.inner, styles.section, wide && styles.boardWide]}>
+        <View style={wide && styles.boardText}>
+          <Text style={styles.kicker}>Žebříček</Text>
+          <Text style={styles.sectionTitle}>Kdo se hýbe nejvíc</Text>
+          <Text style={styles.sectionLead}>
+            Za každou návštěvu a kombinaci přibývají body. Vedle celkového pořadí běží každý týden nový žebříček, takže
+            se do čela může dostat kdokoli. Týden začíná vždy v pondělí.
+          </Text>
+        </View>
+        <View style={wide ? styles.boardCard : styles.boardCardNarrow}>
+          <LandingLeaderboard />
+        </View>
+      </View>
+
       {/* Install guide */}
       <View
         style={[styles.inner, styles.section, wide && styles.installWide]}
@@ -388,6 +404,10 @@ const styles = StyleSheet.create({
   featureTitle: { color: colors.navy, fontSize: 17, fontWeight: '900' },
   featureText: { color: colors.muted, fontSize: 14, lineHeight: 20, fontWeight: '600' },
 
+  boardWide: { flexDirection: 'row', alignItems: 'flex-start', gap: 48 },
+  boardText: { flex: 1, paddingTop: 8 },
+  boardCard: { flex: 1.2 },
+  boardCardNarrow: { marginTop: 18 },
   installWide: { flexDirection: 'row', alignItems: 'center', gap: 48 },
   installText: { flex: 1 },
   benefits: { gap: 10, marginTop: 18 },
