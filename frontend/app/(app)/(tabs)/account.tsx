@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, ActivityIndicator, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import { useRouter } from 'expo-router';
 import { useUserStats } from '../../../context/UserStatsContext';
 import { useAuth } from '../../../context/AuthContext';
 import { apiFetch, getErrorMessage } from '../../../services/api';
@@ -30,7 +31,8 @@ async function buildAvatarForm(asset: ImagePicker.ImagePickerAsset): Promise<For
 
 export default function AccountScreen() {
     const { profile, visits, totalPoints, refreshStats, loading } = useUserStats();
-    const { logout } = useAuth();
+    const { logout, isAdmin } = useAuth();
+    const router = useRouter();
 
     const [editing, setEditing] = useState(false);
     const [name, setName] = useState('');
@@ -202,6 +204,13 @@ export default function AccountScreen() {
                     <Text style={styles.liText}>Změnit fotku</Text>
                     <Ionicons name="chevron-forward" size={18} color={colors.inactive} />
                 </TouchableOpacity>
+                {isAdmin && (
+                    <TouchableOpacity style={styles.li} onPress={() => router.push('/admin')}>
+                        <Ionicons name="shield-checkmark-outline" size={20} color={colors.primary} />
+                        <Text style={[styles.liText, styles.liAdmin]}>Administrace</Text>
+                        <Ionicons name="chevron-forward" size={18} color={colors.inactive} />
+                    </TouchableOpacity>
+                )}
                 <TouchableOpacity style={styles.li} onPress={() => void logout()} disabled={deleting}>
                     <Ionicons name="log-out-outline" size={20} color={colors.muted} />
                     <Text style={styles.liText}>Odhlásit se</Text>
@@ -302,6 +311,7 @@ const styles = StyleSheet.create({
         borderWidth: 0,
         outlineWidth: 0,
     },
+    liAdmin: { color: colors.primary, fontWeight: '800' },
     saveLink: { color: colors.primary, fontWeight: '800', fontSize: 14 },
     infoCard: {
         marginTop: 16,

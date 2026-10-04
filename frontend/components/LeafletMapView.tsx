@@ -50,7 +50,7 @@ type MapMessage =
   | { type: 'selected'; id: number | null; focus?: boolean }
   | { type: 'center' };
 
-interface TileSource {
+export interface TileSource {
   /** `{r}` becomes `@2x` on high-density screens, where Mapy.com serves sharper tiles. */
   url: string;
   maxZoom: number;
@@ -59,7 +59,7 @@ interface TileSource {
   mapyLogo: boolean;
 }
 
-function tileSource(): TileSource {
+export function tileSource(): TileSource {
   if (config.mapyApiKey) {
     return {
       url: `https://api.mapy.com/v1/maptiles/${encodeURIComponent(config.mapyMapset)}/256{r}/{z}/{x}/{y}?apikey=${encodeURIComponent(config.mapyApiKey)}`,

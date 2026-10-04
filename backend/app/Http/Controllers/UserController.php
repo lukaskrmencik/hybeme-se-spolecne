@@ -32,7 +32,11 @@ class UserController extends Controller
             $perPage = config('pagination.per_page_default');
         }
 
-        $query = User::query();
+        // Newest first, with a short summary of the activity for the admin list.
+        $query = User::query()
+            ->withCount('visits')
+            ->withSum('visits as total_points', 'reward')
+            ->orderByDesc('id');
 
         if ($request->filled('search')) {
             $searchTerm = $request->input('search');
@@ -41,6 +45,10 @@ class UserController extends Controller
                 $q->where('name', 'ILIKE', '%' . $searchTerm . '%')
                 ->orWhere('email', 'ILIKE', '%' . $searchTerm . '%');
             });
+        }
+
+        if (in_array($request->input('role'), ['user', 'admin'], true)) {
+            $query->where('role', $request->input('role'));
         }
 
         $users = $query->paginate($perPage);

@@ -160,6 +160,53 @@ class VisitController extends Controller
         ]);
     }
 
+    /**
+     * All visit photos for the admin, newest first. Filters: search (author name or e-mail),
+     * user_id, place_id, from / to (upload date, Y-m-d).
+     */
+    public function photos(Request $request)
+    {
+        $this->authorize('viewAny', Visit::class);
+
+        $validated = $request->validate([
+            'search' => 'sometimes|nullable|string|max:255',
+            'user_id' => 'sometimes|nullable|integer',
+            'place_id' => 'sometimes|nullable|integer',
+            'from' => 'sometimes|nullable|date',
+            'to' => 'sometimes|nullable|date',
+        ]);
+
+        $perPage = (int) $request->input('per_page', config('pagination.per_page_default'));
+        if ($perPage < config('pagination.per_page_min') || $perPage > config('pagination.per_page_max')) {
+            $perPage = config('pagination.per_page_default');
+        }
+
+        $query = VisitsPhoto::query()
+            ->with(['visit:id,user_id,place_id,timestamp', 'visit.user:id,name,email', 'visit.place:id,name'])
+            ->orderByDesc('id');
+
+        if (!empty($validated['search'])) {
+            $term = '%' . $validated['search'] . '%';
+            $query->whereHas('visit.user', function ($q) use ($term) {
+                $q->where('name', 'ILIKE', $term)->orWhere('email', 'ILIKE', $term);
+            });
+        }
+        if (!empty($validated['user_id'])) {
+            $query->whereHas('visit', fn ($q) => $q->where('user_id', $validated['user_id']));
+        }
+        if (!empty($validated['place_id'])) {
+            $query->whereHas('visit', fn ($q) => $q->where('place_id', $validated['place_id']));
+        }
+        if (!empty($validated['from'])) {
+            $query->whereDate('created_at', '>=', $validated['from']);
+        }
+        if (!empty($validated['to'])) {
+            $query->whereDate('created_at', '<=', $validated['to']);
+        }
+
+        return response()->pagination($query->paginate($perPage));
+    }
+
     public function uploadPhoto(Request $request, Visit $visit, ImageModerationService $imageModerationService)
     {
         $this->authorize('uploadPhoto', $visit);

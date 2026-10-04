@@ -8,6 +8,7 @@ import { ActivityIndicator, Platform, StyleSheet, View, useWindowDimensions } fr
 import { AuthProvider, useAuth } from '../context/AuthContext';
 import { ToastHost } from '../components/ToastHost';
 import { DESKTOP_MIN_WIDTH } from '../components/landing/LandingPage';
+import { takeAfterLogin } from '../utils/afterLogin';
 import { nunitoFonts } from '../utils/fonts';
 import { colors } from '../utils/theme';
 
@@ -28,7 +29,7 @@ function InitialLayout() {
     if (!token && group === '(app)') {
       router.replace('/login');
     } else if (token && group === '(auth)') {
-      router.replace('/map');
+      router.replace((takeAfterLogin() ?? '/map') as '/map');
     }
   }, [token, isLoading, group, router]);
 
@@ -40,7 +41,10 @@ function InitialLayout() {
     );
   }
 
-  if (isDesktopWeb && pathname !== '/') return <Redirect href="/" />;
+  // The administration works on a computer too, and its admins need to sign in there.
+  const desktopAllowed =
+    pathname === '/' || pathname.startsWith('/admin') || pathname === '/login' || pathname === '/verify-email';
+  if (isDesktopWeb && !desktopAllowed) return <Redirect href="/" />;
 
   return <Slot />;
 }

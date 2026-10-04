@@ -1,0 +1,297 @@
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Linking, StyleSheet, Text, View } from 'react-native';
+import {
+  AdminPage,
+  adminStyles,
+  Badge,
+  Button,
+  Card,
+  EmptyState,
+  ErrorBlock,
+  Field,
+  LoadingBlock,
+  Notice,
+  SearchBox,
+  Segmented,
+  useConfirm,
+} from '../../components/admin/ui';
+import { LatLng, LocationPicker } from '../../components/admin/LocationPicker';
+import { createPlace, describeValidationError, fetchAllPlaces, setPlaceActive } from '../../services/admin';
+import { getErrorMessage } from '../../services/api';
+import { showToast } from '../../utils/alert';
+import { Place } from '../../types/place';
+import { colors } from '../../utils/theme';
+
+type StatusFilter = 'all' | 'active' | 'inactive';
+
+/** "50.2931, 14.8291", "50.2931N, 14.8291E" or "50,2931; 14,8291" -> lat/lng. */
+function parseCoordinates(text: string): LatLng | null {
+  const clean = text.replace(/[°NEne]/g, ' ').trim();
+  const dot = /^(-?\d+(?:\.\d+)?)\s*[,;\s]\s*(-?\d+(?:\.\d+)?)$/.exec(clean);
+  const comma = /^(-?\d+(?:,\d+)?)\s*[;\s]\s*(-?\d+(?:,\d+)?)$/.exec(clean);
+  const m = dot ?? comma;
+  if (!m) return null;
+  const lat = Number(m[1].replace(',', '.'));
+  const lng = Number(m[2].replace(',', '.'));
+  if (!(Math.abs(lat) <= 90 && Math.abs(lng) <= 180)) return null;
+  return { lat, lng };
+}
+
+const formatCoords = (p: LatLng) => `${p.lat.toFixed(5)}, ${p.lng.toFixed(5)}`;
+const placeCoords = (p: Place): LatLng => ({ lat: p.coordinates.coordinates[1], lng: p.coordinates.coordinates[0] });
+
+function NewPlaceForm({ places, onCreated, onCancel }: { places: Place[]; onCreated: () => void; onCancel: () => void }) {
+  const [name, setName] = useState('');
+  const [reward, setReward] = useState('10');
+  const [position, setPosition] = useState<LatLng | null>(null);
+  const [coordsText, setCoordsText] = useState('');
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [serverError, setServerError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  const existing = useMemo(
+    () => places.map((p) => ({ name: p.name, active: p.is_active, ...placeCoords(p) })),
+    [places]
+  );
+
+  const pick = useCallback((value: LatLng) => {
+    setPosition(value);
+    setCoordsText(formatCoords(value));
+    setErrors((e) => ({ ...e, position: '' }));
+  }, []);
+
+  const typeCoords = (text: string) => {
+    setCoordsText(text);
+    const parsed = parseCoordinates(text);
+    if (parsed) {
+      setPosition(parsed);
+      setErrors((e) => ({ ...e, position: '' }));
+    }
+  };
+
+  const save = async () => {
+    const next: Record<string, string> = {};
+    const trimmed = name.trim();
+    const points = Number(reward);
+    if (!trimmed) next.name = 'Napiš název místa.';
+    else if (places.some((p) => p.name.toLowerCase() === trimmed.toLowerCase())) next.name = 'Místo s tímhle názvem už existuje.';
+    if (!Number.isInteger(points) || points < 1) next.reward = 'Zadej celé číslo, aspoň 1.';
+    if (!position) next.position = coordsText ? 'Souřadnicím nerozumím. Zkus třeba 50.2931, 14.8291.' : 'Vyber místo v mapě.';
+    setErrors(next);
+    if (Object.values(next).some(Boolean) || !position) return;
+
+    setSaving(true);
+    setServerError(null);
+    try {
+      await createPlace({ name: trimmed, defaultReward: points, ...position });
+      showToast('Místo přidáno', `${trimmed} se v aplikaci objeví do hodiny.`, 'success');
+      onCreated();
+    } catch (err) {
+      setServerError(describeValidationError(err, { name: 'Název', default_reward: 'Body', coordinates: 'Poloha' }, 'Místo se nepodařilo uložit.'));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Card>
+      <Text style={adminStyles.sectionTitle}>Nové místo</Text>
+      <View style={adminStyles.wrapRow}>
+        <Field
+          label="Název"
+          half
+          value={name}
+          onChangeText={(t) => {
+            setName(t);
+            setErrors((e) => ({ ...e, name: '' }));
+          }}
+          placeholder="Např. Rozhledna Bezděčín"
+          error={errors.name}
+          help="Takhle ho uvidí lidé v aplikaci."
+          maxLength={255}
+        />
+        <Field
+          label="Body za návštěvu"
+          half
+          value={reward}
+          onChangeText={(t) => {
+            setReward(t.replace(/\D/g, ''));
+            setErrors((e) => ({ ...e, reward: '' }));
+          }}
+          keyboardType="number-pad"
+          suffix="b."
+          error={errors.reward}
+          help="Kolik bodů dostane člověk za samostatnou návštěvu. Obvykle 10–50."
+        />
+      </View>
+
+      <Text style={styles.label}>Poloha</Text>
+      <LocationPicker value={position} onChange={pick} existing={existing} />
+      <Field
+        label="Souřadnice"
+        value={coordsText}
+        onChangeText={typeCoords}
+        placeholder="50.2931, 14.8291"
+        error={errors.position}
+        help="Doplní se samy po kliknutí do mapy. Můžeš sem i vložit souřadnice zkopírované z Mapy.com. Tečky na mapě jsou místa, která už existují."
+        autoCapitalize="none"
+      />
+
+      {!!serverError && <Notice tone="danger" text={serverError} />}
+
+      <View style={styles.formActions}>
+        <Button label="Zrušit" variant="secondary" onPress={onCancel} disabled={saving} />
+        <Button label="Uložit místo" icon="checkmark" onPress={() => void save()} loading={saving} />
+      </View>
+    </Card>
+  );
+}
+
+export default function AdminPlaces() {
+  const [places, setPlaces] = useState<Place[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [adding, setAdding] = useState(false);
+  const [search, setSearch] = useState('');
+  const [status, setStatus] = useState<StatusFilter>('all');
+  const [busyId, setBusyId] = useState<number | null>(null);
+  const [dialog, confirm] = useConfirm();
+
+  const load = useCallback(async () => {
+    setError(null);
+    try {
+      setPlaces(await fetchAllPlaces());
+    } catch (err) {
+      setError(getErrorMessage(err, 'Místa se nepodařilo načíst.'));
+    }
+  }, []);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  const shown = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return (places ?? []).filter(
+      (p) =>
+        (status === 'all' || (status === 'active') === p.is_active) && (!q || p.name.toLowerCase().includes(q))
+    );
+  }, [places, search, status]);
+
+  const activeCount = places?.filter((p) => p.is_active).length ?? 0;
+
+  const toggle = async (place: Place) => {
+    const turnOff = place.is_active;
+    const ok = await confirm(
+      turnOff
+        ? {
+            title: `Vypnout místo „${place.name}“?`,
+            message:
+              'Místo zmizí z mapy a nepůjde navštívit. Body, které za něj už lidé dostali, jim zůstanou. Kdykoli ho můžeš zase zapnout.',
+            confirmLabel: 'Vypnout',
+            danger: true,
+          }
+        : {
+            title: `Zapnout místo „${place.name}“?`,
+            message: 'Místo se znovu objeví na mapě a půjde navštívit.',
+            confirmLabel: 'Zapnout',
+          }
+    );
+    if (!ok) return;
+    setBusyId(place.id);
+    try {
+      await setPlaceActive(place.id, !turnOff);
+      setPlaces((list) => list?.map((p) => (p.id === place.id ? { ...p, is_active: !turnOff } : p)) ?? list);
+      showToast(turnOff ? 'Místo vypnuto' : 'Místo zapnuto', place.name, 'success');
+    } catch (err) {
+      showToast('Nepovedlo se', getErrorMessage(err, 'Zkus to prosím znovu.'), 'danger');
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  return (
+    <AdminPage
+      title="Místa"
+      description={
+        places ? `${activeCount} aktivních z ${places.length}. Vypnuté místo není vidět na mapě, ale historie návštěv zůstává.` : undefined
+      }
+      actions={!adding && <Button label="Přidat místo" icon="add" onPress={() => setAdding(true)} />}
+    >
+      {dialog}
+      {adding && places && (
+        <NewPlaceForm
+          places={places}
+          onCancel={() => setAdding(false)}
+          onCreated={() => {
+            setAdding(false);
+            void load();
+          }}
+        />
+      )}
+
+      <View style={adminStyles.wrapRow}>
+        <SearchBox value={search} onChange={setSearch} placeholder="Hledat místo podle názvu" />
+        <Segmented<StatusFilter>
+          value={status}
+          onChange={setStatus}
+          options={[
+            { value: 'all', label: 'Všechna' },
+            { value: 'active', label: 'Aktivní' },
+            { value: 'inactive', label: 'Vypnutá' },
+          ]}
+        />
+      </View>
+
+      {error ? (
+        <ErrorBlock message={error} onRetry={() => void load()} />
+      ) : !places ? (
+        <LoadingBlock />
+      ) : shown.length === 0 ? (
+        <EmptyState icon="location-outline" title="Žádné místo neodpovídá" text="Zkus upravit hledání nebo filtr." />
+      ) : (
+        <Card style={styles.list}>
+          {shown.map((p, i) => {
+            const c = placeCoords(p);
+            return (
+              <View key={p.id} style={[styles.item, i > 0 && styles.itemBorder]}>
+                <View style={styles.itemText}>
+                  <View style={adminStyles.wrapRow}>
+                    <Text style={adminStyles.strong}>{p.name}</Text>
+                    {p.is_active ? <Badge label="Aktivní" tone="green" /> : <Badge label="Vypnuté" tone="grey" />}
+                  </View>
+                  <View style={adminStyles.wrapRow}>
+                    <Text style={adminStyles.muted}>{p.default_reward} b. za návštěvu</Text>
+                    <Text
+                      style={styles.link}
+                      onPress={() => void Linking.openURL(`https://mapy.com/?q=${c.lat},${c.lng}&z=17`)}
+                    >
+                      Ukázat na mapě
+                    </Text>
+                  </View>
+                </View>
+                <Button
+                  small
+                  label={p.is_active ? 'Vypnout' : 'Zapnout'}
+                  icon={p.is_active ? 'eye-off-outline' : 'eye-outline'}
+                  variant="secondary"
+                  loading={busyId === p.id}
+                  onPress={() => void toggle(p)}
+                />
+              </View>
+            );
+          })}
+        </Card>
+      )}
+    </AdminPage>
+  );
+}
+
+const styles = StyleSheet.create({
+  label: { color: colors.navy, fontSize: 13, fontWeight: '800', marginBottom: -4 },
+  formActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 8, flexWrap: 'wrap' },
+  list: { paddingVertical: 4, gap: 0 },
+  item: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12 },
+  itemBorder: { borderTopWidth: 1, borderTopColor: colors.border },
+  itemText: { flex: 1, gap: 4 },
+  link: { color: colors.skyText, fontSize: 13, fontWeight: '800' },
+});

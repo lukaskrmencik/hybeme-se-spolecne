@@ -30,6 +30,7 @@ export function getVerificationRequired(err: unknown): VerificationRequired | nu
 interface AuthContextType {
   token: string | null;
   userId: number | null;
+  isAdmin: boolean;
   isLoading: boolean;
   login: (credentials: LoginCredentials) => Promise<void>;
   /** Creates the account and sends a verification code; signing in follows after verifyEmail. */
@@ -59,6 +60,16 @@ function takeGoogleRedirectToken(): string | null {
   if (!token) return null;
   window.history.replaceState(null, '', window.location.pathname + window.location.search);
   return token;
+}
+
+/** The role is in the token claims; the backend checks it again on every admin request. */
+function isAdminToken(token: string | null): boolean {
+  if (!token) return false;
+  try {
+    return jwtDecode<{ user_role?: string }>(token).user_role === 'admin';
+  } catch {
+    return false;
+  }
 }
 
 function userIdFromToken(token: string | null): number | null {
@@ -151,6 +162,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     () => ({
       token,
       userId: userIdFromToken(token),
+      isAdmin: isAdminToken(token),
       isLoading,
       login,
       register,

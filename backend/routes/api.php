@@ -57,6 +57,9 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::delete('/photo/{visitsPhoto}', [VisitController::class, 'deletePhoto']);
     });
 
+    // Admin: every visit photo with filters (deleting is visits/photo/{id}).
+    Route::get('photos', [VisitController::class, 'photos']);
+
     Route::group(['prefix' => 'cheats'], function () {
         Route::get('', [CheatController::class, 'index']);
         Route::get('{cheat}', [CheatController::class, 'show']);
