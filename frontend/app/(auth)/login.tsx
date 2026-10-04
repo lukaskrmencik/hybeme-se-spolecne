@@ -1,76 +1,96 @@
-import { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import { useRef, useState } from 'react';
+import { TextInput } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useAuth } from '../../context/AuthContext';
+import { getVerificationRequired, useAuth } from '../../context/AuthContext';
+import { getErrorMessage } from '../../services/api';
+import { AuthLayout } from '../../components/auth/AuthLayout';
+import { FormField } from '../../components/auth/FormField';
 
 export default function LoginScreen() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [errorMsg, setErrorMsg] = useState('');
-  const [loading, setLoading] = useState(false);
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [errorMsg, setErrorMsg] = useState<string | null>(null);
+    const [loading, setLoading] = useState(false);
+    const passwordRef = useRef<TextInput>(null);
 
-  const { login } = useAuth();
-  const router = useRouter();
+    const { login, loginWithGoogle } = useAuth();
+    const router = useRouter();
 
-  const handleLogin = async () => {
-    setErrorMsg('');
-    setLoading(true);
+    const handleLogin = async () => {
+        if (loading) return;
+        if (!email.trim() || !password) {
+            setErrorMsg('Vyplň e-mail i heslo.');
+            return;
+        }
+        setErrorMsg(null);
+        setLoading(true);
+        try {
+            await login({ email, password });
+        } catch (err) {
+            setLoading(false);
+            const verification = getVerificationRequired(err);
+            if (verification) {
+                router.push({
+                    pathname: '/verify-email',
+                    params: { email: verification.email, resendIn: String(verification.resendIn) },
+                });
+                return;
+            }
+            setErrorMsg(getErrorMessage(err, 'Přihlášení se nezdařilo.'));
+        }
+    };
 
-    try {
-      await login({ email, password });
-    } catch (err: any) {
-      setErrorMsg(err.error_message || 'Přihlášení se nezdařilo.');
-    } finally {
-      setLoading(false);
-    }
-  };
+    const handleGoogle = async (idToken: string) => {
+        setErrorMsg(null);
+        setLoading(true);
+        try {
+            // The root layout moves to the map once the token is stored.
+            await loginWithGoogle(idToken);
+        } catch (err) {
+            setErrorMsg(getErrorMessage(err, 'Přihlášení přes Google se nezdařilo.'));
+            setLoading(false);
+        }
+    };
 
-  return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Hýbeme se společně</Text>
-      <Text style={styles.subtitle}>Přihlas se do své aplikace</Text>
-
-      {!!errorMsg && <Text style={styles.errorText}>{errorMsg}</Text>}
-
-      <TextInput
-        style={styles.input}
-        placeholder="E-mail"
-        value={email}
-        onChangeText={setEmail}
-        autoCapitalize="none"
-        keyboardType="email-address"
-      />
-
-      <TextInput
-        style={styles.input}
-        placeholder="Heslo"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-      />
-
-      <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
-        {loading ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.buttonText}>Přihlásit se</Text>
-        )}
-      </TouchableOpacity>
-
-      <TouchableOpacity onPress={() => router.push('/register')}>
-        <Text style={styles.linkText}>Nemáš účet? Zaregistruj se</Text>
-      </TouchableOpacity>
-    </View>
-  );
+    return (
+        <AuthLayout
+            title="Hýbeme se společně"
+            subtitle="Objevuj Benátecko pěšky i na kole"
+            error={errorMsg}
+            submitLabel="Přihlásit se"
+            loading={loading}
+            onSubmit={handleLogin}
+            footerPrompt="Nemáš účet?"
+            footerAction="Zaregistruj se"
+            onGoogleIdToken={handleGoogle}
+            onGoogleError={setErrorMsg}
+            onFooterPress={() => router.push('/register')}
+        >
+            <FormField
+                label="E-mail"
+                placeholder="E-mail"
+                value={email}
+                onChangeText={setEmail}
+                autoCapitalize="none"
+                autoComplete="email"
+                keyboardType="email-address"
+                textContentType="emailAddress"
+                returnKeyType="next"
+                onSubmitEditing={() => passwordRef.current?.focus()}
+                submitBehavior="submit"
+            />
+            <FormField
+                ref={passwordRef}
+                label="Heslo"
+                placeholder="Heslo"
+                value={password}
+                onChangeText={setPassword}
+                password
+                autoComplete="current-password"
+                textContentType="password"
+                returnKeyType="go"
+                onSubmitEditing={handleLogin}
+            />
+        </AuthLayout>
+    );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', padding: 20, backgroundColor: '#fff' },
-  title: { fontSize: 28, fontWeight: 'bold', textAlign: 'center', color: '#4a90e2', marginBottom: 5 },
-  subtitle: { fontSize: 16, textAlign: 'center', color: '#666', marginBottom: 30 },
-  errorText: { color: 'red', textAlign: 'center', marginBottom: 15 },
-  input: { height: 50, borderWidth: 1, borderColor: '#ddd', borderRadius: 8, paddingHorizontal: 15, marginBottom: 15, fontSize: 16 },
-  button: { height: 50, backgroundColor: '#4a90e2', borderRadius: 8, justifyContent: 'center', alignItems: 'center', marginTop: 10, marginBottom: 20 },
-  buttonText: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
-  linkText: { color: '#4a90e2', textAlign: 'center', fontSize: 14 }
-});

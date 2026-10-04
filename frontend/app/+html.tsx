@@ -7,7 +7,7 @@ import type { ReactNode } from 'react';
 // do not have access to the DOM or browser APIs.
 export default function Root({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="cs">
       <head>
         <meta charSet="utf-8" />
         <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
@@ -18,8 +18,6 @@ export default function Root({ children }: { children: ReactNode }) {
           However, body scrolling is often nice to have for mobile web. If you want to enable it, remove this line.
         */}
         <ScrollViewStyleReset />
-
-        {/* Using raw CSS styles as an escape-hatch to ensure the background color never flickers in dark-mode. */}
         <style dangerouslySetInnerHTML={{ __html: responsiveBackground }} />
         {/* Add any additional <head> elements that you want globally available on web... */}
       </head>
@@ -30,10 +28,24 @@ export default function Root({ children }: { children: ReactNode }) {
 
 const responsiveBackground = `
 body {
-  background-color: #fff;
+  background-color: #F5F7F2;
+  font-family: Nunito, sans-serif;
 }
-@media (prefers-color-scheme: dark) {
-  body {
-    background-color: #000;
-  }
+input, textarea, button {
+  font-family: inherit;
+}
+*:focus, *:focus-visible, input:focus, textarea:focus {
+  outline: none !important;
+  -webkit-tap-highlight-color: transparent;
+}
+input, textarea {
+  box-shadow: none !important;
+  -webkit-appearance: none;
+  appearance: none;
+  background-color: transparent;
+}
+input:-webkit-autofill, input:-webkit-autofill:focus, textarea:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 100px #F5F7F2 inset !important;
+  -webkit-text-fill-color: #133F63 !important;
+  caret-color: #133F63;
 }`;

@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\Visit;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 
 class CheatController extends Controller
@@ -93,39 +94,35 @@ class CheatController extends Controller
 
         if ($cheat->is_denied !== true) {
 
-            $visit = $cheat->visit;
-            $user = $visit->user;
-            $visitCombinations = $user->visitsCombinations();
-            $visit->update(['is_combination' => true]);
+            DB::transaction(function () use ($cheat) {
+                $visit = $cheat->visit;
+                $user = $visit->user;
+                $visit->update(['is_combination' => true]);
 
-            $afterCheatVisit = false;
+                $visitCombinations = $user->load('visits')->visitsCombinations();
+                $startIndex = $visitCombinations->search(fn ($v) => $v->id === $visit->id);
 
-            for($i = 0; $i < count($visitCombinations); $i++) {
-                $visitCombination = $visitCombinations[$i];
-                $actualVisit = Visit::findOrFail($visitCombination->id);
+                for ($i = max((int) $startIndex, 1); $startIndex !== false && $i < count($visitCombinations); $i++) {
+                    $actualVisit = $visitCombinations[$i];
 
-                if($visitCombination->id === $visit->id) {
-                    $afterCheatVisit = true;
-                }
-
-                if($afterCheatVisit) {
-
-                    if($actualVisit->is_combination === false) {
+                    if ($actualVisit->is_combination !== true) {
                         break;
-                    }else{
-                        $placeId = $actualVisit->place_id;
-                        $sportId = $actualVisit->sport_id;
-                        $defaultReward = $actualVisit->place->default_reward;
-                        $lastVisit = $visitCombinations[$i-1];
-
-                        $reward = calc_combination_reward($user, $sportId, $placeId, $defaultReward, $lastVisit);
-
-                        $actualVisit->update(['reward' => $reward]);
                     }
-                }
-            }
 
-            $cheat->update(['is_denied' => true]);
+                    $reward = calc_combination_reward(
+                        $user,
+                        $actualVisit->sport_id,
+                        $actualVisit->place_id,
+                        $actualVisit->place->default_reward,
+                        $visitCombinations[$i - 1]
+                    );
+
+                    // combination_order is a computed attribute, so save via query instead of the model.
+                    Visit::whereKey($actualVisit->id)->update(['reward' => $reward]);
+                }
+
+                $cheat->update(['is_denied' => true]);
+            });
 
         }else{
             return response()->error('Podvod již byl zamítnut', 400);

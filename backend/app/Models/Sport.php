@@ -38,6 +38,8 @@ class Sport extends Model
             'id' => 'integer',
             'average_speed' => 'float',
             'max_speed' => 'float',
+            'min_speed' => 'float',
+            'is_active' => 'boolean',
             'comb_mult_1' => 'float',
             'comb_mult_2' => 'float',
             'comb_mult_3' => 'float',

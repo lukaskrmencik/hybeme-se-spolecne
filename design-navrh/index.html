@@ -1,0 +1,412 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8" />
+<title>Hýbeme se společně – návrh designu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800;900&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script type="module" src="https://unpkg.com/ionicons@7.4.0/dist/ionicons/ionicons.esm.js"></script>
+<style>
+  :root {
+    --navy: #133F63;
+    --navy-700: #0E3050;
+    --navy-50: #EAF0F6;
+    --green: #8BB53C;
+    --green-600: #6E9A24;
+    --green-800: #52831A;
+    --green-50: #F1F7E6;
+    --sky: #7AB6E3;
+    --sky-50: #EAF4FB;
+    --bg: #F5F7F2;
+    --surface: #FFFFFF;
+    --line: #E2E7DC;
+    --text: #133F63;
+    --muted: #5F7385;
+    --faint: #9AA9B5;
+    --danger: #C2412D;
+    --danger-50: #FBEDEA;
+    --warn: #B7791F;
+    --warn-50: #FDF4E3;
+    --r-sm: 10px; --r-md: 14px; --r-lg: 20px;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'Nunito', system-ui, sans-serif; color: var(--text); background: #ECEFE8; }
+  .page { max-width: 1680px; margin: 0 auto; padding: 48px 56px 64px; }
+  h1 { font-size: 40px; font-weight: 900; margin: 0; letter-spacing: -0.5px; }
+  h2 { font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.2px; color: var(--muted); margin: 0 0 16px; }
+  .lead { color: var(--muted); font-size: 18px; max-width: 760px; margin: 10px 0 0; line-height: 1.5; }
+  .top { display: flex; align-items: center; gap: 24px; margin-bottom: 40px; }
+  .top img { width: 96px; height: 96px; }
+  .grid { display: grid; grid-template-columns: 1.1fr 1fr 1fr; gap: 24px; margin-bottom: 40px; }
+  .panel { background: var(--surface); border-radius: var(--r-lg); padding: 24px; border: 1px solid var(--line); }
+  .swatches { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .sw { border-radius: var(--r-md); overflow: hidden; border: 1px solid var(--line); }
+  .sw .c { height: 64px; }
+  .sw .l { padding: 8px 10px; font-size: 12px; line-height: 1.35; }
+  .sw .l b { display: block; font-size: 13px; }
+  .note { font-size: 14px; color: var(--muted); line-height: 1.5; margin: 14px 0 0; }
+  .type .t1 { font-size: 30px; font-weight: 900; letter-spacing: -0.3px; }
+  .type .t2 { font-size: 20px; font-weight: 800; margin-top: 6px; }
+  .type .t3 { font-size: 15px; font-weight: 600; color: var(--muted); margin-top: 6px; line-height: 1.45; }
+  .type .t4 { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-top: 10px; }
+  .type .num { font-size: 34px; font-weight: 900; font-variant-numeric: tabular-nums; color: var(--green-800); margin-top: 8px; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+
+  /* Komponenty */
+  .btn { border: 0; font-family: inherit; font-weight: 800; font-size: 16px; border-radius: var(--r-md); padding: 14px 20px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; }
+  .btn ion-icon { font-size: 20px; }
+  .btn-primary { background: var(--green-800); color: #fff; }
+  .btn-dark { background: var(--navy); color: #fff; }
+  .btn-ghost { background: transparent; color: var(--navy); border: 1.5px solid var(--line); }
+  .btn-danger { background: var(--danger-50); color: var(--danger); }
+  .btn-block { width: 100%; }
+  .chip { padding: 8px 14px; border-radius: 999px; font-weight: 700; font-size: 14px; border: 1.5px solid var(--line); background: #fff; color: var(--navy); }
+  .chip.on { background: var(--navy); color: #fff; border-color: var(--navy); }
+  .tag { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 999px; font-weight: 800; font-size: 12px; }
+  .tag ion-icon { font-size: 14px; }
+  .tag-green { background: var(--green-50); color: var(--green-800); }
+  .tag-sky { background: var(--sky-50); color: #2B6A99; }
+  .tag-warn { background: var(--warn-50); color: var(--warn); }
+  .tag-navy { background: var(--navy-50); color: var(--navy); }
+  .pins { display: flex; gap: 22px; align-items: flex-end; margin-top: 6px; }
+  .pinbox { text-align: center; font-size: 12px; color: var(--muted); font-weight: 700; }
+  .pinbox svg { display: block; margin: 0 auto 6px; }
+  .icons { display: flex; gap: 18px; font-size: 26px; color: var(--navy); margin-top: 4px; }
+
+  /* Telefony */
+  .phones { display: grid; grid-template-columns: repeat(4, 1fr); gap: 28px; }
+  .phone-wrap h3 { font-size: 15px; font-weight: 800; margin: 0 0 12px; color: var(--muted); }
+  .phone { width: 100%; max-width: 372px; height: 780px; background: var(--bg); border-radius: 38px; border: 10px solid #1B2630; overflow: hidden; position: relative; display: flex; flex-direction: column; }
+  .status { height: 30px; display: flex; justify-content: space-between; align-items: center; padding: 0 22px; font-size: 13px; font-weight: 800; color: var(--navy); background: var(--surface); flex-shrink: 0; }
+  .status.clear { background: transparent; }
+  .appbar { background: var(--surface); padding: 8px 16px 12px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--line); flex-shrink: 0; }
+  .appbar .brand { display: flex; align-items: center; gap: 9px; font-weight: 900; font-size: 18px; }
+  .appbar .brand img { width: 32px; height: 32px; border-radius: 8px; }
+  .points { display: inline-flex; align-items: center; gap: 6px; background: var(--green-50); color: var(--green-800); font-weight: 900; padding: 6px 12px; border-radius: 999px; font-size: 14px; font-variant-numeric: tabular-nums; }
+  .points i { width: 8px; height: 8px; border-radius: 50%; background: var(--green); display: inline-block; }
+  .tabbar { margin-top: auto; background: var(--surface); border-top: 1px solid var(--line); display: flex; padding: 8px 6px 14px; flex-shrink: 0; }
+  .tab { flex: 1; text-align: center; font-size: 11px; font-weight: 800; color: var(--faint); }
+  .tab ion-icon { font-size: 23px; display: block; margin: 0 auto 3px; }
+  .tab.on { color: var(--navy); }
+  .tab.on .dot { width: 18px; height: 3px; border-radius: 2px; background: var(--green); margin: 4px auto 0; }
+  .content { flex: 1; overflow: hidden; position: relative; }
+
+  /* Login */
+  .auth { flex: 1; display: flex; flex-direction: column; padding: 0 24px 18px; background: var(--surface); position: relative; overflow: hidden; }
+  .auth .hero { text-align: center; padding-top: 20px; position: relative; }
+  .auth .hero img { width: 150px; height: 150px; }
+  .auth .hero .name { font-size: 26px; font-weight: 900; margin-top: 4px; letter-spacing: -0.3px; }
+  .auth .hero .sub { color: var(--muted); font-weight: 600; font-size: 15px; margin-top: 4px; }
+  .field { margin-top: 14px; }
+  .field label { font-size: 13px; font-weight: 800; color: var(--navy); display: block; margin-bottom: 6px; }
+  .input { height: 50px; border-radius: var(--r-md); border: 1.5px solid var(--line); background: var(--bg); padding: 0 14px; display: flex; align-items: center; color: var(--faint); font-weight: 600; font-size: 15px; }
+  .input.focus { border-color: var(--navy); background: #fff; color: var(--navy); }
+  .link { text-align: center; margin-top: 14px; font-weight: 700; color: var(--muted); font-size: 14px; }
+  .link b { color: var(--green-800); }
+  .partners { margin-top: auto; padding-top: 14px; border-top: 1px solid var(--line); display: flex; justify-content: center; }
+  .partners.in-card { margin-top: 0; padding-top: 4px; border-top: 0; }
+  .partner { width: 140px; display: flex; flex-direction: column; align-items: center; }
+  .partner + .partner { border-left: 1px solid var(--line); }
+  .partner small { display: block; font-size: 10px; font-weight: 800; letter-spacing: 0.8px; text-transform: uppercase; color: var(--faint); margin-bottom: 4px; }
+  .partner .box { height: 60px; display: flex; align-items: center; justify-content: center; }
+  .partner img.school { height: 56px; }
+  .partner .sko { height: 16px; }
+  .path-deco { position: absolute; left: -10px; right: -10px; top: 155px; height: 70px; pointer-events: none; }
+
+  /* Mapa */
+  #map { position: absolute; inset: 0; }
+  .map-search { position: absolute; top: 12px; left: 12px; right: 12px; z-index: 500; display: flex; gap: 8px; }
+  .map-search .box { flex: 1; background: #fff; border-radius: var(--r-md); height: 44px; display: flex; align-items: center; gap: 8px; padding: 0 14px; color: var(--faint); font-weight: 700; font-size: 14px; box-shadow: 0 2px 10px rgba(19,63,99,.12); }
+  .map-search .loc { width: 44px; height: 44px; border-radius: var(--r-md); background: #fff; display: grid; place-items: center; color: var(--navy); font-size: 21px; box-shadow: 0 2px 10px rgba(19,63,99,.12); }
+  .sheet { position: absolute; left: 0; right: 0; bottom: 0; z-index: 600; background: #fff; border-radius: 24px 24px 0 0; padding: 10px 18px 16px; box-shadow: 0 -6px 24px rgba(19,63,99,.14); }
+  .grab { width: 40px; height: 4px; border-radius: 2px; background: var(--line); margin: 0 auto 12px; }
+  .sheet .title { font-size: 20px; font-weight: 900; }
+  .sheet .meta { display: flex; gap: 6px; margin: 8px 0 14px; flex-wrap: wrap; }
+  .sheet .lbl { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .8px; color: var(--muted); margin-bottom: 8px; }
+  .reward { display: flex; justify-content: space-between; align-items: center; background: var(--bg); border-radius: var(--r-md); padding: 12px 14px; margin: 14px 0 12px; }
+  .reward .v { font-size: 24px; font-weight: 900; color: var(--green-800); font-variant-numeric: tabular-nums; }
+  .reward .k { font-size: 13px; font-weight: 700; color: var(--muted); }
+
+  /* Žebříček */
+  .lb-head { background: var(--navy); color: #fff; padding: 18px 18px 22px; position: relative; overflow: hidden; }
+  .lb-head .me { display: flex; align-items: center; gap: 12px; }
+  .lb-head .rank { font-size: 38px; font-weight: 900; line-height: 1; }
+  .lb-head .rank small { font-size: 15px; font-weight: 800; opacity: .7; }
+  .lb-head .who { font-weight: 700; opacity: .8; font-size: 14px; }
+  .lb-head .pts { margin-left: auto; text-align: right; }
+  .lb-head .pts b { font-size: 24px; font-weight: 900; color: var(--green); display: block; font-variant-numeric: tabular-nums; }
+  .lb-head .pts span { font-size: 12px; opacity: .7; font-weight: 700; }
+  .lb-arc { position: absolute; right: -40px; top: -60px; width: 200px; height: 200px; border: 6px solid rgba(139,181,60,.35); border-radius: 50%; }
+  .lb-list { padding: 12px 14px; }
+  .lb-row { display: flex; align-items: center; gap: 12px; background: #fff; border-radius: var(--r-md); padding: 10px 12px; margin-bottom: 8px; border: 1px solid var(--line); }
+  .lb-row .n { width: 26px; text-align: center; font-weight: 900; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .lb-row.top1 .n { color: var(--green-800); }
+  .lb-row.me { border-color: var(--green); background: var(--green-50); }
+  .av { width: 38px; height: 38px; border-radius: 50%; background: var(--sky-50); color: #2B6A99; display: grid; place-items: center; font-weight: 900; font-size: 15px; flex-shrink: 0; }
+  .lb-row .nm { font-weight: 800; flex: 1; font-size: 15px; }
+  .lb-row .p { font-weight: 900; font-variant-numeric: tabular-nums; }
+  .sponsor-strip { margin: 4px 14px 0; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 12px; font-weight: 700; color: var(--faint); }
+  .sponsor-strip .sko { height: 12px; }
+
+  /* Účet */
+  .acc { padding: 16px 14px; }
+  .profile { background: #fff; border-radius: var(--r-lg); border: 1px solid var(--line); padding: 18px; display: flex; gap: 14px; align-items: center; }
+  .profile .av { width: 60px; height: 60px; font-size: 22px; }
+  .profile .nm { font-size: 19px; font-weight: 900; }
+  .profile .em { font-size: 13px; color: var(--muted); font-weight: 600; }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 10px 0 16px; }
+  .stat { background: #fff; border: 1px solid var(--line); border-radius: var(--r-md); padding: 12px 10px; }
+  .stat b { display: block; font-size: 21px; font-weight: 900; font-variant-numeric: tabular-nums; }
+  .stat span { font-size: 12px; font-weight: 700; color: var(--muted); }
+  .list { background: #fff; border-radius: var(--r-lg); border: 1px solid var(--line); overflow: hidden; }
+  .li { display: flex; align-items: center; gap: 12px; padding: 14px 16px; font-weight: 700; font-size: 15px; border-bottom: 1px solid var(--line); }
+  .li:last-child { border-bottom: 0; }
+  .li ion-icon { font-size: 20px; color: var(--muted); }
+  .li .chev { margin-left: auto; color: var(--faint); }
+  .li.danger { color: var(--danger); }
+  .li.danger ion-icon { color: var(--danger); }
+  .about { margin-top: 16px; background: #fff; border-radius: var(--r-lg); border: 1px solid var(--line); padding: 16px; }
+  .about p { margin: 0 0 12px; font-size: 13px; color: var(--muted); font-weight: 600; line-height: 1.45; }
+
+  @media (max-width: 1500px) {
+    .page { padding: 32px 24px; }
+    .grid { grid-template-columns: 1fr 1fr; }
+    .grid .panel:last-child { grid-column: span 2; }
+    .principles { grid-template-columns: 1fr 1fr !important; }
+    .phones { grid-template-columns: repeat(2, 372px) !important; justify-content: center; }
+  }
+  .principles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 40px; }
+  .pr { background: #fff; border: 1px solid var(--line); border-radius: var(--r-lg); padding: 18px 20px; }
+  .pr b { display: block; font-size: 16px; font-weight: 900; margin-bottom: 6px; }
+  .pr span { font-size: 14px; color: var(--muted); line-height: 1.5; font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="top">
+    <img src="../frontend/assets/images/logos/logo_hss_mark.png" alt="Logo" />
+    <div>
+      <h1>Hýbeme se společně – designový jazyk</h1>
+      <p class="lead">Barvy, tvary i motivy jsou převzaté přímo z loga: zelený oblouk a špendlík, tmavě modrá postava a cesta, světle modrá silueta města. Vzhled je klidný a čistý, ikon je málo a jen tam, kde pomáhají.</p>
+    </div>
+  </div>
+
+  <div class="principles">
+    <div class="pr"><b>Barvy z loga</b><span>Tmavě modrá je hlavní barva textu a navigace, zelená patří akcím a bodům, světle modrá kombinacím a informacím.</span></div>
+    <div class="pr"><b>Zaoblené, ale střídmé</b><span>Rohy 10–20 px jako dlaždice loga. Plné plochy bez přechodů, skla a třpytek, jen jemné stíny.</span></div>
+    <div class="pr"><b>Ikony s mírou</b><span>Jedna sada obrysových ikon (Ionicons). Ikony jen v navigaci, hlavních tlačítkách a stavech. Seznamy jsou bez ikon.</span></div>
+    <div class="pr"><b>Motiv cesty</b><span>Vlnitá cesta a oblouk z loga se objeví jen dvakrát: na přihlášení a v hlavičce žebříčku. Nikde jinde, aby nezevšedněly.</span></div>
+  </div>
+
+  <div class="grid">
+    <div class="panel">
+      <h2>Paleta</h2>
+      <div class="swatches">
+        <div class="sw"><div class="c" style="background:#133F63"></div><div class="l"><b>Půlnoc</b>#133F63 · text, navigace</div></div>
+        <div class="sw"><div class="c" style="background:#8BB53C"></div><div class="l"><b>Louka</b>#8BB53C · akce, body</div></div>
+        <div class="sw"><div class="c" style="background:#7AB6E3"></div><div class="l"><b>Obloha</b>#7AB6E3 · kombinace</div></div>
+        <div class="sw"><div class="c" style="background:#52831A"></div><div class="l"><b>Les</b>#52831A · tlačítka, zelený text</div></div>
+        <div class="sw"><div class="c" style="background:#F5F7F2"></div><div class="l"><b>Pozadí</b>#F5F7F2 · lehce teplé</div></div>
+        <div class="sw"><div class="c" style="background:#C2412D"></div><div class="l"><b>Chyba</b>#C2412D · mazání</div></div>
+      </div>
+      <p class="note">Světlá zelená z loga je na akcenty (body, aktivní záložka, špendlíky). Tlačítka a zelený text jsou v tmavším odstínu Les, aby byl bílý text dobře čitelný.</p>
+    </div>
+
+    <div class="panel type">
+      <h2>Písmo – Nunito</h2>
+      <div class="t1">Hýbeme se společně</div>
+      <div class="t2">Loděnice Benátky nad Jizerou</div>
+      <div class="t3">Zaoblené tvary písma ladí s logem a dobře se čte i s českou diakritikou. Jedno písmo pro všechno, rozlišené jen tloušťkou.</div>
+      <div class="t4">Nadpis sekce</div>
+      <div class="num">1 245 b.</div>
+    </div>
+
+    <div class="panel">
+      <h2>Prvky</h2>
+      <div class="row">
+        <button class="btn btn-primary"><ion-icon name="location"></ion-icon>Jsem tu!</button>
+        <button class="btn btn-dark">Přihlásit se</button>
+        <button class="btn btn-ghost">Zrušit</button>
+      </div>
+      <div class="row">
+        <span class="chip on">Chůze</span><span class="chip">Běh</span><span class="chip">Kolo</span>
+      </div>
+      <div class="row">
+        <span class="tag tag-green">+120 b.</span>
+        <span class="tag tag-sky"><ion-icon name="git-merge-outline"></ion-icon>Kombinace ×2</span>
+        <span class="tag tag-warn"><ion-icon name="cloud-offline-outline"></ion-icon>Čeká na odeslání</span>
+        <span class="tag tag-navy">Za 41 h</span>
+      </div>
+      <h2 style="margin-top:18px">Špendlíky na mapě</h2>
+      <div class="pins">
+        <div class="pinbox"><svg width="30" height="40" viewBox="0 0 30 40"><path d="M15 39C15 39 2 23.5 2 14.5a13 13 0 0 1 26 0C28 23.5 15 39 15 39z" fill="#8BB53C"/><circle cx="15" cy="14.5" r="5.5" fill="#fff"/></svg>Lze navštívit</div>
+        <div class="pinbox"><svg width="30" height="40" viewBox="0 0 30 40"><path d="M15 39C15 39 2 23.5 2 14.5a13 13 0 0 1 26 0C28 23.5 15 39 15 39z" fill="#7AB6E3"/><circle cx="15" cy="14.5" r="5.5" fill="#fff"/></svg>Do kombinace</div>
+        <div class="pinbox"><svg width="30" height="40" viewBox="0 0 30 40"><path d="M15 39C15 39 2 23.5 2 14.5a13 13 0 0 1 26 0C28 23.5 15 39 15 39z" fill="#133F63"/><path d="M10.5 14.5l3 3 6-6" stroke="#fff" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>Navštíveno</div>
+        <div class="pinbox"><svg width="30" height="40" viewBox="0 0 30 40"><path d="M15 39C15 39 2 23.5 2 14.5a13 13 0 0 1 26 0C28 23.5 15 39 15 39z" fill="#B9C4CC"/><circle cx="15" cy="14.5" r="5.5" fill="#fff"/></svg>Nedostupné</div>
+      </div>
+      <p class="note">Tvar špendlíku je ten z loga (kapka s kolečkem).</p>
+    </div>
+  </div>
+
+  <h2>Ukázkové obrazovky</h2>
+  <div class="phones">
+
+    <!-- Přihlášení -->
+    <div class="phone-wrap">
+      <h3>Přihlášení – logo školy a partnera dole</h3>
+      <div class="phone">
+        <div class="status" style="background:#fff"><span>9:41</span><span>100 %</span></div>
+        <div class="auth">
+          <div class="hero">
+            <img src="../frontend/assets/images/logos/logo_hss_mark.png" alt="" />
+            <div class="name">Hýbeme se společně</div>
+            <div class="sub">Objevuj Benátecko pěšky i na kole</div>
+            <svg viewBox="0 0 320 34" style="display:block;width:100%;height:30px;margin-top:6px"><path d="M4 22 C 60 4, 110 32, 160 18 S 260 4, 316 14" stroke="#8BB53C" stroke-opacity=".35" stroke-width="6" fill="none" stroke-linecap="round"/></svg>
+          </div>
+          <div class="field"><label>E-mail</label><div class="input focus">lukas@skola.cz</div></div>
+          <div class="field"><label>Heslo</label><div class="input">••••••••</div></div>
+          <button class="btn btn-dark btn-block" style="margin-top:18px">Přihlásit se</button>
+          <div class="link">Nemáš účet? <b>Zaregistruj se</b></div>
+          <div class="partners">
+            <div class="partner"><small>Provozuje</small><div class="box"><img class="school" src="../frontend/assets/images/logos/logo_skola_b.png" alt="ZŠ Benátky nad Jizerou" /></div></div>
+            <div class="partner"><small>Hlavní partner</small><div class="box"><img class="sko" src="../frontend/assets/images/logos/skoenergo_wordmark.png" alt="ŠKOENERGO" /></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mapa -->
+    <div class="phone-wrap">
+      <h3>Mapa s vybraným místem</h3>
+      <div class="phone">
+        <div class="status"><span>9:41</span><span>100 %</span></div>
+        <div class="appbar">
+          <div class="brand"><img src="../frontend/assets/images/logos/logo_hss_mark.png" alt="" />Mapa</div>
+          <span class="points"><i></i>1 245 b.</span>
+        </div>
+        <div class="content">
+          <div id="map"></div>
+          <div class="map-search">
+            <div class="box"><ion-icon name="search-outline"></ion-icon>Hledat místo</div>
+            <div class="loc"><ion-icon name="locate-outline"></ion-icon></div>
+          </div>
+          <div class="sheet">
+            <div class="grab"></div>
+            <div class="title">Loděnice Benátky nad Jizerou</div>
+            <div class="meta">
+              <span class="tag tag-navy">Jsi 40 m od místa</span>
+              <span class="tag tag-sky"><ion-icon name="git-merge-outline"></ion-icon>Kombinace ×2</span>
+            </div>
+            <div class="lbl">Jak ses sem dostal?</div>
+            <div class="row" style="margin:0">
+              <span class="chip on">Chůze</span><span class="chip">Běh</span><span class="chip">Kolo</span>
+            </div>
+            <div class="reward"><span class="k">Získáš</span><span class="v">+245 b.</span></div>
+            <button class="btn btn-primary btn-block"><ion-icon name="location"></ion-icon>Jsem tu!</button>
+          </div>
+        </div>
+        <div class="tabbar">
+          <div class="tab on"><ion-icon name="map"></ion-icon>Mapa<div class="dot"></div></div>
+          <div class="tab"><ion-icon name="footsteps-outline"></ion-icon>Návštěvy</div>
+          <div class="tab"><ion-icon name="podium-outline"></ion-icon>Žebříček</div>
+          <div class="tab"><ion-icon name="person-outline"></ion-icon>Účet</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Žebříček -->
+    <div class="phone-wrap">
+      <h3>Žebříček</h3>
+      <div class="phone">
+        <div class="status" style="background:var(--navy);color:#fff"><span>9:41</span><span>100 %</span></div>
+        <div class="lb-head">
+          <div class="lb-arc"></div>
+          <div style="font-weight:900;font-size:18px;margin-bottom:14px">Žebříček</div>
+          <div class="me">
+            <div class="rank"><small>#</small>4</div>
+            <div class="who">Tvoje pozice<br/>z 86 hráčů</div>
+            <div class="pts"><b>1 245</b><span>bodů</span></div>
+          </div>
+        </div>
+        <div class="content">
+          <div class="lb-list">
+            <div class="lb-row top1"><span class="n">1</span><span class="av">JN</span><span class="nm">Jana Nováková</span><span class="p">3 410</span></div>
+            <div class="lb-row"><span class="n">2</span><span class="av">PK</span><span class="nm">Petr Kučera</span><span class="p">2 980</span></div>
+            <div class="lb-row"><span class="n">3</span><span class="av">EH</span><span class="nm">Eliška Horáková</span><span class="p">1 760</span></div>
+            <div class="lb-row me"><span class="n">4</span><span class="av" style="background:#fff">LS</span><span class="nm">Lukáš (ty)</span><span class="p">1 245</span></div>
+            <div class="lb-row"><span class="n">5</span><span class="av">MV</span><span class="nm">Marek Veselý</span><span class="p">1 120</span></div>
+            <div class="lb-row"><span class="n">6</span><span class="av">TB</span><span class="nm">Tereza Bártová</span><span class="p">980</span></div>
+            <div class="lb-row"><span class="n">7</span><span class="av">OP</span><span class="nm">Ondřej Pokorný</span><span class="p">875</span></div>
+          </div>
+        </div>
+        <div class="tabbar">
+          <div class="tab"><ion-icon name="map-outline"></ion-icon>Mapa</div>
+          <div class="tab"><ion-icon name="footsteps-outline"></ion-icon>Návštěvy</div>
+          <div class="tab on"><ion-icon name="podium"></ion-icon>Žebříček<div class="dot"></div></div>
+          <div class="tab"><ion-icon name="person-outline"></ion-icon>Účet</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Účet -->
+    <div class="phone-wrap">
+      <h3>Účet – sekce „O aplikaci“ s oběma logy</h3>
+      <div class="phone">
+        <div class="status"><span>9:41</span><span>100 %</span></div>
+        <div class="appbar">
+          <div class="brand">Účet</div>
+          <span class="points"><i></i>1 245 b.</span>
+        </div>
+        <div class="content acc">
+          <div class="profile">
+            <div class="av">LS</div>
+            <div><div class="nm">Lukáš Svoboda</div><div class="em">lukas@skola.cz</div></div>
+          </div>
+          <div class="stats">
+            <div class="stat"><b>1 245</b><span>bodů</span></div>
+            <div class="stat"><b>18</b><span>návštěv</span></div>
+            <div class="stat"><b>4</b><span>kombinace</span></div>
+          </div>
+          <div class="list">
+            <div class="li"><ion-icon name="create-outline"></ion-icon>Upravit jméno<ion-icon class="chev" name="chevron-forward"></ion-icon></div>
+            <div class="li"><ion-icon name="image-outline"></ion-icon>Změnit fotku<ion-icon class="chev" name="chevron-forward"></ion-icon></div>
+            <div class="li"><ion-icon name="log-out-outline"></ion-icon>Odhlásit se</div>
+            <div class="li danger"><ion-icon name="trash-outline"></ion-icon>Smazat účet</div>
+          </div>
+          <div class="about">
+            <p>Aplikaci provozuje ZŠ Benátky nad Jizerou za podpory hlavního partnera ŠKOENERGO.</p>
+            <div class="partners in-card">
+              <div class="partner"><small>Provozuje</small><div class="box"><img class="school" src="../frontend/assets/images/logos/logo_skola_b.png" alt="ZŠ Benátky nad Jizerou" /></div></div>
+              <div class="partner"><small>Hlavní partner</small><div class="box"><img class="sko" src="../frontend/assets/images/logos/skoenergo_wordmark.png" alt="ŠKOENERGO" /></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="tabbar">
+          <div class="tab"><ion-icon name="map-outline"></ion-icon>Mapa</div>
+          <div class="tab"><ion-icon name="footsteps-outline"></ion-icon>Návštěvy</div>
+          <div class="tab"><ion-icon name="podium-outline"></ion-icon>Žebříček</div>
+          <div class="tab on"><ion-icon name="person"></ion-icon>Účet<div class="dot"></div></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+<script>
+  const map = L.map('map', { zoomControl: false, attributionControl: false }).setView([50.305, 14.815], 12);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+  const pin = (fill, check) => L.divIcon({
+    className: '', iconSize: [30, 40], iconAnchor: [15, 39],
+    html: `<svg width="30" height="40" viewBox="0 0 30 40" style="filter:drop-shadow(0 2px 3px rgba(19,63,99,.35))"><path d="M15 39C15 39 2 23.5 2 14.5a13 13 0 0 1 26 0C28 23.5 15 39 15 39z" fill="${fill}"/>${check ? '<path d="M10.5 14.5l3 3 6-6" stroke="#fff" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>' : '<circle cx="15" cy="14.5" r="5.5" fill="#fff"/>'}</svg>`
+  });
+  L.marker([50.334158, 14.800125], { icon: pin('#133F63', true) }).addTo(map);
+  L.marker([50.291547, 14.825124], { icon: pin('#7AB6E3') }).addTo(map);
+  L.marker([50.312, 14.842], { icon: pin('#8BB53C') }).addTo(map);
+  L.marker([50.298, 14.783], { icon: pin('#8BB53C') }).addTo(map);
+  L.marker([50.322, 14.77], { icon: pin('#B9C4CC') }).addTo(map);
+  L.circleMarker([50.2905, 14.8238], { radius: 7, color: '#fff', weight: 3, fillColor: '#133F63', fillOpacity: 1 }).addTo(map);
+</script>
+</body>
+</html>

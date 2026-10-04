@@ -6,19 +6,19 @@
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "frontend",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#FFFFFF",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.lukas.hybemesispolecne"
+      "package": "com.lukas.hybemesespolecne"
     },
     "web": {
       "bundler": "metro",
@@ -30,8 +30,8 @@
           "name": "Hýbeme se společně",
           "short_name": "Hýbeme se společně",
           "description": "Sportovní motivační aplikace",
-          "background_color": "#ffffff",
-          "theme_color": "#4a90e2",
+          "background_color": "#F5F7F2",
+          "theme_color": "#133F63",
           "display": "standalone"
         }
       }
@@ -46,7 +46,15 @@
           "backgroundColor": "#ffffff"
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Aplikace potřebuje přístup k fotkám kvůli nahrání avataru a fotek z navštívených míst.",
+          "cameraPermission": "Aplikace potřebuje fotoaparát, aby šlo rovnou vyfotit navštívené místo."
+        }
+      ],
+      "expo-asset"
     ],
     "experiments": {
       "typedRoutes": true

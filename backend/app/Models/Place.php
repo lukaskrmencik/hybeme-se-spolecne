@@ -51,7 +51,7 @@ class Place extends Model
         return $this->visits()
             ->latest('timestamp')
             ->limit(config('general.placeLatestVisitsCount', 10))
-            ->with(['user', 'sport', 'photos'])
+            ->with(['user:id,name,avatar_url', 'sport', 'photos'])
             ->get();
     }
 

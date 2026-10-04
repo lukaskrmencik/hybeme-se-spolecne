@@ -20,7 +20,7 @@ class VisitPolicy
      */
     public function view(User $user, Visit $visit): bool
     {
-        return true;
+        return $user->id === $visit->user_id || $user->role === 'admin';
     }
 
     /**

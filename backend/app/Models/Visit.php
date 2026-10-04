@@ -38,7 +38,7 @@ class Visit extends Model
             'place_id' => 'integer',
             'sport_id' => 'integer',
             'is_combination' => 'boolean',
-            'timestamp' => 'datetime:d.m.Y H:i',
+            'timestamp' => 'datetime:d.m.Y H:i:s',
         ];
     }
 

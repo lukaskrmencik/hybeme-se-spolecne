@@ -19,6 +19,7 @@ export interface UserProfile {
   role: string;
   name: string;
   email: string;
+  avatar_url?: string | null;
   totalPoints: number;
   visitsCombinations: Visit[];
 }

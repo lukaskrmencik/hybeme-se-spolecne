@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -28,6 +29,7 @@ class User extends Authenticatable implements JWTSubject
         'provider_name',
         'password',
         'avatar_url',
+        'email_verified_at',
     ];
 
     /**
@@ -48,6 +50,7 @@ class User extends Authenticatable implements JWTSubject
     {
         return [
             'id' => 'integer',
+            'email_verified_at' => 'datetime',
         ];
     }
 
@@ -64,6 +67,16 @@ class User extends Authenticatable implements JWTSubject
             'user_email' => $this->email,
             'user_role'  => $this->role,
         ];
+    }
+
+    public function hasVerifiedEmail(): bool
+    {
+        return $this->email_verified_at !== null;
+    }
+
+    public function verificationCode(): HasOne
+    {
+        return $this->hasOne(EmailVerificationCode::class);
     }
 
     public function visits(): HasMany

@@ -10,7 +10,9 @@ use App\Services\AntiCheatService;
 use App\Services\ImageModerationService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 
 class VisitController extends Controller
 {
@@ -63,13 +65,21 @@ class VisitController extends Controller
         $user = $request->user();
 
         $validatedData = $request->validate([
-            'place_id' => 'required|exists:places,id',
-            'sport_id' => 'required|exists:sports,id',
+            'place_id' => ['required', 'integer', Rule::exists('places', 'id')->where('is_active', true)],
+            'sport_id' => ['required', 'integer', Rule::exists('sports', 'id')->where('is_active', true)],
             'is_combination' => 'required|boolean',
             'timestamp' => 'required|date',
         ]);
 
-        if($validatedData['is_combination'] === true && $user->visitsCombinations()->count() === 0) {
+        $validatedData['is_combination'] = $request->boolean('is_combination');
+
+        if (Carbon::parse($validatedData['timestamp'])->isAfter(now()->addMinutes(10))) {
+            return response()->error('Čas návštěvy nemůže být v budoucnosti.', 400);
+        }
+
+        $lastVisit = $user->visitsCombinations()->last();
+
+        if ($validatedData['is_combination'] === true && !$lastVisit) {
             $validatedData['is_combination'] = false;
         }
 
@@ -94,8 +104,6 @@ class VisitController extends Controller
 
         if($validatedData['is_combination'] === true) {
 
-            $lastVisit = $user->visitsCombinations()->last();
-
             $reward = calc_combination_reward($user, $validatedData['sport_id'], $validatedData['place_id'], $defaultReward, $lastVisit);
 
         } else {
@@ -109,7 +117,7 @@ class VisitController extends Controller
         if($cheatNote) {
             Cheat::create([
                 'visit_id' => $visit->id,
-                'visit_id_2' => $user->visitsCombinations()->last()->id,
+                'visit_id_2' => $lastVisit->id,
                 'user_message' => null,
                 'is_denied' => false,
                 'cheat_description' => $cheatNote,

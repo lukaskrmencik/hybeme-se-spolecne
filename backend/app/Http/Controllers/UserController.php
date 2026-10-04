@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Cheat;
 use App\Models\User;
+use App\Models\Visit;
+use App\Models\VisitsPhoto;
 use App\Services\ImageModerationService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
@@ -133,8 +136,21 @@ class UserController extends Controller
     {
         $this->authorize('delete', $user);
 
-        if ($user->avatar_url) {
-            $path = str_replace(url('storage/'), '', $user->avatar_url);
+        $visitIds = $user->visits()->pluck('id');
+        $photos = VisitsPhoto::whereIn('visit_id', $visitIds)->get();
+        $filesToDelete = $photos->pluck('photo_url')->push($user->avatar_url)->filter();
+
+        DB::transaction(function () use ($user, $visitIds) {
+            Cheat::whereIn('visit_id', $visitIds)
+                ->orWhereIn('visit_id_2', $visitIds)
+                ->delete();
+            VisitsPhoto::whereIn('visit_id', $visitIds)->delete();
+            Visit::whereIn('id', $visitIds)->delete();
+            $user->delete();
+        });
+
+        foreach ($filesToDelete as $url) {
+            $path = str_replace(url('storage/'), '', $url);
             if (Storage::disk('public')->exists($path)) {
                 Storage::disk('public')->delete($path);
             }
@@ -147,8 +163,6 @@ class UserController extends Controller
                 //
             }
         }
-
-        $user->delete();
 
         return response()->success([
             'message' => 'Uživatel a všechna jeho data byla úspěšně smazána.'
@@ -183,6 +197,7 @@ class UserController extends Controller
             'success' => true,
             'leaderboard' => $topUsers,
             'current_user' => $currentUser,
+            'total_users' => $allUsers->count(),
         ]);
     }
 }

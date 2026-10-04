@@ -18,6 +18,7 @@ class UserFactory extends Factory
             'provider_name' => fake()->word(),
             'password' => fake()->password(),
             'avatar_url' => fake()->text(),
+            'email_verified_at' => now(),
         ];
     }
 }

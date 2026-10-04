@@ -9,10 +9,14 @@ use App\Http\Controllers\VisitController;
 use Illuminate\Support\Facades\Route;
 
 // Public routes
-Route::group(['prefix' => 'auth'], function () {
+Route::group(['prefix' => 'auth', 'middleware' => 'throttle:20,1'], function () {
     Route::post('login', [AuthController::class, 'login']);
     Route::post('register', [AuthController::class, 'register']);
     Route::post('refresh', [AuthController::class, 'refresh']);
+    Route::post('google', [AuthController::class, 'google']);
+    Route::post('google/redirect', [AuthController::class, 'googleRedirect']);
+    Route::post('verify-email', [AuthController::class, 'verifyEmail']);
+    Route::post('resend-code', [AuthController::class, 'resendVerificationCode']);
 });
 
 Route::get('users/leaderboard', [UserController::class, 'leaderboard']);

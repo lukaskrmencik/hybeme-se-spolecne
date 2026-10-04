@@ -32,7 +32,7 @@ class PlaceController extends Controller
             $perPage = config('pagination.per_page_default');
         }
 
-        $onlyActive = (bool) $request->input('only_active', true);
+        $onlyActive = $request->boolean('only_active', true);
 
         $query = Place::query();
 
@@ -117,10 +117,10 @@ class PlaceController extends Controller
             'is_active' => 'sometimes|boolean',
         ]);
 
-        
-
-        $parser = app(GeojsonParser::class);
-        $validatedData['coordinates'] = $parser->parse($request->input('coordinates'));
+        if ($request->has('coordinates')) {
+            $parser = app(GeojsonParser::class);
+            $validatedData['coordinates'] = $parser->parse($request->input('coordinates'));
+        }
 
         $place->update($validatedData);
 

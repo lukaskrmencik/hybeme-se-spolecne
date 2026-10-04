@@ -19,7 +19,7 @@ class SportController extends Controller
     {
         $this->authorize('viewAny', Sport::class);
 
-        $onlyActive = (bool) $request->input('only_active', true);
+        $onlyActive = $request->boolean('only_active', true);
 
         $query = Sport::query();
 
