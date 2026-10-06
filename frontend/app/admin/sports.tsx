@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import {
   AdminPage,
@@ -16,13 +16,14 @@ import {
   Notice,
   useConfirm,
 } from '../../components/admin/ui';
-import { createSport, describeValidationError, fetchAllSports, NewSport, setSportActive } from '../../services/admin';
+import { createSport, describeValidationError, fetchAllSports, NewSport, setSportActive, setSportRouteType } from '../../services/admin';
+import { ROUTE_TYPES, routeTypeLabel } from '../../utils/navigation';
 import { getErrorMessage } from '../../services/api';
 import { showToast } from '../../utils/alert';
 import { Sport } from '../../types/sport';
 import { colors } from '../../utils/theme';
 
-type NumberKey = Exclude<keyof NewSport, 'name'>;
+type NumberKey = Exclude<keyof NewSport, 'name' | 'mapy_route_type'>;
 
 const SPEEDS: { key: NumberKey; label: string; help: string }[] = [
   {
@@ -67,6 +68,7 @@ const fmt = (n: number | string) => String(Number(n)).replace('.', ',');
 function NewSportForm({ sports, onCreated, onCancel }: { sports: Sport[]; onCreated: () => void; onCancel: () => void }) {
   const [name, setName] = useState('');
   const [values, setValues] = useState(EMPTY);
+  const [routeType, setRouteType] = useState<string>('foot_fast');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [serverError, setServerError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -81,6 +83,7 @@ function NewSportForm({ sports, onCreated, onCancel }: { sports: Sport[]; onCrea
       Object.fromEntries(Object.keys(EMPTY).map((k) => [k, String(Number(s[k as NumberKey]))])) as Record<NumberKey, string>
     );
     setErrors((e) => ({ name: e.name ?? '' }));
+    if (s.mapy_route_type) setRouteType(s.mapy_route_type);
   };
 
   const save = async () => {
@@ -103,7 +106,7 @@ function NewSportForm({ sports, onCreated, onCancel }: { sports: Sport[]; onCrea
     setSaving(true);
     setServerError(null);
     try {
-      await createSport({ name: trimmed, ...n });
+      await createSport({ name: trimmed, ...n, mapy_route_type: routeType });
       showToast('Sport byl přidán', `${trimmed} se uživatelům zobrazí při příštím otevření aplikace.`, 'success');
       onCreated();
     } catch (err) {
@@ -175,6 +178,10 @@ function NewSportForm({ sports, onCreated, onCancel }: { sports: Sport[]; onCrea
         ))}
       </View>
 
+      <Text style={styles.groupTitle}>Navigace k místům</Text>
+      <Text style={adminStyles.muted}>Způsob plánování trasy v Mapy.com, který se použije po klepnutí na Navigovat u místa.</Text>
+      <RouteTypeOptions value={routeType} onChange={setRouteType} />
+
       {!!serverError && <Notice tone="danger" text={serverError} />}
 
       <View style={styles.formActions}>
@@ -182,6 +189,27 @@ function NewSportForm({ sports, onCreated, onCancel }: { sports: Sport[]; onCrea
         <Button label="Uložit sport" icon="checkmark" onPress={() => void save()} loading={saving} />
       </View>
     </Card>
+  );
+}
+
+function RouteTypeOptions({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  return (
+    <View style={styles.routeOptions}>
+      {ROUTE_TYPES.map((t) => {
+        const active = t.value === value;
+        return (
+          <Pressable
+            key={t.value}
+            onPress={() => onChange(t.value)}
+            style={[styles.routeOption, active && styles.routeOptionActive]}
+            accessibilityRole="radio"
+            accessibilityState={{ checked: active }}
+          >
+            <Text style={[styles.routeOptionText, active && styles.routeOptionTextActive]}>{t.label}</Text>
+          </Pressable>
+        );
+      })}
+    </View>
   );
 }
 
@@ -215,6 +243,12 @@ const sportColumns: Column<Sport>[] = [
     ),
   },
   {
+    key: 'route',
+    title: 'Navigace',
+    flex: 1.5,
+    render: (s) => <Text style={styles.cell}>{routeTypeLabel(s.mapy_route_type)}</Text>,
+  },
+  {
     key: 'status',
     title: 'Stav',
     flex: 1,
@@ -228,7 +262,24 @@ export default function AdminSports() {
   const [error, setError] = useState<string | null>(null);
   const [adding, setAdding] = useState(params.new === '1');
   const [busyId, setBusyId] = useState<number | null>(null);
+  const [routeEdit, setRouteEdit] = useState<{ sport: Sport; value: string } | null>(null);
+  const [savingRoute, setSavingRoute] = useState(false);
   const [dialog, confirm] = useConfirm();
+
+  const saveRoute = async () => {
+    if (!routeEdit) return;
+    setSavingRoute(true);
+    try {
+      await setSportRouteType(routeEdit.sport.id, routeEdit.value);
+      setSports((list) => list?.map((s) => (s.id === routeEdit.sport.id ? { ...s, mapy_route_type: routeEdit.value } : s)) ?? list);
+      showToast('Navigace byla změněna', `${routeEdit.sport.name}: ${routeTypeLabel(routeEdit.value)}`, 'success');
+      setRouteEdit(null);
+    } catch (err) {
+      showToast('Změnu se nepodařilo uložit', getErrorMessage(err, 'Zkuste to prosím znovu.'), 'danger');
+    } finally {
+      setSavingRoute(false);
+    }
+  };
 
   const load = useCallback(async () => {
     setError(null);
@@ -301,7 +352,16 @@ export default function AdminSports() {
           rows={sports}
           rowKey={(s) => s.id}
           columns={sportColumns}
+          actionsWidth={250}
           actions={(s) => (
+            <>
+            <Button
+              small
+              label="Navigace"
+              icon="navigate-outline"
+              variant="secondary"
+              onPress={() => setRouteEdit({ sport: s, value: s.mapy_route_type ?? 'foot_fast' })}
+            />
             <Button
               small
               label={s.is_active ? 'Vyřadit' : 'Aktivovat'}
@@ -310,14 +370,38 @@ export default function AdminSports() {
               loading={busyId === s.id}
               onPress={() => void toggle(s)}
             />
+            </>
           )}
         />
       )}
+
+      <Modal visible={!!routeEdit} transparent animationType="fade" onRequestClose={() => setRouteEdit(null)}>
+        <Pressable style={styles.backdrop} onPress={() => setRouteEdit(null)}>
+          <Pressable style={styles.dialog} onPress={() => {}}>
+            <Text style={adminStyles.sectionTitle}>Navigace pro sport {routeEdit?.sport.name}</Text>
+            <Text style={adminStyles.muted}>
+              Způsob plánování trasy v Mapy.com po klepnutí na Navigovat u místa. Změna nemá vliv na body ani na dosavadní návštěvy.
+            </Text>
+            {routeEdit && <RouteTypeOptions value={routeEdit.value} onChange={(v) => setRouteEdit({ ...routeEdit, value: v })} />}
+            <View style={styles.formActions}>
+              <Button label="Zrušit" variant="secondary" onPress={() => setRouteEdit(null)} disabled={savingRoute} />
+              <Button label="Uložit" icon="checkmark" onPress={() => void saveRoute()} loading={savingRoute} />
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </AdminPage>
   );
 }
 
 const styles = StyleSheet.create({
+  routeOptions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  routeOption: { paddingHorizontal: 12, height: 36, justifyContent: 'center', borderRadius: 8, borderWidth: 1, borderColor: '#D3DACB', backgroundColor: colors.white },
+  routeOptionActive: { backgroundColor: colors.navy, borderColor: colors.navy },
+  routeOptionText: { color: colors.navy, fontSize: 13, fontWeight: '700' },
+  routeOptionTextActive: { color: colors.white },
+  backdrop: { flex: 1, backgroundColor: 'rgba(5, 16, 26, 0.5)', alignItems: 'center', justifyContent: 'center', padding: 20 },
+  dialog: { width: '100%', maxWidth: 480, backgroundColor: colors.surface, borderRadius: 10, padding: 22, gap: 12 },
   groupTitle: { color: colors.navy, fontSize: 15, fontWeight: '900', marginTop: 4 },
   copy: { gap: 8 },
   copyChip: {

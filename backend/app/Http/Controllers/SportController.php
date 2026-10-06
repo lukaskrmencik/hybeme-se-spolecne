@@ -48,6 +48,7 @@ class SportController extends Controller
             'comb_mult_2' => 'required|numeric|min:0',
             'comb_mult_3' => 'required|numeric|min:0',
             'comb_mult_4' => 'required|numeric|min:0',
+            'mapy_route_type' => ['sometimes', Rule::in(Sport::MAPY_ROUTE_TYPES)],
         ]);
 
         $validatedData['icon_url'] = config('general.default_sport_icon_url');
@@ -65,6 +66,7 @@ class SportController extends Controller
             'comb_mult_2' => $sport->comb_mult_2,
             'comb_mult_3' => $sport->comb_mult_3,
             'comb_mult_4' => $sport->comb_mult_4,
+            'mapy_route_type' => $sport->mapy_route_type,
             'is_active' => $sport->is_active,
         ], 201);
     }
@@ -88,6 +90,7 @@ class SportController extends Controller
             'comb_mult_2' => $sport->comb_mult_2,
             'comb_mult_3' => $sport->comb_mult_3,
             'comb_mult_4' => $sport->comb_mult_4,
+            'mapy_route_type' => $sport->mapy_route_type,
             'is_active' => $sport->is_active,
         ]);
     }
@@ -112,6 +115,7 @@ class SportController extends Controller
             'comb_mult_2' => 'sometimes|required|numeric|min:0',
             'comb_mult_3' => 'sometimes|required|numeric|min:0',
             'comb_mult_4' => 'sometimes|required|numeric|min:0',
+            'mapy_route_type' => ['sometimes', Rule::in(Sport::MAPY_ROUTE_TYPES)],
             'is_active' => 'sometimes|required|boolean',
         ]);
 
@@ -128,6 +132,7 @@ class SportController extends Controller
             'comb_mult_2' => $sport->comb_mult_2,
             'comb_mult_3' => $sport->comb_mult_3,
             'comb_mult_4' => $sport->comb_mult_4,
+            'mapy_route_type' => $sport->mapy_route_type,
             'is_active' => $sport->is_active,
         ]);
     }

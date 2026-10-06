@@ -9,6 +9,9 @@ class Sport extends Model
 {
     use HasFactory;
 
+    /** Route planning types of Mapy.com used for navigation to a place. */
+    public const MAPY_ROUTE_TYPES = ['foot_fast', 'foot_hiking', 'bike_road', 'bike_mountain'];
+
     /**
      * The attributes that are mass assignable.
      *
@@ -24,6 +27,7 @@ class Sport extends Model
         'comb_mult_2',
         'comb_mult_3',
         'comb_mult_4',
+        'mapy_route_type',
         'is_active',
     ];
 

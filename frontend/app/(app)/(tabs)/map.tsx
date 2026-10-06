@@ -11,6 +11,8 @@ import { useUserStats } from '../../../context/UserStatsContext';
 import { LeafletMapView, PlaceStatus, ActivePlace, MapSelection } from '../../../components/LeafletMapView';
 import { VisitSheet } from '../../../components/VisitSheet';
 import { SportChips } from '../../../components/SportChips';
+import { LocationBanner } from '../../../components/LocationBanner';
+import { openNavigation } from '../../../utils/navigation';
 import { MapLegend } from '../../../components/MapLegend';
 import { submitVisit } from '../../../services/visits';
 import { getErrorMessage } from '../../../services/api';
@@ -32,7 +34,7 @@ const SHEET_TOP_GAP = 124;
 export default function MapScreen() {
   const { places, loading: loadingPlaces, error } = usePlaces();
   const { sports, loading: loadingSports } = useSports();
-  const { position, status: locationStatus } = useLocation();
+  const { position, status: locationStatus, retry: retryLocation } = useLocation();
   const { userId } = useAuth();
   const { visits, lastVisit, loading: loadingStats, pendingCount, addConfirmedVisit, flushNow, uploadVisitPhotos } =
     useUserStats();
@@ -333,16 +335,12 @@ export default function MapScreen() {
           </View>
         )}
 
-        {(error || locationStatus === 'denied' || locationStatus === 'error') && (
-          <View style={styles.errorBanner}>
-            <Text style={styles.errorText}>
-              {error ??
-                (locationStatus === 'denied'
-                  ? 'Bez přístupu k poloze nelze zaznamenat návštěvu. Povol ho v nastavení.'
-                  : 'Polohu se nepodařilo zjistit.')}
-            </Text>
+        {!!error && (
+          <View style={[styles.errorBanner, styles.bannerGap]}>
+            <Text style={styles.errorText}>{error}</Text>
           </View>
         )}
+        <LocationBanner status={locationStatus} onRetry={() => void retryLocation()} />
       </View>
 
       <View style={styles.sheetLayer} pointerEvents="box-none">
@@ -367,6 +365,11 @@ export default function MapScreen() {
           isSaving={isSaving}
           onSave={handleSaveVisit}
           onClose={closeSheet}
+          onNavigate={() => {
+            if (!actionPlace) return;
+            const [lng, lat] = actionPlace.coordinates.coordinates;
+            openNavigation({ lat, lng }, position, selectedSport?.mapy_route_type);
+          }}
           photos={photos}
           onPhotosChange={setPhotos}
           maxHeight={areaHeight > 0 ? areaHeight - SHEET_TOP_GAP : undefined}
@@ -436,4 +439,5 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   errorText: { color: colors.white, textAlign: 'center', fontWeight: '700' },
+  bannerGap: { marginBottom: 8 },
 });

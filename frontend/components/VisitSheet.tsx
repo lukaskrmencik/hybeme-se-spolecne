@@ -5,6 +5,7 @@ import { Place } from '../types/place';
 import { Sport } from '../types/sport';
 import { colors, radius, shadows } from '../utils/theme';
 import { formatDistance, formatNumber } from '../utils/format';
+import { routeTypeLabel } from '../utils/navigation';
 import { SportChips } from './SportChips';
 import { PlacePhotoStrip } from './PlacePhotoStrip';
 import { PhotoAttach } from './PhotoAttach';
@@ -42,6 +43,8 @@ interface VisitSheetProps {
   isSaving: boolean;
   onSave: () => void;
   onClose: () => void;
+  /** Opens the route to the place in Mapy.com. */
+  onNavigate: () => void;
   /** Photos the user attaches to the visit being saved. */
   photos: LocalPhoto[];
   onPhotosChange: (photos: LocalPhoto[]) => void;
@@ -189,6 +192,7 @@ export function VisitSheet({
   isSaving,
   onSave,
   onClose,
+  onNavigate,
   photos,
   onPhotosChange,
   maxHeight,
@@ -252,6 +256,11 @@ export function VisitSheet({
               </Text>
             </View>
           </View>
+          <TouchableOpacity onPress={onNavigate} style={styles.navigate} accessibilityRole="link">
+            <Ionicons name="navigate" size={15} color={colors.white} />
+            <Text style={styles.navigateText}>Navigovat</Text>
+            <Text style={styles.navigateSub}>Mapy.com · {routeTypeLabel(sport?.mapy_route_type, true)}</Text>
+          </TouchableOpacity>
         </View>
         <TouchableOpacity
           onPress={onClose}
@@ -359,6 +368,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
   },
+  navigate: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: 6,
+    marginTop: 10,
+    backgroundColor: colors.navy,
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+  },
+  navigateText: { color: colors.white, fontSize: 13, fontWeight: '900' },
+  navigateSub: { color: 'rgba(255,255,255,0.7)', fontSize: 12, fontWeight: '700' },
   tagNavyText: { color: colors.navy, fontSize: 12, fontWeight: '800' },
   close: {
     width: 32,

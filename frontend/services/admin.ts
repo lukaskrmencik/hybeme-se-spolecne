@@ -96,10 +96,16 @@ export interface NewSport {
   comb_mult_2: number;
   comb_mult_3: number;
   comb_mult_4: number;
+  mapy_route_type: string;
 }
 
 export async function createSport(sport: NewSport): Promise<void> {
   await apiFetch('sports', { method: 'POST', body: JSON.stringify(sport) });
+}
+
+/** How the navigation to a place plans the route for this sport. Does not affect points or history. */
+export async function setSportRouteType(id: number, routeType: string): Promise<void> {
+  await apiFetch(`sports/${id}`, { method: 'PATCH', body: JSON.stringify({ mapy_route_type: routeType }) });
 }
 
 export async function setSportActive(id: number, active: boolean): Promise<void> {
