@@ -164,12 +164,23 @@ export default function MapScreen() {
     blockedText = singleWaitText ?? actionAvail?.single.reason ?? 'Návštěva teď není možná.';
   }
   const blocked: { text: string; tone: 'info' | 'danger' } | null = blockedText ? { text: blockedText, tone: 'info' } : null;
+
+  // A place that already scored cannot be a combination either, so the combination row is left out.
+  const placeDone = actionAvail?.state === 'done';
   const allowed = !!actionPlace && blocked == null;
 
   // The combination continues the last visit, so it only works with the same sport.
   const sportHint =
     actionAvail?.prediction?.kind === 'sport' && actionAvail.combo.allowed && lastVisit?.sport
       ? `Kombinace navazuje na návštěvu se sportem ${lastVisit.sport.name}. Přepni na něj a body se přepočítají.`
+      : null;
+
+  // Every message is shown once: the reason under the combination row is dropped when the note at the
+  // bottom of the card (or the sport hint) already says the same.
+  const rawComboReason = sportHint || comboAvailable || placeDone ? null : actionAvail?.comboReason ?? null;
+  const comboReasonText =
+    rawComboReason && !(blockedText && (blockedText.includes(rawComboReason) || rawComboReason.includes(blockedText)))
+      ? rawComboReason
       : null;
 
   const level = getCombinationLevel(lastVisit);
@@ -353,9 +364,9 @@ export default function MapScreen() {
           onSelectSport={setSelectedSportId}
           sportHint={sportHint}
           multiplier={multiplier}
-          hasLastVisit={!!lastVisit}
+          hasLastVisit={!!lastVisit && !placeDone}
           comboAvailable={comboAvailable}
-          comboReason={sportHint || comboAvailable ? null : actionAvail?.comboReason ?? null}
+          comboReason={comboReasonText}
           isCombination={useCombo}
           onToggleCombination={setIsCombination}
           allowed={allowed}
