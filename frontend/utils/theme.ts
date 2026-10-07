@@ -31,6 +31,8 @@ export const colors = {
   dangerText: '#9F2E1C',
   dangerBorder: '#F3C7C0',
   white: '#ffffff',
+  /** Official Mapy.com green, only for the navigation button. */
+  mapyCom: '#1EAE00',
 };
 
 export const radius = {

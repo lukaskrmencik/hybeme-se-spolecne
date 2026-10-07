@@ -1,2 +1,5 @@
 # Local backups (never commit: they contained .env with secrets)
 *.tar.gz
+
+# Windows "downloaded from the internet" markers copied along with files
+*:Zone.Identifier
