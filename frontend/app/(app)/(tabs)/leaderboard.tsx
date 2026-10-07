@@ -131,17 +131,36 @@ export default function LeaderboardScreen() {
             <View style={[styles.head, { paddingTop: insets.top + 18 }]}>
                 <View style={styles.arc} />
                 <Text style={styles.headTitle}>Žebříček</Text>
-                <View style={styles.me}>
-                    <Text style={styles.meRank}>
-                        <Text style={styles.meHash}>#</Text>
-                        {currentUser?.rank ? currentUser.rank : '–'}
-                    </Text>
-                    <Text style={styles.meWho}>{who}</Text>
-                    <View style={styles.mePoints}>
-                        <Text style={styles.mePointsValue}>{formatNumber(currentUser?.total_points ?? 0)}</Text>
-                        <Text style={styles.mePointsLabel}>{tab === 'week' ? 'bodů za týden' : 'bodů'}</Text>
+                {currentUser?.rank ? (
+                    <View style={styles.me}>
+                        <Text style={styles.meRank}>
+                            <Text style={styles.meHash}>#</Text>
+                            {currentUser.rank}
+                        </Text>
+                        <Text style={styles.meWho}>{who}</Text>
+                        <View style={styles.mePoints}>
+                            <Text style={styles.mePointsValue}>{formatNumber(currentUser.total_points)}</Text>
+                            <Text style={styles.mePointsLabel}>{tab === 'week' ? 'bodů za týden' : 'bodů'}</Text>
+                        </View>
                     </View>
-                </View>
+                ) : (
+                    // Without points there is no place yet: invite to the first visit instead of showing "#–".
+                    <View style={styles.me}>
+                        <View style={styles.meIcon}>
+                            <Ionicons name="trophy-outline" size={24} color={colors.accent} />
+                        </View>
+                        <View style={styles.meInvite}>
+                            <Text style={styles.meInviteTitle}>
+                                {tab === 'week' ? 'Tento týden ještě nemáš body' : 'Zatím nejsi v žebříčku'}
+                            </Text>
+                            <Text style={styles.meInviteText}>
+                                {tab === 'week'
+                                    ? 'Navštiv místo a zařaď se do týdenního pořadí.'
+                                    : 'Navštiv první místo a objevíš se tu.'}
+                            </Text>
+                        </View>
+                    </View>
+                )}
             </View>
 
             {tabs}
@@ -229,6 +248,17 @@ const styles = StyleSheet.create({
     meHash: { fontSize: 15, lineHeight: 15, fontWeight: '800', opacity: 0.7 },
     meWho: { color: 'rgba(255,255,255,0.8)', fontSize: 14, fontWeight: '700', flex: 1 },
     mePoints: { alignItems: 'flex-end' },
+    meIcon: {
+        width: 46,
+        height: 46,
+        borderRadius: 23,
+        backgroundColor: 'rgba(255,255,255,0.1)',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    meInvite: { flex: 1, gap: 2 },
+    meInviteTitle: { color: colors.white, fontSize: 17, fontWeight: '900' },
+    meInviteText: { color: 'rgba(255,255,255,0.75)', fontSize: 13, fontWeight: '600' },
     mePointsValue: { color: colors.accent, fontSize: 24, fontWeight: '900', lineHeight: 32 },
     mePointsLabel: { color: 'rgba(255,255,255,0.7)', fontSize: 12, fontWeight: '700', lineHeight: 16, marginTop: 4, marginBottom: 2 },
 

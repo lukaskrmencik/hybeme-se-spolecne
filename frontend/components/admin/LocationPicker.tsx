@@ -3,6 +3,7 @@ import { Platform, StyleSheet, View } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { tileSource, TileSource } from '../LeafletMapView';
 import { config } from '../../constants/config';
+import { mapLibsHead } from '../../utils/mapLibs';
 import { colors, radius } from '../../utils/theme';
 
 export interface LatLng {
@@ -28,8 +29,7 @@ const buildHtml = (tiles: TileSource, lat: number, lng: number, colorsJson: stri
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  ${mapLibsHead(false)}
   <style>
     html, body, #map { margin:0; padding:0; height:100%; width:100%; }
     body { background:#E7EBE3; font-family: Nunito, "Segoe UI", sans-serif; }

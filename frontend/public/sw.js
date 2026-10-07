@@ -1,12 +1,19 @@
 // Service worker: keeps the app itself on the phone, so it opens without signal.
 // API calls are never touched: the app has its own offline queue for visits.
-// Map tiles are not stored either (Mapy.com terms), only the Leaflet library.
+// Map tiles are not stored either (Mapy.com terms); Leaflet and the map font come from /vendor and /fonts.
 
-const VERSION = 'v1';
+const VERSION = 'v2';
 const CACHE = `hybeme-${VERSION}`;
 // Pages the installed app opens on; any of them boots the whole app.
-const SHELL = ['/map', '/login', '/', '/manifest.webmanifest', '/icons/icon-192.png'];
-const CDN_LIBS = ['https://unpkg.com/leaflet@'];
+const SHELL = [
+  '/map',
+  '/login',
+  '/',
+  '/manifest.webmanifest',
+  '/icons/icon-192.png',
+  '/vendor/leaflet/leaflet.js',
+  '/vendor/leaflet/leaflet.css',
+];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -67,13 +74,8 @@ self.addEventListener('fetch', (event) => {
       event.respondWith(networkFirstPage(request));
       return;
     }
-    if (url.pathname.startsWith('/_expo/') || url.pathname.startsWith('/assets/') || url.pathname.startsWith('/icons/')) {
+    if (['/_expo/', '/assets/', '/icons/', '/vendor/', '/fonts/'].some((prefix) => url.pathname.startsWith(prefix))) {
       event.respondWith(cacheFirst(request));
     }
-    return;
-  }
-
-  if (CDN_LIBS.some((prefix) => request.url.startsWith(prefix))) {
-    event.respondWith(cacheFirst(request));
   }
 });

@@ -17,7 +17,17 @@ export default function Root({ children }: { children: ReactNode }) {
           Disable body scrolling on web. This makes ScrollView components work closer to how they do on native.
           However, body scrolling is often nice to have for mobile web. If you want to enable it, remove this line.
         */}
+        <title>Hýbeme se společně</title>
         <meta name="description" content="Objevuj Benátecko, navštěvuj zajímavá místa, sbírej body a poměř síly s ostatními." />
+
+        {/* Preview when the link is shared (Messenger, WhatsApp, Facebook…). */}
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="Hýbeme se společně" />
+        <meta property="og:title" content="Hýbeme se společně" />
+        <meta property="og:description" content="Objevuj Benátecko, navštěvuj zajímavá místa, sbírej body a poměř síly s ostatními." />
+        <meta property="og:image" content="https://hybemesespolecne.cz/icons/icon-512.png" />
+        <meta property="og:url" content="https://hybemesespolecne.cz/" />
+        <meta property="og:locale" content="cs_CZ" />
 
         {/* Installable app (PWA): manifest, icons and the look when started from the home screen. */}
         <link rel="manifest" href="/manifest.webmanifest" />

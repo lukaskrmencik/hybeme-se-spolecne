@@ -1,7 +1,8 @@
 <?php
 
 return [
-    'default_sport_icon_url' => "http://localhost/storage/place_images/HGhvp1gRueTPNzOtLWmRtup30PuRNHxE8XO7HQ6c.jpg",
+    // Sport icons are not shown in the app yet; a fixed localhost URL broke in production.
+    'default_sport_icon_url' => env('DEFAULT_SPORT_ICON_URL', ''),
     'routingCoefficient' => 1.23,
     'minimalTimeBetweenVisitsInMinutes' => 5,
     'placeCooldownInHours' => 72,

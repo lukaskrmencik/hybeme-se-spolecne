@@ -5,6 +5,7 @@ import { Place } from '../types/place';
 import { GpsPosition } from '../hooks/useLocation';
 import { colors } from '../utils/theme';
 import { config } from '../constants/config';
+import { mapLibsHead } from '../utils/mapLibs';
 
 /** Same meaning as PlaceState: green = points now, white with a clock = points later, grey tick = done. */
 export type PlaceTone = 'open' | 'wait' | 'done';
@@ -82,9 +83,7 @@ const buildHtml = (lat: number, lng: number, radius: number, tiles: TileSource) 
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&display=swap" rel="stylesheet" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  ${mapLibsHead(true)}
   <style>
     *:focus { outline: none !important; }
     html, body, #map { margin:0; padding:0; height:100%; width:100%; }

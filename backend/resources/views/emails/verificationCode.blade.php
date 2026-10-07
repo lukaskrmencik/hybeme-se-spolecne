@@ -6,7 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="color-scheme" content="light">
     <title>Ověřovací kód</title>
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;800;900&display=swap" rel="stylesheet">
 </head>
 <body style="margin:0; padding:0; background-color:#F5F7F2; font-family:Nunito, 'Segoe UI', Arial, sans-serif; color:#133F63;">
     {{-- Inbox preview line --}}
