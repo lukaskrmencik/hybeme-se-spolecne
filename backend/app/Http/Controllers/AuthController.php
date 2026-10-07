@@ -51,9 +51,14 @@ class AuthController extends Controller
                     ->mixedCase()
                     ->numbers(),
             ],
+            // Agreement to the terms and privacy policy, incl. that a parent agreed for a child under 15.
+            'terms' => 'accepted',
+        ], [
+            'terms.accepted' => 'Pro registraci je potřeba souhlasit s podmínkami používání.',
         ]);
 
         $email = mb_strtolower(trim($validatedData['email']));
+        $terms = ['terms_accepted_at' => now(), 'terms_version' => config('general.termsVersion')];
         $existing = User::whereRaw('LOWER(email) = ?', [$email])->first();
 
         if ($existing && $existing->hasVerifiedEmail()) {
@@ -64,6 +69,7 @@ class AuthController extends Controller
             $existing->update([
                 'name' => $validatedData['name'],
                 'password' => Hash::make($validatedData['password']),
+                ...$terms,
             ]);
             $user = $existing;
         } else {
@@ -72,6 +78,7 @@ class AuthController extends Controller
                 'role' => "user",
                 'email' => $email,
                 'password' => Hash::make($validatedData['password']),
+                ...$terms,
             ]);
         }
 

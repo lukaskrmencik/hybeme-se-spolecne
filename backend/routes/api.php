@@ -31,6 +31,7 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::get('{user}', [UserController::class, 'show']);
         Route::patch('{user}', [UserController::class, 'update']);
         Route::patch('{user}/role', [UserController::class, 'updateRole']);
+        Route::post('{user}/terms', [UserController::class, 'acceptTerms']);
         Route::post('{user}/avatar', [UserController::class, 'uploadAvatar']);
         Route::delete('{user}/avatar', [UserController::class, 'deleteAvatar']);
         Route::delete('{user}', [UserController::class, 'destroy']);

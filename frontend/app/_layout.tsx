@@ -43,7 +43,12 @@ function InitialLayout() {
 
   // The administration works on a computer too, and its admins need to sign in there.
   const desktopAllowed =
-    pathname === '/' || pathname.startsWith('/admin') || pathname === '/login' || pathname === '/verify-email';
+    pathname === '/' ||
+    pathname.startsWith('/admin') ||
+    pathname === '/login' ||
+    pathname === '/verify-email' ||
+    pathname === '/soukromi' ||
+    pathname === '/podminky';
   if (isDesktopWeb && !desktopAllowed) return <Redirect href="/" />;
 
   return <Slot />;

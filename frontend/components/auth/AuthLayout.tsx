@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { PartnerLogos } from '../PartnerLogos';
 import { PathWave } from '../PathWave';
 import { GoogleSignInButton, googleSignInSupported } from './GoogleSignInButton';
+import { LegalLinks } from '../legal/LegalLinks';
 import { colors, radius } from '../../utils/theme';
 
 const logo = require('../../assets/images/logos/logo_hss_mark.png');
@@ -92,6 +93,9 @@ export function AuthLayout({
 
         <View style={styles.partners}>
           <PartnerLogos />
+          <View style={styles.legal}>
+            <LegalLinks />
+          </View>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -140,5 +144,6 @@ const styles = StyleSheet.create({
   footer: { marginTop: 14 },
   footerText: { color: colors.muted, textAlign: 'center', fontSize: 14, fontWeight: '700' },
   footerAction: { color: colors.primary, fontWeight: '900' },
+  legal: { marginTop: 12 },
   partners: { marginTop: 'auto', paddingTop: 14, borderTopWidth: 1, borderTopColor: colors.border },
 });

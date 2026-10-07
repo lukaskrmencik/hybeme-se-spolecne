@@ -11,6 +11,7 @@ import { confirmAction, showToast } from '../../../utils/alert';
 import { plural } from '../../../utils/plural';
 import { formatNumber } from '../../../utils/format';
 import { PartnerLogos } from '../../../components/PartnerLogos';
+import { LegalLinks } from '../../../components/legal/LegalLinks';
 import { colors, radius } from '../../../utils/theme';
 
 async function buildAvatarForm(asset: ImagePicker.ImagePickerAsset): Promise<FormData> {
@@ -232,6 +233,7 @@ export default function AccountScreen() {
                 <View style={styles.partners}>
                     <PartnerLogos />
                 </View>
+                <LegalLinks />
             </View>
         </ScrollView>
     );

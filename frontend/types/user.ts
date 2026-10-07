@@ -21,5 +21,8 @@ export interface UserProfile {
   email: string;
   avatar_url?: string | null;
   totalPoints: number;
+  /** Version of the terms the user agreed to; null for accounts that have not agreed yet. */
+  terms_version?: string | null;
+  terms_accepted_at?: string | null;
   visitsCombinations: Visit[];
 }

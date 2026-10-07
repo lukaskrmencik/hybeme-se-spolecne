@@ -9,4 +9,6 @@ return [
     'pointsPerKilometer' => 10,
     'placeLatestVisitsCount' => 10,
     'leaderboardMaxUsers' => 20,
+    // Version of the terms of use and privacy policy; keep equal to LEGAL.termsVersion in frontend/constants/legal.ts.
+    'termsVersion' => '2026-10-07',
 ];

@@ -71,6 +71,8 @@ class UserController extends Controller
             'name' => $user->name,
             'email' => $user->email,
             'avatar_url' => $user->avatar_url,
+            'terms_accepted_at' => $user->terms_accepted_at,
+            'terms_version' => $user->terms_version,
             'visitsCombinations' => $user->visitsCombinations(),
             'totalPoints' => $user->totalPoints(),
             'cheats' => $user->cheats()->where('is_denied', false)->get(),
@@ -98,6 +100,31 @@ class UserController extends Controller
             'name' => $user->name,
             'email' => $user->email,
             'avatar_url' => $user->avatar_url,
+        ]);
+    }
+
+    /**
+     * The user agrees to the current terms of use and privacy policy (also for users who signed up
+     * before they existed, or through Google). Only for one's own account: consent cannot be given for others.
+     */
+    public function acceptTerms(Request $request, User $user)
+    {
+        abort_unless($request->user()->id === $user->id, 403);
+
+        $request->validate([
+            'version' => ['required', 'string', Rule::in([config('general.termsVersion')])],
+        ], [
+            'version.in' => 'Podmínky se mezitím změnily. Načti prosím aplikaci znovu.',
+        ]);
+
+        $user->forceFill([
+            'terms_accepted_at' => now(),
+            'terms_version' => config('general.termsVersion'),
+        ])->save();
+
+        return response()->success([
+            'terms_accepted_at' => $user->terms_accepted_at,
+            'terms_version' => $user->terms_version,
         ]);
     }
 

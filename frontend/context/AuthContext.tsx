@@ -12,6 +12,8 @@ export interface LoginCredentials {
 export interface RegisterData extends LoginCredentials {
   name: string;
   password_confirmation: string;
+  /** Agreement to the terms and privacy policy (the backend refuses the registration without it). */
+  terms: boolean;
 }
 
 /** The account exists but its e-mail is not confirmed yet; a code was sent to it. */

@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { ApiError, getErrorMessage } from '../../services/api';
 import { AuthLayout } from '../../components/auth/AuthLayout';
 import { FormField } from '../../components/auth/FormField';
+import { Consent, ConsentCheckboxes, consentComplete } from '../../components/legal/ConsentCheckboxes';
 
 type Field = 'name' | 'email' | 'password' | 'password_confirmation';
 type FieldErrors = Partial<Record<Field, string>>;
@@ -29,6 +30,8 @@ export default function RegisterScreen() {
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
     const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
     const [loading, setLoading] = useState(false);
+    const [consent, setConsent] = useState<Consent>({ terms: false, age: false });
+    const [consentError, setConsentError] = useState<string | null>(null);
 
     const emailRef = useRef<TextInput>(null);
     const passwordRef = useRef<TextInput>(null);
@@ -41,7 +44,9 @@ export default function RegisterScreen() {
         if (loading) return;
         const errors = validate(name, email, password, passwordConfirmation);
         setFieldErrors(errors);
-        if (Object.keys(errors).length > 0) {
+        const consentMissing = !consentComplete(consent);
+        setConsentError(consentMissing ? 'Bez obou souhlasů se zaregistrovat nejde.' : null);
+        if (Object.keys(errors).length > 0 || consentMissing) {
             setErrorMsg(null);
             return;
         }
@@ -49,7 +54,7 @@ export default function RegisterScreen() {
         setErrorMsg(null);
         setLoading(true);
         try {
-            const verification = await register({ name, email, password, password_confirmation: passwordConfirmation });
+            const verification = await register({ name, email, password, password_confirmation: passwordConfirmation, terms: true });
             setLoading(false);
             router.push({
                 pathname: '/verify-email',
@@ -147,6 +152,14 @@ export default function RegisterScreen() {
                 textContentType="newPassword"
                 returnKeyType="go"
                 onSubmitEditing={handleRegister}
+            />
+            <ConsentCheckboxes
+                value={consent}
+                onChange={(c) => {
+                    setConsent(c);
+                    if (consentComplete(c)) setConsentError(null);
+                }}
+                error={consentError}
             />
         </AuthLayout>
     );

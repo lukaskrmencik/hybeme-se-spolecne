@@ -6,6 +6,7 @@ import QRCode from 'react-native-qrcode-svg';
 import { useAuth } from '../../context/AuthContext';
 import { PartnerLogos } from '../PartnerLogos';
 import { LandingLeaderboard } from './LandingLeaderboard';
+import { LegalLinks } from '../legal/LegalLinks';
 import Svg, { Path } from 'react-native-svg';
 import { colors, radius, shadows } from '../../utils/theme';
 
@@ -315,6 +316,7 @@ export function LandingPage() {
       <View style={styles.footer}>
         <View style={[styles.inner, styles.footerInner]}>
           <PartnerLogos />
+          <LegalLinks />
           <Text style={styles.copyright}>© {new Date().getFullYear()} Hýbeme se společně</Text>
         </View>
       </View>
