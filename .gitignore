@@ -3,3 +3,5 @@
 
 # Windows "downloaded from the internet" markers copied along with files
 *:Zone.Identifier
+# WSL stores the ":" of these Windows file names as U+F03A
+*Zone.Identifier
