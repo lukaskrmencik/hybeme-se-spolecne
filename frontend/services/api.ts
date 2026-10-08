@@ -69,6 +69,16 @@ export function onSessionExpired(fn: () => void): () => void {
     };
 }
 
+const refreshListeners = new Set<(token: string) => void>();
+
+/** Fires with the new token after a refresh, so the auth state (role, user id) follows it. */
+export function onTokenRefreshed(fn: (token: string) => void): () => void {
+    refreshListeners.add(fn);
+    return () => {
+        refreshListeners.delete(fn);
+    };
+}
+
 export interface ApiOptions extends RequestInit {
     /** Uploads over mobile data need longer than the default 15 s. */
     timeoutMs?: number;
@@ -109,6 +119,7 @@ async function refreshToken(expiredToken: string): Promise<string | null> {
                 const token: string | undefined = data?.data?.token;
                 if (response.ok && token) {
                     await saveToken(token);
+                    refreshListeners.forEach((fn) => fn(token));
                     return token;
                 }
                 return null;

@@ -58,6 +58,8 @@ function queuedToVisit(q: QueuedVisit, userId: number): Visit | null {
 
 export function UserStatsProvider({ children }: { children: React.ReactNode }) {
   const { token, userId } = useAuth();
+  // A refreshed token is the same session, so the effects below follow only signing in and out.
+  const signedIn = !!token;
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [queuedVisits, setQueuedVisits] = useState<QueuedVisit[]>([]);
   const [loading, setLoading] = useState(true);
@@ -89,7 +91,7 @@ export function UserStatsProvider({ children }: { children: React.ReactNode }) {
   }, [storeProfile]);
 
   useEffect(() => {
-    if (!token || userId == null) {
+    if (!signedIn || userId == null) {
       setProfile(null);
       setQueuedVisits([]);
       setLoading(false);
@@ -113,7 +115,7 @@ export function UserStatsProvider({ children }: { children: React.ReactNode }) {
     return () => {
       active = false;
     };
-  }, [token, userId, reloadQueue, refreshStats]);
+  }, [signedIn, userId, reloadQueue, refreshStats]);
 
   useEffect(() => onQueueChange(() => void reloadQueue()), [reloadQueue]);
 

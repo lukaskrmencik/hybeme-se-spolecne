@@ -268,8 +268,17 @@ class AuthController extends Controller
     public function refresh()
     {
         try {
-            $newToken = auth('api')->refresh(true, true);
-            return response()->success(["token" => $newToken]);
+            $guard = auth('api');
+            // Refreshing checks and blacklists the old token, but the new one would lose the custom
+            // claims (role, name), so it is swapped for a fresh token with the current user data.
+            $refreshed = $guard->refresh(true, true);
+            $user = User::find($guard->setToken($refreshed)->getPayload()->get('sub'));
+            $guard->invalidate(true);
+            if (! $user) {
+                return response()->error('Chyba tokenu, přihlašte se manuálně.', 401);
+            }
+
+            return response()->success(["token" => $guard->login($user)]);
 
         } catch (\Exception $e) {
             return response()->error('Chyba tokenu, přihlašte se manuálně.', 401);

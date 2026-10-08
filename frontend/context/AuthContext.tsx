@@ -1,7 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { Platform } from 'react-native';
 import { jwtDecode } from 'jwt-decode';
-import { apiFetch, ApiError, onSessionExpired } from '../services/api';
+import { apiFetch, ApiError, onSessionExpired, onTokenRefreshed } from '../services/api';
 import { getToken, saveToken, removeToken } from '../services/storage';
 
 export interface LoginCredentials {
@@ -106,6 +106,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   useEffect(() => onSessionExpired(() => setToken(null)), []);
+  useEffect(() => onTokenRefreshed(setToken), []);
 
   const authenticate = useCallback(async (endpoint: string, body: object) => {
     const res = await apiFetch<TokenResponse>(endpoint, {
