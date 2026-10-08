@@ -10,10 +10,10 @@ export const LEGAL = {
 
   operatorName: 'Základní škola Benátky nad Jizerou',
   operatorAddress: 'Husovo náměstí 55, 294 71 Benátky nad Jizerou',
-  operatorId: '[DOPLNIT IČO školy]',
-  operatorEmail: '[DOPLNIT kontaktní e-mail školy]',
+  operatorId: '70997501',
+  operatorEmail: 'sekretariat@1-zsbenatky.cz',
   /** Every public school must have a data protection officer (pověřenec, čl. 37 GDPR). */
-  dpoContact: '[DOPLNIT jméno a e-mail pověřence pro ochranu osobních údajů]',
+  dpoContact: 'Ondřej Vraník, ondrej.vranik@1-zsbenatky.cz',
   partner: 'ŠKOENERGO',
   website: 'https://hybemesespolecne.cz',
 } as const;
