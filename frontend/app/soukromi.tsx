@@ -14,87 +14,98 @@ const SUMMARY = [
 
 const SECTIONS: LegalSection[] = [
   {
-    title: 'Kdo tvoje údaje zpracovává',
+    title: 'Správce osobních údajů',
     blocks: [
-      `Správcem osobních údajů je ${LEGAL.operatorName}, ${LEGAL.operatorAddress}, IČO: ${LEGAL.operatorId} (dále „škola“). Kontakt: ${LEGAL.operatorEmail}.`,
+      `Správcem osobních údajů je ${LEGAL.operatorName}, se sídlem ${LEGAL.operatorAddress}, IČO: ${LEGAL.operatorId} (dále jen „správce“). Kontaktní e-mail: ${LEGAL.operatorEmail}.`,
       `Pověřenec pro ochranu osobních údajů: ${LEGAL.dpoContact}.`,
-      `Aplikace „Hýbeme se společně“ (${LEGAL.website}) vznikla s podporou hlavního partnera ${LEGAL.partner}. Partner k osobním údajům uživatelů přístup nemá.`,
+      `Aplikace „Hýbeme se společně“ dostupná na adrese ${LEGAL.website} (dále jen „aplikace“) vznikla s finanční podporou společnosti ${LEGAL.partner}. Tato společnost nemá k osobním údajům uživatelů přístup.`,
     ],
   },
   {
-    title: 'Jaké údaje zpracováváme a proč',
+    title: 'Rozsah a účely zpracování',
     blocks: [
+      'Správce zpracovává tyto kategorie osobních údajů:',
       {
         list: [
-          'Účet: jméno (nebo přezdívka), e-mail, heslo a datum registrace. Heslo ukládáme jen jako zašifrovaný otisk, takže ho nikdo nezná, ani správci. Účet potřebuješ, aby se ti body počítaly.',
-          'Přihlášení přes Google: pokud ho použiješ, dostaneme od Googlu identifikátor účtu, jméno, e-mail a profilovou fotku.',
-          'Návštěvy: které místo, kdy, jakým sportem a kolik bodů za něj. Z toho počítáme body, kombinace a žebříček.',
-          'Poloha: aplikace používá GPS telefonu jen v telefonu, aby ověřila, že jsi u místa, a ukázala tě na mapě. Polohu na server neposíláme ani neukládáme.',
-          'Fotky: fotky, které přidáš k návštěvě, a profilová fotka. Každou fotku před uložením automaticky zkontroluje program na našem serveru, jestli neobsahuje nevhodný obsah. Fotky nikam dál neposíláme.',
-          'Nahlášení: pokud nahlásíš nevhodnou fotku nebo jméno, uložíme, co jsi nahlásil(a), kdy a s jakou poznámkou. Vidí to jen správci a nahlášený uživatel se nedozví, od koho nahlášení přišlo.',
-          'Technické záznamy: server si krátce pamatuje IP adresu a čas požadavků, abychom mohli řešit poruchy a útoky.',
-          'V telefonu: aplikace si ukládá přihlášení, seznam míst a ještě neodeslané návštěvy, aby fungovala i bez signálu. Nepoužíváme reklamní ani sledovací cookies a žádné analytické nástroje.',
+          'Údaje o uživatelském účtu: jméno nebo přezdívka, e-mailová adresa, heslo a datum registrace, za účelem vedení účtu a přihlašování. Heslo je uloženo výhradně v podobě kryptografického otisku, ze kterého je nelze zpětně zjistit.',
+          'Údaje z účtu Google: v případě přihlášení prostřednictvím služby Google identifikátor účtu, jméno, e-mailová adresa a profilová fotografie, za účelem přihlášení.',
+          'Údaje o návštěvách: navštívené místo, datum a čas návštěvy, zvolený sport a přidělené body, za účelem výpočtu bodů a sestavení žebříčků.',
+          'Poloha zařízení: údaje o poloze (GPS) zpracovává aplikace výhradně v zařízení uživatele, a to za účelem ověření přítomnosti u místa a zobrazení polohy na mapě. Údaje o poloze nejsou předávány na server správce ani jím ukládány.',
+          'Fotografie: fotografie pořízené uživatelem k návštěvám a profilová fotografie, za účelem jejich zobrazení ostatním uživatelům. Každá fotografie je před uložením automaticky posouzena programem provozovaným na serveru správce z hlediska nevhodného obsahu. Fotografie nejsou předávány třetím osobám.',
+          'Nahlášení obsahu: nahlášený obsah, datum a čas nahlášení a poznámka oznamovatele, za účelem moderování obsahu. Totožnost oznamovatele není nahlášenému uživateli sdělena.',
+          'Provozní záznamy: IP adresa a čas požadavků na server, za účelem zajištění bezpečnosti a řešení technických poruch.',
+          'Data ukládaná v zařízení: aplikace ukládá v zařízení uživatele přihlašovací údaje relace, seznam míst a dosud neodeslané návštěvy, aby byla funkční i bez připojení k internetu. Aplikace nepoužívá reklamní ani sledovací cookies ani analytické nástroje.',
         ],
       },
     ],
   },
   {
-    title: 'Na jakém základě údaje zpracováváme',
+    title: 'Právní základ zpracování',
     blocks: [
-      'Údaje o účtu, návštěvách, bodech a fotkách zpracováváme na základě tvého souhlasu (čl. 6 odst. 1 písm. a) obecného nařízení o ochraně osobních údajů, GDPR), který dáváš při registraci.',
-      'Pokud ti ještě nebylo 15 let, musí souhlas dát rodič nebo jiný zákonný zástupce (čl. 8 GDPR a § 7 zákona č. 110/2019 Sb., o zpracování osobních údajů). Při registraci to potvrzuješ zaškrtnutím.',
-      'Souhlas můžeš kdykoli odvolat smazáním účtu. Technické záznamy serveru zpracováváme z oprávněného zájmu na bezpečném provozu aplikace (čl. 6 odst. 1 písm. f) GDPR).',
+      'Osobní údaje uvedené v čl. 2, s výjimkou provozních záznamů, zpracovává správce na základě souhlasu subjektu údajů podle čl. 6 odst. 1 písm. a) nařízení Evropského parlamentu a Rady (EU) 2016/679, obecného nařízení o ochraně osobních údajů (dále jen „GDPR“), uděleného při registraci.',
+      'Je-li uživateli méně než 15 let, je zpracování zákonné pouze tehdy, byl-li souhlas udělen nebo schválen jeho zákonným zástupcem (čl. 8 GDPR ve spojení s § 7 zákona č. 110/2019 Sb., o zpracování osobních údajů). Uživatel tuto skutečnost potvrzuje při registraci.',
+      'Souhlas lze kdykoli odvolat, zejména zrušením účtu. Odvoláním souhlasu není dotčena zákonnost zpracování před jeho odvoláním.',
+      'Provozní záznamy zpracovává správce na základě oprávněného zájmu na zajištění bezpečného provozu aplikace podle čl. 6 odst. 1 písm. f) GDPR.',
     ],
   },
   {
-    title: 'Kdo další může údaje vidět',
+    title: 'Příjemci osobních údajů',
     blocks: [
       {
         list: [
-          'Ostatní uživatelé a návštěvníci webu: v žebříčku (i na veřejné úvodní stránce) vidí tvoje jméno, profilovou fotku a body. U fotek, které přidáš k místu, vidí i tvoje jméno.',
-          'Správci aplikace z řad školy: vidí údaje potřebné ke správě, například seznam účtů a nahlášený obsah.',
-          'Hetzner Online GmbH (Německo): na jejích serverech v EU aplikace běží.',
-          'Brevo (Sendinblue SAS, Francie): odesílá e-maily, například ověřovací kód při registraci. Vidí tvůj e-mail.',
-          'Seznam.cz, a.s. (Mapy.com): z jejích serverů telefon stahuje mapu, takže vidí tvou IP adresu. Když klepneš na Navigovat, otevře se Mapy.com s trasou k místu.',
-          'Google: jen pokud se přihlásíš přes Google. Google údaje zpracovává podle svých zásad a může je zpracovávat i mimo EU.',
+          'Ostatní uživatelé a veřejnost: jméno, profilová fotografie a body uživatele jsou zobrazeny v žebříčcích, a to i na veřejně přístupné úvodní stránce aplikace. U fotografií přidaných k místům je zobrazeno jméno jejich autora.',
+          'Pověření pracovníci správce, kteří aplikaci spravují, v rozsahu nezbytném pro její správu.',
+          'Hetzner Online GmbH, Německo, jako zpracovatel zajišťující provoz serverů v Evropské unii.',
+          'Sendinblue SAS (Brevo), Francie, jako zpracovatel zajišťující odesílání e-mailů, v rozsahu e-mailové adresy uživatele.',
+          'Seznam.cz, a.s., poskytovatel mapových podkladů Mapy.com, který při načítání mapy získává IP adresu zařízení. Po zvolení funkce „Navigovat“ je uživatel přesměrován do služby Mapy.com.',
+          'Google LLC, pouze v případě přihlášení prostřednictvím služby Google. Google zpracovává údaje podle vlastních zásad a může je předávat mimo Evropskou unii.',
         ],
       },
-      'Tvoje údaje nikomu neprodáváme, nepoužíváme je k reklamě a nepředáváme je dalším firmám.',
+      'Osobní údaje nejsou prodávány, využívány k marketingovým účelům ani předávány dalším osobám.',
     ],
   },
   {
-    title: 'Jak dlouho údaje uchováváme',
+    title: 'Doba uložení',
     blocks: [
-      'Údaje uchováváme, dokud máš účet. Když účet smažeš (Účet → Smazat účet), okamžitě smažeme účet, návštěvy, body i fotky. Ze záloh zmizí nejpozději do 14 dnů.',
-      'Technické záznamy serveru mažeme nejpozději po 14 dnech.',
+      'Osobní údaje jsou uchovávány po dobu existence uživatelského účtu. Po zrušení účtu (v aplikaci Účet → Smazat účet) jsou účet, návštěvy, body a fotografie neprodleně vymazány. Ze záložních kopií jsou odstraněny nejpozději do 14 dnů.',
+      'Provozní záznamy jsou vymazány nejpozději po 14 dnech.',
     ],
   },
   {
-    title: 'Tvoje práva',
+    title: 'Automatizované rozhodování',
     blocks: [
+      'Nedochází k automatizovanému rozhodování s právními či obdobně závažnými účinky ani k profilování ve smyslu čl. 22 GDPR. Automatická kontrola fotografií a věrohodnosti návštěv slouží pouze k dodržování pravidel aplikace a o nahlášeném obsahu rozhoduje člověk.',
+    ],
+  },
+  {
+    title: 'Práva subjektu údajů',
+    blocks: [
+      'Uživatel má právo:',
       {
         list: [
-          'vědět, jaké údaje o tobě máme, a dostat jejich kopii,',
-          'nechat opravit nepřesné údaje (jméno si změníš přímo v Účtu),',
-          'nechat údaje smazat (smazáním účtu v aplikaci),',
-          'požádat o omezení zpracování nebo vznést námitku,',
-          'odvolat souhlas,',
-          'podat stížnost u Úřadu pro ochranu osobních údajů (Pplk. Sochora 27, 170 00 Praha 7, www.uoou.gov.cz).',
+          'na přístup ke svým osobním údajům a na jejich kopii (čl. 15 GDPR),',
+          'na opravu nepřesných údajů (čl. 16 GDPR); jméno lze změnit přímo v aplikaci,',
+          'na výmaz (čl. 17 GDPR), zejména zrušením účtu v aplikaci,',
+          'na omezení zpracování (čl. 18 GDPR),',
+          'na přenositelnost údajů (čl. 20 GDPR),',
+          'vznést námitku proti zpracování na základě oprávněného zájmu (čl. 21 GDPR),',
+          'kdykoli odvolat souhlas se zpracováním (čl. 7 odst. 3 GDPR),',
+          'podat stížnost u Úřadu pro ochranu osobních údajů, Pplk. Sochora 27, 170 00 Praha 7, www.uoou.gov.cz (čl. 77 GDPR).',
         ],
       },
-      `S čímkoli se obrať na školu (${LEGAL.operatorEmail}) nebo na pověřence (${LEGAL.dpoContact}). Za dítě mladší 15 let jedná rodič nebo jiný zákonný zástupce.`,
+      `Práva lze uplatnit u správce na adrese ${LEGAL.operatorEmail} nebo u pověřence pro ochranu osobních údajů (${LEGAL.dpoContact}). Za uživatele mladšího 15 let uplatňuje práva jeho zákonný zástupce.`,
     ],
   },
   {
-    title: 'Jak údaje chráníme',
+    title: 'Zabezpečení osobních údajů',
     blocks: [
-      'Spojení s aplikací je šifrované (HTTPS), hesla ukládáme jen jako otisk, server je v EU a do administrace mají přístup jen pověření správci.',
+      'Správce přijal přiměřená technická a organizační opatření k ochraně osobních údajů, zejména šifrovaný přenos dat (HTTPS), ukládání hesel výhradně v podobě otisku, umístění serverů v Evropské unii a omezení přístupu do administrace na pověřené osoby.',
     ],
   },
   {
     title: 'Změny zásad',
     blocks: [
-      'Když zásady podstatně změníme, aplikace tě při dalším otevření požádá, abys nové znění odsouhlasil(a).',
+      'Správce je oprávněn tyto zásady měnit. O podstatné změně bude uživatel informován v aplikaci a bude požádán o udělení souhlasu s novým zněním.',
     ],
   },
 ];

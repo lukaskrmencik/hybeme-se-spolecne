@@ -11,86 +11,90 @@ const SUMMARY = [
 
 const SECTIONS: LegalSection[] = [
   {
-    title: 'Úvod',
+    title: 'Úvodní ustanovení',
     blocks: [
-      `Aplikaci „Hýbeme se společně“ (${LEGAL.website}) provozuje ${LEGAL.operatorName}, ${LEGAL.operatorAddress}, IČO: ${LEGAL.operatorId} (dále „škola“), s podporou hlavního partnera ${LEGAL.partner}.`,
-      'Aplikace má motivovat k pohybu: za návštěvy zajímavých míst pěšky, během nebo na kole se sbírají body. Je zdarma a její používání je dobrovolné.',
-      'Registrací souhlasíš s těmito podmínkami. Jak zacházíme s osobními údaji, popisují Zásady ochrany osobních údajů.',
+      `Tyto podmínky používání (dále jen „podmínky“) upravují používání aplikace „Hýbeme se společně“ dostupné na adrese ${LEGAL.website} (dále jen „aplikace“), jejímž provozovatelem je ${LEGAL.operatorName}, se sídlem ${LEGAL.operatorAddress}, IČO: ${LEGAL.operatorId} (dále jen „provozovatel“). Aplikace vznikla s finanční podporou společnosti ${LEGAL.partner}.`,
+      'Účelem aplikace je podpora pohybových aktivit: uživatelé získávají body za návštěvy vybraných míst pěšky, během nebo na kole. Používání aplikace je bezplatné a dobrovolné.',
+      'Registrací uživatel potvrzuje, že se s podmínkami seznámil a souhlasí s nimi. Zpracování osobních údajů upravují Zásady ochrany osobních údajů.',
     ],
   },
   {
-    title: 'Kdo může aplikaci používat',
+    title: 'Uživatelé',
     blocks: [
       {
         list: [
-          'Aplikaci může používat každý. Pokud ti ještě nebylo 15 let, potřebuješ k registraci souhlas rodiče nebo jiného zákonného zástupce.',
-          'Rodiče a zákonní zástupci odpovídají za to, jak jejich dítě aplikaci používá, a za dohled nad ním na cestách.',
-          'Každý může mít jen jeden účet a nesmí ho půjčovat ostatním. Při registraci uveď e-mail, ke kterému máš přístup.',
+          'Aplikaci může používat každá fyzická osoba. Uživatel mladší 15 let se smí registrovat pouze se souhlasem svého zákonného zástupce.',
+          'Zákonný zástupce nezletilého uživatele odpovídá za používání aplikace nezletilým a za dohled nad ním při přesunech mezi místy.',
+          'Každý uživatel smí mít pouze jeden účet a nesmí jej přenechat jiné osobě. Uživatel je povinen uvést e-mailovou adresu, ke které má přístup, a chránit své přihlašovací údaje.',
         ],
       },
     ],
   },
   {
-    title: 'Bezpečnost na cestě',
+    title: 'Bezpečnost',
     blocks: [
+      'Uživatel je povinen zejména:',
       {
         list: [
-          'Dodržuj pravidla silničního provozu. Na kole nos přilbu a telefon nepoužívej za jízdy, zastav.',
-          'Trasu a tempo přizpůsob svým silám, počasí a denní době. Body nikam neutečou.',
-          'Nevstupuj na soukromé pozemky, do uzavřených nebo nebezpečných míst. Místa v aplikaci jsou veřejně přístupná.',
-          'Mladší děti by měly chodit nebo jezdit s dospělým.',
+          'dodržovat pravidla silničního provozu, při jízdě na kole používat ochrannou přilbu a nepoužívat telefon za jízdy,',
+          'přizpůsobit trasu a tempo svým schopnostem, počasí a denní době,',
+          'nevstupovat na soukromé pozemky ani do uzavřených či nebezpečných prostor.',
         ],
       },
-      'Aplikaci používáš na vlastní odpovědnost. Škola neodpovídá za úrazy ani škody vzniklé cestou k místům; za dodržování pravidel odpovídá každý sám, u dětí jejich rodiče.',
+      'Provozovatel doporučuje, aby mladší děti navštěvovaly místa v doprovodu dospělé osoby.',
+      'Provozovatel neodpovídá za újmu vzniklou porušením pravidel silničního provozu nebo těchto podmínek ani za stav míst a cest k nim, které nespravuje. Za dodržování pravidel odpovídá uživatel, u nezletilého uživatele jeho zákonný zástupce.',
     ],
   },
   {
-    title: 'Body a fér hra',
+    title: 'Body a pravidla hry',
     blocks: [
-      'Body se počítají podle pravidel popsaných v aplikaci (návštěvy, kombinace, žebříčky). Pravidla se mohou upravit, aby hra zůstala spravedlivá.',
+      'Body se přidělují podle pravidel uvedených v aplikaci (návštěvy, kombinace, žebříčky). Provozovatel je oprávněn pravidla upravit, zejména za účelem zachování spravedlnosti hry.',
       {
         list: [
-          'Je zakázáno podvádět: jezdit autem či jiným dopravním prostředkem tam, kde se počítá chůze, běh nebo kolo, falšovat polohu, používat více účtů nebo cizí účet.',
-          'Aplikace automaticky kontroluje, jestli přesun mezi místy odpovídá zvolenému sportu. Podezřelou kombinaci může započítat jen jako běžnou návštěvu nebo návštěvu odmítnout.',
-          'Body nemají peněžní hodnotu a nelze je směnit. Případné soutěže o ceny se řídí samostatnými pravidly.',
-        ],
-      },
-    ],
-  },
-  {
-    title: 'Fotky, jména a chování',
-    blocks: [
-      {
-        list: [
-          'Přidávej jen fotky, které jsi pořídil(a) sám/sama, a jméno, které není vulgární ani urážlivé a nevydává se za někoho jiného.',
-          'Zakázané jsou fotky urážlivé, vulgární, násilné, sexuální nebo nenávistné a fotky jiných lidí bez jejich souhlasu. Nezveřejňuj ani osobní údaje druhých (adresy, telefonní čísla apod.).',
-          'Přidáním fotky souhlasíš, že ji aplikace zobrazí ostatním uživatelům u daného místa, a to dokud ji nesmažeš ty nebo správce.',
-          'Nevhodný obsah může kdokoli nahlásit. Fotky navíc automaticky kontroluje program; kontrola se může splést, proto o nahlášeném obsahu rozhoduje správce.',
+          'Zakázáno je zejména přesouvat se dopravním prostředkem v případech, kdy se body udělují za chůzi, běh nebo jízdu na kole, falšovat polohu zařízení a používat více účtů nebo účet jiné osoby.',
+          'Aplikace automaticky ověřuje, zda přesun mezi místy odpovídá zvolenému sportu. Nevěrohodnou kombinaci může započítat pouze jako běžnou návštěvu nebo návštěvu nezapočítat.',
+          'Body nemají peněžní hodnotu a nejsou směnitelné. Případné soutěže o ceny se řídí samostatnými pravidly.',
         ],
       },
     ],
   },
   {
-    title: 'Porušení pravidel',
+    title: 'Obsah vkládaný uživateli',
     blocks: [
-      'Při porušení těchto podmínek může správce odstranit fotku nebo profilovou fotku, změnit nevhodné jméno, odebrat body nebo zrušit účet, u závažného porušení i bez předchozího upozornění.',
+      {
+        list: [
+          'Uživatel smí vkládat pouze fotografie, které sám pořídil, a jméno, které není vulgární, urážlivé ani zavádějící a nevydává se za jinou osobu.',
+          'Zakázáno je vkládat obsah urážlivý, vulgární, násilný, sexuální či nenávistný, fotografie jiných osob bez jejich souhlasu a osobní údaje třetích osob.',
+          'Vložením fotografie uděluje uživatel provozovateli bezúplatnou nevýhradní licenci k jejímu zobrazování ostatním uživatelům v aplikaci, a to do doby, než fotografii odstraní uživatel nebo provozovatel.',
+          'Nevhodný obsah může nahlásit kterýkoli uživatel. Fotografie jsou dále kontrolovány automaticky; o nahlášeném obsahu rozhoduje správce aplikace.',
+        ],
+      },
+    ],
+  },
+  {
+    title: 'Porušení podmínek',
+    blocks: [
+      'Při porušení podmínek je provozovatel oprávněn odstranit fotografii nebo profilovou fotografii, změnit nevhodné jméno, odebrat body nebo zrušit účet, v případě závažného porušení i bez předchozího upozornění.',
     ],
   },
   {
     title: 'Provoz aplikace',
     blocks: [
-      'Škola se snaží, aby aplikace fungovala spolehlivě, ale nezaručuje nepřetržitý provoz. Může měnit místa, sporty a pravidla bodování nebo provoz aplikace ukončit.',
+      'Provozovatel nezaručuje nepřetržitou dostupnost aplikace. Je oprávněn měnit místa, sporty a pravidla bodování nebo provoz aplikace ukončit.',
     ],
   },
   {
     title: 'Zrušení účtu',
-    blocks: ['Účet můžeš kdykoli zrušit v aplikaci (Účet → Smazat účet). Smažou se tím i tvoje návštěvy, body a fotky.'],
+    blocks: [
+      'Uživatel může účet kdykoli zrušit v aplikaci (Účet → Smazat účet). Zrušením účtu jsou vymazány i návštěvy, body a fotografie uživatele.',
+    ],
   },
   {
-    title: 'Změny podmínek a kontakt',
+    title: 'Závěrečná ustanovení',
     blocks: [
-      'Když podmínky podstatně změníme, aplikace tě při dalším otevření požádá o souhlas s novým zněním.',
-      `S dotazy a připomínkami se obracej na školu: ${LEGAL.operatorEmail}.`,
+      'Provozovatel je oprávněn podmínky měnit. O podstatné změně bude uživatel informován v aplikaci a bude požádán o souhlas s novým zněním; bez tohoto souhlasu nelze aplikaci dále používat.',
+      'Tyto podmínky se řídí právním řádem České republiky.',
+      `Dotazy a připomínky lze zasílat na adresu ${LEGAL.operatorEmail}.`,
     ],
   },
 ];
