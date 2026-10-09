@@ -11,6 +11,7 @@ import { DESKTOP_MIN_WIDTH } from '../components/landing/LandingPage';
 import { takeAfterLogin } from '../utils/afterLogin';
 import { nunitoFonts } from '../utils/fonts';
 import { colors } from '../utils/theme';
+import { syncOfflineMapFiles } from '../services/offlineMapFiles';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -60,6 +61,11 @@ export default function RootLayout() {
   useEffect(() => {
     if (fontsLoaded) SplashScreen.hideAsync().catch(() => {});
   }, [fontsLoaded]);
+
+  // The app keeps the offline map on the phone itself (the web has the service worker for it).
+  useEffect(() => {
+    void syncOfflineMapFiles();
+  }, []);
 
   const [webFontsReady, setWebFontsReady] = useState(Platform.OS !== 'web');
 

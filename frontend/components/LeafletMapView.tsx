@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Platform, View, StyleSheet } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { Place } from '../types/place';
@@ -7,6 +7,10 @@ import { colors } from '../utils/theme';
 import { config } from '../constants/config';
 import { mapLibsHead } from '../utils/mapLibs';
 import { OFFLINE_MAP, OfflineMap } from '../constants/offlineMap';
+import { MapLibs, hasOfflineMapFile, loadMapLibs, readOfflineMapBytes } from '../services/offlineMapFiles';
+
+/** Where the offline map comes from: a URL (web, the service worker answers it) or the app over the bridge (native). */
+type OfflineSource = OfflineMap & { bridge: boolean };
 
 /** Same meaning as PlaceState: green = points now, white with a clock = points later, grey tick = done. */
 export type PlaceTone = 'open' | 'wait' | 'done';
@@ -78,13 +82,20 @@ export function tileSource(): TileSource {
   };
 }
 
-const buildHtml = (lat: number, lng: number, radius: number, tiles: TileSource, offline: OfflineMap | null) => `
+const buildHtml = (
+  lat: number,
+  lng: number,
+  radius: number,
+  tiles: TileSource,
+  offline: OfflineSource | null,
+  libs: MapLibs | null
+) => `
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  ${mapLibsHead(true, !!offline)}
+  ${mapLibsHead(true, !!offline, libs)}
   <style>
     *:focus { outline: none !important; }
     html, body, #map { margin:0; padding:0; height:100%; width:100%; }
@@ -158,9 +169,33 @@ const buildHtml = (lat: number, lng: number, radius: number, tiles: TileSource, 
 
     // Without signal the Mapy.com tiles fail; the map then switches to the stored OpenStreetMap map of
     // the area and goes back once the tiles load again.
-    var offlineLayer = OFFLINE && typeof protomapsL !== 'undefined'
+    // In the app the file is on the phone: the page asks for its pieces and the app answers via __mapBytes.
+    var pendingBytes = {}, nextBytesId = 1;
+    window.__mapBytes = function (id, base64) {
+      var request = pendingBytes[id];
+      if (!request) return;
+      delete pendingBytes[id];
+      if (base64 == null) return request.reject(new Error('Offline mapu se nepodařilo přečíst.'));
+      var binary = atob(base64), bytes = new Uint8Array(binary.length);
+      for (var i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      request.resolve({ data: bytes.buffer });
+    };
+    var offlineUrl = OFFLINE && !OFFLINE.bridge ? OFFLINE.url : null;
+    if (OFFLINE && OFFLINE.bridge && typeof pmtiles !== 'undefined') {
+      offlineUrl = new pmtiles.PMTiles({
+        getKey: function () { return 'offline-map'; },
+        getBytes: function (offset, length) {
+          return new Promise(function (resolve, reject) {
+            var id = nextBytesId++;
+            pendingBytes[id] = { resolve: resolve, reject: reject };
+            post({ type: 'mapBytes', id: id, offset: offset, length: length });
+          });
+        }
+      });
+    }
+    var offlineLayer = offlineUrl && typeof protomapsL !== 'undefined'
       ? protomapsL.leafletLayer({
-          url: OFFLINE.url, flavor: 'light', lang: 'cs', maxDataZoom: OFFLINE.maxDataZoom, bounds: OFFLINE.bounds,
+          url: offlineUrl, flavor: 'light', lang: 'cs', maxDataZoom: OFFLINE.maxDataZoom, bounds: OFFLINE.bounds,
           attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>'
         })
       : null;
@@ -380,11 +415,22 @@ export const LeafletMapView = memo(function LeafletMapView({
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const readyRef = useRef(false);
 
-  const html = useMemo(
-    // The native WebView has no service worker to keep the offline map, so only the web gets it.
-    () => buildHtml(defaultLat, defaultLng, visitRadiusMeters, tileSource(), Platform.OS === 'web' ? OFFLINE_MAP : null),
-    [defaultLat, defaultLng, visitRadiusMeters]
-  );
+  // Native: the map libraries downloaded to the phone (undefined while they are being read).
+  const [libs, setLibs] = useState<MapLibs | null | undefined>(Platform.OS === 'web' ? null : undefined);
+  useEffect(() => {
+    if (Platform.OS !== 'web') void loadMapLibs().then(setLibs);
+  }, []);
+
+  const html = useMemo(() => {
+    if (libs === undefined) return '';
+    const offline: OfflineSource | null =
+      Platform.OS === 'web'
+        ? { ...OFFLINE_MAP, bridge: false }
+        : libs && hasOfflineMapFile()
+          ? { ...OFFLINE_MAP, bridge: true }
+          : null;
+    return buildHtml(defaultLat, defaultLng, visitRadiusMeters, tileSource(), offline, libs);
+  }, [defaultLat, defaultLng, visitRadiusMeters, libs]);
 
   const placesMessage = useMemo<MapMessage>(
     () => ({
@@ -467,7 +513,7 @@ export const LeafletMapView = memo(function LeafletMapView({
           title="Mapa"
           style={{ width: '100%', height: '100%', border: 'none' }}
         />
-      ) : (
+      ) : !html ? null : (
         <WebView
           ref={webViewRef}
           originWhitelist={['*']}
@@ -477,7 +523,13 @@ export const LeafletMapView = memo(function LeafletMapView({
           onLoad={handleLoad}
           onMessage={(e) => {
             try {
-              handleMapEvent(JSON.parse(e.nativeEvent.data));
+              const msg = JSON.parse(e.nativeEvent.data);
+              if (msg?.type === 'mapBytes') {
+                const data = readOfflineMapBytes(Number(msg.offset), Number(msg.length));
+                webViewRef.current?.injectJavaScript(`window.__mapBytes(${Number(msg.id)}, ${JSON.stringify(data)}); true;`);
+                return;
+              }
+              handleMapEvent(msg);
             } catch {
               // ignore foreign messages
             }

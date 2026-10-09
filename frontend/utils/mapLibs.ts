@@ -1,13 +1,15 @@
 import { Platform } from 'react-native';
+import type { MapLibs } from '../services/offlineMapFiles';
 
 /**
  * <head> tags that load Leaflet (and the Nunito font for the pins) inside the map frames, and on the web
  * the renderer of the offline map (protomaps-leaflet) when asked for.
  * The web takes them from our own server (public/vendor, public/fonts): no request to a foreign CDN, so
  * no visitor's IP goes to unpkg / Google, and the service worker keeps them for offline use. A srcdoc
- * iframe resolves "/…" against the app's address. The native WebView has no address, so it uses the CDN.
+ * iframe resolves "/…" against the app's address. The native WebView has no address: it gets the copies
+ * the app downloaded from our server inline (they work without signal), or the CDN until it has them.
  */
-export function mapLibsHead(withFont: boolean, withOfflineMap = false): string {
+export function mapLibsHead(withFont: boolean, withOfflineMap = false, inline: MapLibs | null = null): string {
   if (Platform.OS === 'web') {
     const font = withFont
       ? `<style>
@@ -25,6 +27,13 @@ export function mapLibsHead(withFont: boolean, withOfflineMap = false): string {
   const font = withFont
     ? '<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&display=swap" rel="stylesheet" />'
     : '';
+  if (inline) {
+    const offlineMap = withOfflineMap ? `<script>${inline.pmtilesJs}</script>\n  <script>${inline.protomapsJs}</script>` : '';
+    return `<style>${inline.leafletCss}</style>
+  ${font}
+  <script>${inline.leafletJs}</script>
+  ${offlineMap}`;
+  }
   return `<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   ${font}
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>`;
