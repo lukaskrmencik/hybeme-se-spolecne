@@ -1,8 +1,9 @@
 // Service worker: keeps the app itself on the phone, so it opens without signal.
 // API calls are never touched: the app has its own offline queue for visits.
-// Map tiles are not stored either (Mapy.com terms); Leaflet and the map font come from /vendor and /fonts.
+// Mapy.com tiles are not stored (their terms); instead the OpenStreetMap map of the area (offline-map) is
+// downloaded once in the background and shown when there is no signal. Leaflet and the font come from /vendor and /fonts.
 
-const VERSION = 'v2';
+const VERSION = 'v3';
 const CACHE = `hybeme-${VERSION}`;
 // Pages the installed app opens on; any of them boots the whole app.
 const SHELL = [
@@ -13,7 +14,11 @@ const SHELL = [
   '/icons/icon-192.png',
   '/vendor/leaflet/leaflet.js',
   '/vendor/leaflet/leaflet.css',
+  '/vendor/protomaps-leaflet/protomaps-leaflet.js',
 ];
+// Its own cache, so a new app version does not throw away 20+ MB that would have to be downloaded again.
+const MAP_CACHE = 'offline-map';
+const MAP_URL = '/offline-map/area.pmtiles';
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -51,6 +56,61 @@ async function cacheFirst(request) {
   return response;
 }
 
+// The offline map: downloaded when missing, again only when the server has a new one (its ETag changes).
+let mapSync = null;
+let mapBlob = null;
+
+function syncOfflineMap() {
+  if (!mapSync) {
+    mapSync = (async () => {
+      try {
+        // The user asked the browser to save data: 20+ MB is not worth it then.
+        if (self.navigator.connection && self.navigator.connection.saveData) return;
+        const head = await fetch(MAP_URL, { method: 'HEAD', cache: 'no-store' });
+        if (!head.ok) return;
+        const version = (r) => r.headers.get('etag') || r.headers.get('last-modified');
+        const cache = await caches.open(MAP_CACHE);
+        const cached = await cache.match(MAP_URL);
+        if (cached && version(cached) === version(head)) return;
+        const response = await fetch(MAP_URL, { cache: 'no-store' });
+        if (response.ok) {
+          await cache.put(MAP_URL, response);
+          mapBlob = null;
+        }
+      } catch {
+        // No signal or an interrupted download; the next start tries again.
+      } finally {
+        mapSync = null;
+      }
+    })();
+  }
+  return mapSync;
+}
+
+// The map reads the file in pieces (HTTP Range requests); the stored copy answers them the same way the server does.
+async function offlineMap(request) {
+  const cached = await caches.match(MAP_URL, { cacheName: MAP_CACHE });
+  if (!cached) return fetch(request);
+  if (!mapBlob) mapBlob = await cached.blob();
+  const headers = { 'Content-Type': 'application/octet-stream' };
+  const etag = cached.headers.get('etag');
+  if (etag) headers.ETag = etag;
+  const range = /bytes=(\d+)-(\d*)/.exec(request.headers.get('range') || '');
+  if (!range) return new Response(mapBlob, { headers });
+  const size = mapBlob.size;
+  const start = Number(range[1]);
+  const end = range[2] ? Math.min(Number(range[2]), size - 1) : size - 1;
+  if (start >= size) return new Response(null, { status: 416, headers: { 'Content-Range': `bytes */${size}` } });
+  return new Response(mapBlob.slice(start, end + 1), {
+    status: 206,
+    headers: { ...headers, 'Content-Range': `bytes ${start}-${end}/${size}`, 'Content-Length': String(end - start + 1) },
+  });
+}
+
+self.addEventListener('message', (event) => {
+  if (event.data === 'sync-offline-map') event.waitUntil(syncOfflineMap());
+});
+
 // Pages: always the newest version when online, the stored one when not.
 async function networkFirstPage(request) {
   const cache = await caches.open(CACHE);
@@ -70,6 +130,10 @@ self.addEventListener('fetch', (event) => {
 
   if (url.origin === self.location.origin) {
     if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/storage/')) return;
+    if (url.pathname === MAP_URL) {
+      event.respondWith(offlineMap(request));
+      return;
+    }
     if (request.mode === 'navigate') {
       event.respondWith(networkFirstPage(request));
       return;

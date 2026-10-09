@@ -55,6 +55,10 @@ const registerServiceWorker = `
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function () {
     navigator.serviceWorker.register('/sw.js').catch(function () {});
+    // Downloads the offline map in the background (once, then only when it changes).
+    navigator.serviceWorker.ready.then(function (registration) {
+      if (registration.active) registration.active.postMessage('sync-offline-map');
+    });
   });
 }`;
 

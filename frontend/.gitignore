@@ -39,3 +39,6 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# Built by deploy/offline-map.sh, too big for git.
+public/offline-map/

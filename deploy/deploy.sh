@@ -24,6 +24,10 @@ echo "==> Backend"
 "${COMPOSE[@]}" exec -T app php artisan migrate --force
 "${COMPOSE[@]}" exec -T app php artisan optimize
 
+echo "==> Offline mapa"
+# Without it the app still works offline, only without a map background; a failure must not stop the deploy.
+"$REPO_DIR/deploy/offline-map.sh" || echo "Offline mapu se nepodařilo připravit, web se nasadí bez ní." >&2
+
 echo "==> Web"
 # Built in a throwaway Node container, so the server needs no Node.js. Files stay owned by this user.
 docker run --rm \

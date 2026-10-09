@@ -34,7 +34,7 @@ const SECTIONS: LegalSection[] = [
           'Fotografie: fotografie pořízené uživatelem k návštěvám a profilová fotografie, za účelem jejich zobrazení ostatním uživatelům. Každá fotografie je před uložením automaticky posouzena programem provozovaným na serveru správce z hlediska nevhodného obsahu. Fotografie nejsou předávány třetím osobám.',
           'Nahlášení obsahu: nahlášený obsah, datum a čas nahlášení a poznámka oznamovatele, za účelem moderování obsahu. Totožnost oznamovatele není nahlášenému uživateli sdělena.',
           'Provozní záznamy: IP adresa a čas požadavků na server, za účelem zajištění bezpečnosti a řešení technických poruch.',
-          'Data ukládaná v zařízení: aplikace ukládá v zařízení uživatele přihlašovací údaje relace, seznam míst a dosud neodeslané návštěvy, aby byla funkční i bez připojení k internetu. Aplikace nepoužívá reklamní ani sledovací cookies ani analytické nástroje.',
+          'Data ukládaná v zařízení: aplikace ukládá v zařízení uživatele přihlašovací údaje relace, seznam míst, dosud neodeslané návštěvy a mapu okolí (z OpenStreetMap, stahuje se ze serveru správce), aby byla funkční i bez připojení k internetu. Aplikace nepoužívá reklamní ani sledovací cookies ani analytické nástroje.',
         ],
       },
     ],

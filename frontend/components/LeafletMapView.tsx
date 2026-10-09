@@ -6,6 +6,7 @@ import { GpsPosition } from '../hooks/useLocation';
 import { colors } from '../utils/theme';
 import { config } from '../constants/config';
 import { mapLibsHead } from '../utils/mapLibs';
+import { OFFLINE_MAP, OfflineMap } from '../constants/offlineMap';
 
 /** Same meaning as PlaceState: green = points now, white with a clock = points later, grey tick = done. */
 export type PlaceTone = 'open' | 'wait' | 'done';
@@ -77,13 +78,13 @@ export function tileSource(): TileSource {
   };
 }
 
-const buildHtml = (lat: number, lng: number, radius: number, tiles: TileSource) => `
+const buildHtml = (lat: number, lng: number, radius: number, tiles: TileSource, offline: OfflineMap | null) => `
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  ${mapLibsHead(true)}
+  ${mapLibsHead(true, !!offline)}
   <style>
     *:focus { outline: none !important; }
     html, body, #map { margin:0; padding:0; height:100%; width:100%; }
@@ -134,10 +135,11 @@ const buildHtml = (lat: number, lng: number, radius: number, tiles: TileSource) 
 
     var map = L.map('map', { zoomControl: false, attributionControl: false }).setView([${lat}, ${lng}], 13);
     var TILES = ${JSON.stringify(tiles)};
+    var OFFLINE = ${JSON.stringify(offline)};
     L.control.attribution({ prefix: false }).addTo(map);
-    L.tileLayer(TILES.url.replace('{r}', L.Browser.retina ? '@2x' : ''), {
-      maxZoom: TILES.maxZoom, tileSize: 256, attribution: TILES.attribution
-    }).addTo(map);
+    var tileUrl = TILES.url.replace('{r}', L.Browser.retina ? '@2x' : '');
+    var onlineLayer = L.tileLayer(tileUrl, { maxZoom: TILES.maxZoom, tileSize: 256, attribution: TILES.attribution });
+    var mapyLogo = null;
     if (TILES.mapyLogo) {
       var MapyLogo = L.Control.extend({
         options: { position: 'bottomleft' },
@@ -151,8 +153,51 @@ const buildHtml = (lat: number, lng: number, radius: number, tiles: TileSource) 
           return a;
         }
       });
-      new MapyLogo().addTo(map);
+      mapyLogo = new MapyLogo();
     }
+
+    // Without signal the Mapy.com tiles fail; the map then switches to the stored OpenStreetMap map of
+    // the area and goes back once the tiles load again.
+    var offlineLayer = OFFLINE && typeof protomapsL !== 'undefined'
+      ? protomapsL.leafletLayer({
+          url: OFFLINE.url, flavor: 'light', lang: 'cs', maxDataZoom: OFFLINE.maxDataZoom, bounds: OFFLINE.bounds,
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>'
+        })
+      : null;
+    var showingOffline = null, failedTiles = 0;
+    function showOffline(on) {
+      on = on && !!offlineLayer;
+      if (showingOffline === on) return;
+      showingOffline = on;
+      if (on) {
+        map.removeLayer(onlineLayer);
+        if (mapyLogo) map.removeControl(mapyLogo);
+        offlineLayer.addTo(map);
+      } else {
+        if (offlineLayer) map.removeLayer(offlineLayer);
+        failedTiles = 0;
+        onlineLayer.addTo(map);
+        if (mapyLogo) mapyLogo.addTo(map);
+      }
+    }
+    onlineLayer.on('tileload', function () { failedTiles = 0; });
+    onlineLayer.on('tileerror', function () {
+      failedTiles++;
+      if (!navigator.onLine || failedTiles >= 3) showOffline(true);
+    });
+    // Back online: try one Mapy.com tile first, so a weak signal does not flip the map back and forth.
+    function tryOnline() {
+      if (!showingOffline || !navigator.onLine) return;
+      var z = Math.min(Math.round(map.getZoom()), TILES.maxZoom);
+      var p = map.project(map.getCenter(), z).divideBy(256).floor();
+      var probe = new Image();
+      probe.onload = function () { showOffline(false); };
+      probe.src = L.Util.template(tileUrl, { s: 'a', z: z, x: p.x, y: p.y });
+    }
+    window.addEventListener('online', tryOnline);
+    window.addEventListener('offline', function () { showOffline(true); });
+    setInterval(tryOnline, 30000);
+    showOffline(navigator.onLine === false);
 
     function esc(v) {
       return String(v).replace(/[&<>"']/g, function (m) {
@@ -336,7 +381,8 @@ export const LeafletMapView = memo(function LeafletMapView({
   const readyRef = useRef(false);
 
   const html = useMemo(
-    () => buildHtml(defaultLat, defaultLng, visitRadiusMeters, tileSource()),
+    // The native WebView has no service worker to keep the offline map, so only the web gets it.
+    () => buildHtml(defaultLat, defaultLng, visitRadiusMeters, tileSource(), Platform.OS === 'web' ? OFFLINE_MAP : null),
     [defaultLat, defaultLng, visitRadiusMeters]
   );
 
