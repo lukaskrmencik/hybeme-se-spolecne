@@ -15,8 +15,12 @@ for required in "$REPO_DIR/backend/.env.production" "$REPO_DIR/frontend/.env.loc
 done
 
 cd "$REPO_DIR"
-echo "==> Stahuji novou verzi"
-git pull --ff-only
+if [[ -z "${DEPLOY_UPDATED:-}" ]]; then
+    echo "==> Stahuji novou verzi"
+    git pull --ff-only
+    # Bash keeps running the version of this script it started with; start again so changes to it apply now.
+    DEPLOY_UPDATED=1 exec "$REPO_DIR/deploy/deploy.sh" "$@"
+fi
 
 echo "==> Backend"
 # --force-recreate: .env.production is mounted as a single file, a container would keep an edited copy's old version.

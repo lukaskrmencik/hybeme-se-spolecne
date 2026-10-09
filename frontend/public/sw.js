@@ -3,7 +3,7 @@
 // Mapy.com tiles are not stored (their terms); instead the OpenStreetMap map of the area (offline-map) is
 // downloaded once in the background and shown when there is no signal. Leaflet and the font come from /vendor and /fonts.
 
-const VERSION = 'v3';
+const VERSION = 'v4';
 const CACHE = `hybeme-${VERSION}`;
 // Pages the installed app opens on; any of them boots the whole app.
 const SHELL = [
@@ -41,6 +41,8 @@ self.addEventListener('activate', (event) => {
       const keys = await caches.keys();
       await Promise.all(keys.filter((k) => k.startsWith('hybeme-') && k !== CACHE).map((k) => caches.delete(k)));
       await self.clients.claim();
+      // A new version may come with the map's download fixed; start it now, not on the next app start.
+      syncOfflineMap();
     })()
   );
 });
@@ -60,23 +62,37 @@ async function cacheFirst(request) {
 let mapSync = null;
 let mapBlob = null;
 
+// Every PMTiles file starts with these bytes. A missing file makes nginx answer with the landing page
+// (200, HTML), which must never be kept as the map.
+async function isMapFile(response) {
+  return response.headers.get('content-type')?.startsWith('text/html') !== true &&
+    (await (await response.blob()).slice(0, 7).text()) === 'PMTiles';
+}
+
 function syncOfflineMap() {
   if (!mapSync) {
     mapSync = (async () => {
       try {
         // The user asked the browser to save data: 20+ MB is not worth it then.
         if (self.navigator.connection && self.navigator.connection.saveData) return;
-        const head = await fetch(MAP_URL, { method: 'HEAD', cache: 'no-store' });
-        if (!head.ok) return;
-        const version = (r) => r.headers.get('etag') || r.headers.get('last-modified');
         const cache = await caches.open(MAP_CACHE);
-        const cached = await cache.match(MAP_URL);
-        if (cached && version(cached) === version(head)) return;
-        const response = await fetch(MAP_URL, { cache: 'no-store' });
-        if (response.ok) {
-          await cache.put(MAP_URL, response);
-          mapBlob = null;
+        const head = await fetch(MAP_URL, { method: 'HEAD', cache: 'no-store' });
+        if (!head.ok || head.headers.get('content-type')?.startsWith('text/html')) {
+          // Not on the server (yet); a wrong copy from before is dropped.
+          const cached = await cache.match(MAP_URL);
+          if (cached && !(await isMapFile(cached))) await cache.delete(MAP_URL);
+          return;
         }
+        const version = (r) => r.headers.get('etag') || r.headers.get('last-modified');
+        const cached = await cache.match(MAP_URL);
+        if (cached && version(cached) === version(head) && (await isMapFile(cached))) return;
+        const response = await fetch(MAP_URL, { cache: 'no-store' });
+        if (!response.ok) return;
+        await cache.put(MAP_URL, response);
+        mapBlob = null;
+        // Checked on the stored copy, which lives on disk: no need to hold the whole file in memory.
+        const stored = await cache.match(MAP_URL);
+        if (!stored || !(await isMapFile(stored))) await cache.delete(MAP_URL);
       } catch {
         // No signal or an interrupted download; the next start tries again.
       } finally {
@@ -91,7 +107,11 @@ function syncOfflineMap() {
 async function offlineMap(request) {
   const cached = await caches.match(MAP_URL, { cacheName: MAP_CACHE });
   if (!cached) return fetch(request);
-  if (!mapBlob) mapBlob = await cached.blob();
+  if (!mapBlob) {
+    const blob = await cached.blob();
+    if ((await blob.slice(0, 7).text()) !== 'PMTiles') return fetch(request);
+    mapBlob = blob;
+  }
   const headers = { 'Content-Type': 'application/octet-stream' };
   const etag = cached.headers.get('etag');
   if (etag) headers.ETag = etag;
