@@ -18,7 +18,8 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.lukas.hybemesespolecne"
+      "package": "cz.hybemesespolecne.app",
+      "blockedPermissions": ["android.permission.SYSTEM_ALERT_WINDOW"]
     },
     "web": {
       "bundler": "metro",
@@ -40,7 +41,8 @@
         "expo-image-picker",
         {
           "photosPermission": "Aplikace potřebuje přístup k fotkám kvůli nahrání avataru a fotek z navštívených míst.",
-          "cameraPermission": "Aplikace potřebuje fotoaparát, aby šlo rovnou vyfotit navštívené místo."
+          "cameraPermission": "Aplikace potřebuje fotoaparát, aby šlo rovnou vyfotit navštívené místo.",
+          "microphonePermission": false
         }
       ],
       "expo-asset",
