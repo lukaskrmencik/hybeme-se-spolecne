@@ -43,7 +43,9 @@
           "cameraPermission": "Aplikace potřebuje fotoaparát, aby šlo rovnou vyfotit navštívené místo."
         }
       ],
-      "expo-asset"
+      "expo-asset",
+      "expo-status-bar",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true
