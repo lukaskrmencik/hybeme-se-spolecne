@@ -90,7 +90,7 @@ function installWebFont() {
   const style = document.createElement('style');
   style.id = 'nunito-web-font';
   style.textContent = `${fontFaces}
-#root div, #root span, #root input, #root textarea, #root button { font-family: Nunito, sans-serif; }
+#root div, #root span, #root h1, #root h2, #root h3, #root input, #root textarea, #root button { font-family: Nunito, sans-serif; }
 #root *:focus, #root *:focus-visible { outline: none !important; -webkit-tap-highlight-color: transparent; }
 #root input, #root textarea { box-shadow: none !important; }`;
   document.head.appendChild(style);

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Redirect, Slot, usePathname, useRouter, useSegments } from 'expo-router';
+import Head from 'expo-router/head';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
@@ -14,6 +15,14 @@ import { colors } from '../utils/theme';
 import { syncOfflineMapFiles } from '../services/offlineMapFiles';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
+
+/**
+ * Public pages of the web are rendered into the HTML at build time, so search engines (and visitors on a slow
+ * connection) get their text without running the app. They must not wait for fonts or the sign-in state:
+ * the build has neither, and the first render in the browser has to match the HTML.
+ */
+const PRERENDERED_PAGES = ['/', '/podminky', '/soukromi'];
+const isPrerendered = (pathname: string) => Platform.OS === 'web' && PRERENDERED_PAGES.includes(pathname);
 
 function InitialLayout() {
   const { token, isLoading } = useAuth();
@@ -34,7 +43,7 @@ function InitialLayout() {
     }
   }, [token, isLoading, group, router]);
 
-  if (isLoading) {
+  if (isLoading && !isPrerendered(pathname)) {
     return (
       <View style={styles.center}>
         <ActivityIndicator size="large" color={colors.primary} />
@@ -57,6 +66,7 @@ function InitialLayout() {
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts(nunitoFonts);
+  const pathname = usePathname();
 
   useEffect(() => {
     if (fontsLoaded) SplashScreen.hideAsync().catch(() => {});
@@ -76,10 +86,18 @@ export default function RootLayout() {
       .finally(() => setWebFontsReady(true));
   }, [fontsLoaded]);
 
-  if (!fontsLoaded || !webFontsReady) return null;
+  // Default title of every page; the public pages set their own (components/Seo).
+  const defaultHead = (
+    <Head>
+      <title>Hýbeme se společně</title>
+    </Head>
+  );
+
+  if ((!fontsLoaded || !webFontsReady) && !isPrerendered(pathname)) return defaultHead;
 
   return (
     <GestureHandlerRootView style={styles.root}>
+      {defaultHead}
       <StatusBar style="dark" />
       <AuthProvider>
         <InitialLayout />

@@ -62,7 +62,9 @@ export function LegalPage({
 
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.inner}>
-          <Text style={styles.title}>{title}</Text>
+          <Text role="heading" aria-level={1} style={styles.title}>
+            {title}
+          </Text>
           <Text style={styles.meta}>Platné od {LEGAL.effectiveFrom}</Text>
 
           <View style={styles.summary}>
@@ -77,7 +79,7 @@ export function LegalPage({
 
           {sections.map((section, i) => (
             <View key={section.title} style={styles.section}>
-              <Text style={styles.sectionTitle}>
+              <Text role="heading" aria-level={2} style={styles.sectionTitle}>
                 {i + 1}. {section.title}
               </Text>
               {section.blocks.map((block, j) =>

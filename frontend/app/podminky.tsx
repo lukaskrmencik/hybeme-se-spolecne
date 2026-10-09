@@ -1,5 +1,6 @@
 import { LegalPage, LegalSection } from '../components/legal/LegalPage';
 import { LEGAL } from '../constants/legal';
+import { Seo } from '../components/Seo';
 
 const SUMMARY = [
   'Aplikace je zdarma a používání je dobrovolné.',
@@ -101,11 +102,18 @@ const SECTIONS: LegalSection[] = [
 
 export default function TermsScreen() {
   return (
-    <LegalPage
-      title="Podmínky používání"
-      summary={SUMMARY}
-      sections={SECTIONS}
-      other={{ href: '/soukromi', label: 'Zásady ochrany osobních údajů' }}
-    />
+    <>
+      <Seo
+        title="Podmínky používání"
+        description="Podmínky používání aplikace Hýbeme se společně: kdo ji může používat, pravidla bezpečnosti, bodování a vkládání fotek."
+        path="/podminky"
+      />
+      <LegalPage
+        title="Podmínky používání"
+        summary={SUMMARY}
+        sections={SECTIONS}
+        other={{ href: '/soukromi', label: 'Zásady ochrany osobních údajů' }}
+      />
+    </>
   );
 }

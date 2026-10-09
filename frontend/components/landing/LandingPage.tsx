@@ -7,6 +7,7 @@ import { useAuth } from '../../context/AuthContext';
 import { PartnerLogos } from '../PartnerLogos';
 import { LandingLeaderboard } from './LandingLeaderboard';
 import { LegalLinks } from '../legal/LegalLinks';
+import { LEGAL } from '../../constants/legal';
 import Svg, { Path } from 'react-native-svg';
 import { colors, radius, shadows } from '../../utils/theme';
 
@@ -139,7 +140,12 @@ function Button({
 
 /** Public front page of the web: what the app is, who runs it, how to install it, and the way in. */
 export function LandingPage() {
-  const { width } = useWindowDimensions();
+  // The page is rendered into the HTML at build time, without a screen or an address. The first render in the
+  // browser must match that HTML, so the screen width and the address are used only once the page is running.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  const screen = useWindowDimensions();
+  const width = mounted ? screen.width : 0;
   const isDesktop = width >= DESKTOP_MIN_WIDTH;
   const wide = width >= 760;
   const router = useRouter();
@@ -151,7 +157,7 @@ export function LandingPage() {
 
   useEffect(() => setDevice(detectDevice()), []);
 
-  const appUrl = typeof window !== 'undefined' ? window.location.origin : '';
+  const appUrl = mounted ? window.location.origin : '';
   const appHost = appUrl.replace(/^https?:\/\//, '');
   const openApp = () => router.push(token ? '/map' : '/login');
   const toGuide = () => scrollRef.current?.scrollTo({ y: guideY.current - 16, animated: true });
@@ -166,7 +172,9 @@ export function LandingPage() {
               <Image source={logo} style={styles.brandLogo} accessibilityLabel="Hýbeme se společně" />
               <Text style={styles.brandName}>Hýbeme se společně</Text>
             </View>
-            <Text style={[styles.heroTitle, wide && styles.heroTitleWide]}>Objevuj Benátecko pěšky i na kole</Text>
+            <Text role="heading" aria-level={1} style={[styles.heroTitle, wide && styles.heroTitleWide]}>
+              Objevuj Benátecko pěšky i na kole
+            </Text>
             <Text style={styles.heroLead}>
               Navštěvuj zajímavá místa v okolí, sbírej za ně body a poměř síly s ostatními. Čím víc se hýbeš, tím víc
               bodů máš.
@@ -213,7 +221,7 @@ export function LandingPage() {
       {/* Features */}
       <View style={[styles.inner, styles.section]}>
         <Text style={styles.kicker}>Jak to funguje</Text>
-        <Text style={styles.sectionTitle}>Pohyb, který se počítá</Text>
+        <Text role="heading" aria-level={2} style={styles.sectionTitle}>Pohyb, který se počítá</Text>
         <View style={[styles.features, wide && styles.featuresWide]}>
           {FEATURES.map((f) => (
             <View key={f.title} style={[styles.feature, wide ? styles.featureWide : styles.featureRow]}>
@@ -233,7 +241,7 @@ export function LandingPage() {
       <View style={[styles.inner, styles.section, wide && styles.boardWide]}>
         <View style={wide && styles.boardText}>
           <Text style={styles.kicker}>Žebříček</Text>
-          <Text style={styles.sectionTitle}>Kdo se hýbe nejvíc</Text>
+          <Text role="heading" aria-level={2} style={styles.sectionTitle}>Kdo se hýbe nejvíc</Text>
           <Text style={styles.sectionLead}>
             Za každou návštěvu a kombinaci přibývají body. Vedle celkového pořadí běží každý týden nový žebříček, takže
             se do čela může dostat kdokoli. Týden začíná vždy v pondělí.
@@ -251,7 +259,7 @@ export function LandingPage() {
       >
         <View style={wide && styles.installText}>
           <Text style={styles.kicker}>Instalace</Text>
-          <Text style={styles.sectionTitle}>Dej si aplikaci na plochu</Text>
+          <Text role="heading" aria-level={2} style={styles.sectionTitle}>Dej si aplikaci na plochu</Text>
           <Text style={styles.sectionLead}>
             Nemusíš nic stahovat z obchodu. Aplikaci si přidáš na plochu přímo z prohlížeče a pak se otevírá jako
             každá jiná.
@@ -311,6 +319,19 @@ export function LandingPage() {
           </View>
         </View>
       )}
+
+      {/* About: who is behind the app, also the words people search for (the school, the town). */}
+      <View style={[styles.inner, styles.section]}>
+        <Text style={styles.kicker}>O projektu</Text>
+        <Text role="heading" aria-level={2} style={styles.sectionTitle}>
+          Aplikace z Benátek nad Jizerou
+        </Text>
+        <Text style={styles.sectionLead}>
+          Hýbeme se společně připravila {LEGAL.operatorName} pro své žáky i pro všechny, kdo chtějí poznávat Benátky
+          nad Jizerou a jejich okolí. Projekt podporuje hlavní partner {LEGAL.partner}. Aplikace je zdarma a funguje
+          v každém telefonu přímo v prohlížeči.
+        </Text>
+      </View>
 
       {/* Operator and sponsor */}
       <View style={styles.footer}>

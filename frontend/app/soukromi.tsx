@@ -1,5 +1,6 @@
 import { LegalPage, LegalSection } from '../components/legal/LegalPage';
 import { LEGAL } from '../constants/legal';
+import { Seo } from '../components/Seo';
 
 // Keep in sync with what the app really does. Checked in the code (October 2026): the GPS position never
 // leaves the phone, a visit sends only the place, sport and time; photos are moderated on our own server.
@@ -112,11 +113,18 @@ const SECTIONS: LegalSection[] = [
 
 export default function PrivacyScreen() {
   return (
-    <LegalPage
-      title="Zásady ochrany osobních údajů"
-      summary={SUMMARY}
-      sections={SECTIONS}
-      other={{ href: '/podminky', label: 'Podmínky používání aplikace' }}
-    />
+    <>
+      <Seo
+        title="Zásady ochrany osobních údajů"
+        description="Jak aplikace Hýbeme se společně zpracovává osobní údaje: jaké údaje ukládáme, proč, komu je předáváme a jaká máte práva."
+        path="/soukromi"
+      />
+      <LegalPage
+        title="Zásady ochrany osobních údajů"
+        summary={SUMMARY}
+        sections={SECTIONS}
+        other={{ href: '/podminky', label: 'Podmínky používání aplikace' }}
+      />
+    </>
   );
 }

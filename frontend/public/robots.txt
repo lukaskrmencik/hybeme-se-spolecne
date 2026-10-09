@@ -1,4 +1,14 @@
+# Only the landing page and the legal pages are meant for search engines; the rest is the app behind the sign-in.
 User-agent: *
 Allow: /
 Disallow: /admin
 Disallow: /api/
+Disallow: /map
+Disallow: /visits
+Disallow: /leaderboard
+Disallow: /account
+Disallow: /login
+Disallow: /register
+Disallow: /verify-email
+
+Sitemap: https://hybemesespolecne.cz/sitemap.xml

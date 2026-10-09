@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Public pages only; the app itself is behind the sign-in. -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://hybemesespolecne.cz/</loc>
+    <lastmod>2026-10-09</lastmod>
+  </url>
+  <url>
+    <loc>https://hybemesespolecne.cz/podminky</loc>
+    <lastmod>2026-10-09</lastmod>
+  </url>
+  <url>
+    <loc>https://hybemesespolecne.cz/soukromi</loc>
+    <lastmod>2026-10-09</lastmod>
+  </url>
+</urlset>
