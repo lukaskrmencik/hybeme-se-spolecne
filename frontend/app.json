@@ -19,7 +19,9 @@
       },
       "predictiveBackGestureEnabled": false,
       "package": "cz.hybemesespolecne.app",
-      "blockedPermissions": ["android.permission.SYSTEM_ALERT_WINDOW"]
+      "blockedPermissions": [
+        "android.permission.SYSTEM_ALERT_WINDOW"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -51,6 +53,13 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "4f21d4ec-47c4-4c15-a488-e24bf3c347c8"
+      }
+    },
+    "owner": "lukas-krmencik"
   }
 }
