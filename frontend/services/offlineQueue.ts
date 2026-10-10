@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { apiFetch, ApiError } from './api';
 import { discardLocalPhoto, enqueuePhotos } from './photos';
+import { sealVisit } from './visitPayload';
 import { QueuedVisit, VisitSubmission } from '../types/visit';
 import { UserProfile, Visit } from '../types/user';
 import { parseVisitTime } from '../utils/dates';
@@ -124,7 +125,7 @@ export async function flushQueue(
       try {
         const res = await apiFetch<{ data: { id: number } }>('visits', {
           method: 'POST',
-          body: JSON.stringify(toSubmission(entry)),
+          body: sealVisit(toSubmission(entry)),
         });
         synced++;
         processed.add(entry.id);

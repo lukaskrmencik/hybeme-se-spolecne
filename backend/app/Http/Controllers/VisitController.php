@@ -8,6 +8,7 @@ use App\Models\Visit;
 use App\Models\VisitsPhoto;
 use App\Services\AntiCheatService;
 use App\Services\ImageModerationService;
+use App\Services\VisitPayload;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -64,6 +65,21 @@ class VisitController extends Controller
 
         $user = $request->user();
 
+        // Without a key (local development) the app sends the visit as plain JSON.
+        $payloadKey = config('general.visitPayloadKey');
+        if ($payloadKey) {
+            // Plain JSON comes from an app version before sealing. A 5xx makes that version keep the visit
+            // in its offline queue (a 4xx would throw it away), the updated app then sends it sealed.
+            if (!$request->has('p')) {
+                return response()->error('Aktualizujte prosím aplikaci, návštěva zatím čeká v telefonu.', 503);
+            }
+            $payload = VisitPayload::open($request->input('p'), $payloadKey);
+            if ($payload === null) {
+                return response()->error('Návštěvu se nepodařilo ověřit. Aktualizujte prosím aplikaci.', 400);
+            }
+            $request->replace($payload);
+        }
+
         $validatedData = $request->validate([
             'place_id' => ['required', 'integer', Rule::exists('places', 'id')->where('is_active', true)],
             'sport_id' => ['required', 'integer', Rule::exists('sports', 'id')->where('is_active', true)],
@@ -75,6 +91,13 @@ class VisitController extends Controller
 
         if (Carbon::parse($validatedData['timestamp'])->isAfter(now()->addMinutes(10))) {
             return response()->error('Čas návštěvy nemůže být v budoucnosti.', 400);
+        }
+
+        // Visits saved offline wait in the phone a day or two at most. An older one would let anyone
+        // write a combination after the fact, with times made up to match the speeds.
+        $maxAgeHours = config('general.maxVisitAgeHours');
+        if (Carbon::parse($validatedData['timestamp'])->isBefore(now()->subHours($maxAgeHours))) {
+            return response()->error("Návštěva je starší než {$maxAgeHours} hodin, proto ji už nelze zapsat.", 400);
         }
 
         $lastVisit = $user->visitsCombinations()->last();

@@ -1,6 +1,7 @@
 import { apiFetch, ApiError } from './api';
 import { enqueueVisit, getQueuedVisits, toSubmission } from './offlineQueue';
 import { discardLocalPhoto } from './photos';
+import { sealVisit } from './visitPayload';
 import { Place } from '../types/place';
 import { Sport } from '../types/sport';
 import { LocalPhoto, QueuedVisit } from '../types/visit';
@@ -52,7 +53,7 @@ export async function submitVisit(input: SubmitVisitInput): Promise<SubmitVisitR
     try {
       const res = await apiFetch<{ data: CreatedVisit }>('visits', {
         method: 'POST',
-        body: JSON.stringify(submission),
+        body: sealVisit(submission),
       });
       return { kind: 'saved', visit: res.data };
     } catch (err) {
