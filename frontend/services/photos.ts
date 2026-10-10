@@ -4,6 +4,7 @@ import type { ImagePickerAsset } from 'expo-image-picker';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import { Directory, File, Paths } from 'expo-file-system';
 import { apiFetch, ApiError } from './api';
+import { appendFile } from './upload';
 import { LocalPhoto, QueuedPhoto } from '../types/visit';
 import { VisitPhoto } from '../types/photo';
 
@@ -66,14 +67,7 @@ function photoExists(photo: LocalPhoto): boolean {
 
 async function uploadPhoto(visitId: number, photo: LocalPhoto): Promise<VisitPhoto> {
   const form = new FormData();
-  const name = randomName();
-  if (isWeb) {
-    const blob = await (await fetch(photo.uri)).blob();
-    form.append('photo', blob, name);
-  } else {
-    // React Native's FormData accepts a { uri, name, type } descriptor instead of a Blob.
-    form.append('photo', { uri: photo.uri, name, type: 'image/jpeg' } as unknown as Blob);
-  }
+  await appendFile(form, 'photo', { uri: photo.uri, name: randomName(), type: 'image/jpeg' });
   const res = await apiFetch<{ data: VisitPhoto }>(`visits/${visitId}/photo`, {
     method: 'POST',
     body: form,

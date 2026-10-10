@@ -6,6 +6,9 @@ import { useRouter } from 'expo-router';
 import { useUserStats } from '../../../context/UserStatsContext';
 import { useAuth } from '../../../context/AuthContext';
 import { apiFetch, getErrorMessage } from '../../../services/api';
+import { appendFile } from '../../../services/upload';
+import { discardLocalPhoto, preparePhoto } from '../../../services/photos';
+import { LocalPhoto } from '../../../types/visit';
 import { Avatar } from '../../../components/Avatar';
 import { confirmAction, showToast } from '../../../utils/alert';
 import { plural } from '../../../utils/plural';
@@ -14,20 +17,15 @@ import { PartnerLogos } from '../../../components/PartnerLogos';
 import { LegalLinks } from '../../../components/legal/LegalLinks';
 import { colors, radius } from '../../../utils/theme';
 
-async function buildAvatarForm(asset: ImagePicker.ImagePickerAsset): Promise<FormData> {
-    const ext = /\.(\w+)$/.exec(asset.uri)?.[1]?.toLowerCase() || 'jpg';
-    const fileName = asset.fileName || asset.file?.name || `avatar.${ext}`;
-    const mimeType = asset.mimeType ?? `image/${ext === 'jpg' ? 'jpeg' : ext}`;
-
+/**
+ * The photo is shrunk and turned into a JPEG first, like visit photos: straight from the gallery it was
+ * often over the server's 2 MB, or a HEIC, and the server refused it as invalid data.
+ */
+async function buildAvatarForm(asset: ImagePicker.ImagePickerAsset): Promise<{ form: FormData; photo: LocalPhoto }> {
+    const photo = await preparePhoto(asset);
     const form = new FormData();
-    if (Platform.OS === 'web') {
-        const blob = asset.file ?? (await (await fetch(asset.uri)).blob());
-        form.append('avatar', blob, fileName);
-    } else {
-        // React Native's FormData accepts a { uri, name, type } descriptor instead of a Blob.
-        form.append('avatar', { uri: asset.uri, name: fileName, type: mimeType } as unknown as Blob);
-    }
-    return form;
+    await appendFile(form, 'avatar', { uri: photo.uri, name: `avatar-${Date.now()}.jpg`, type: 'image/jpeg' });
+    return { form, photo };
 }
 
 export default function AccountScreen() {
@@ -108,8 +106,12 @@ export default function AccountScreen() {
 
         setUploadingAvatar(true);
         try {
-            const form = await buildAvatarForm(result.assets[0]);
-            await apiFetch(`users/${profile.id}/avatar`, { method: 'POST', body: form });
+            const { form, photo } = await buildAvatarForm(result.assets[0]);
+            try {
+                await apiFetch(`users/${profile.id}/avatar`, { method: 'POST', body: form, timeoutMs: 60_000 });
+            } finally {
+                discardLocalPhoto(photo);
+            }
             await refreshStats();
         } catch (err) {
             showToast('Nepovedlo se', getErrorMessage(err, 'Avatar se nepodařilo nahrát.'), 'danger');

@@ -1,5 +1,5 @@
-import { Platform } from 'react-native';
 import { apiFetch, ApiError, resolveMediaUrl } from './api';
+import { appendFile } from './upload';
 import { Place, PlacesApiResponse } from '../types/place';
 import { LocalPhoto } from '../types/visit';
 import { Sport } from '../types/sport';
@@ -97,12 +97,7 @@ export async function fetchPlaceAdminPhotos(placeId: number): Promise<PlaceAdmin
 
 export async function uploadPlaceAdminPhoto(placeId: number, photo: LocalPhoto): Promise<PlaceAdminPhoto> {
   const form = new FormData();
-  const name = `place-${Date.now()}.jpg`;
-  if (Platform.OS === 'web') {
-    form.append('photo', await (await fetch(photo.uri)).blob(), name);
-  } else {
-    form.append('photo', { uri: photo.uri, name, type: 'image/jpeg' } as unknown as Blob);
-  }
+  await appendFile(form, 'photo', { uri: photo.uri, name: `place-${Date.now()}.jpg`, type: 'image/jpeg' });
   const res = await apiFetch<{ data: PlaceAdminPhoto }>(`places/${placeId}/photos`, { method: 'POST', body: form, timeoutMs: 60_000 });
   return { ...res.data, photo_url: resolveMediaUrl(res.data.photo_url) };
 }
