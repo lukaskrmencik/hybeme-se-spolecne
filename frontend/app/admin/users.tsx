@@ -179,7 +179,7 @@ export default function AdminUsers() {
   ];
 
   return (
-    <AdminPage title="Uživatelé" description="Registrované účty seřazené od nejnovějších. Správci mají přístup do administrace.">
+    <AdminPage title="Uživatelé" description="Registrované účty, nejnovější nahoře">
       {dialog}
       <View style={adminStyles.wrapRow}>
         <SearchBox value={search} onChange={setSearch} placeholder="Vyhledat podle jména nebo e-mailu" />

@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Ionicons } from '@expo/vector-icons';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import {
@@ -12,6 +13,7 @@ import {
   EmptyState,
   ErrorBlock,
   Field,
+  FormSection,
   LoadingBlock,
   Notice,
   useConfirm,
@@ -25,30 +27,45 @@ import { colors } from '../../utils/theme';
 
 type NumberKey = Exclude<keyof NewSport, 'name' | 'mapy_route_type'>;
 
-const SPEEDS: { key: NumberKey; label: string; help: string }[] = [
+const SPEEDS: { key: NumberKey; label: string; long: string; help?: string }[] = [
   {
     key: 'min_speed',
-    label: 'Minimální rychlost',
+    label: 'Nejnižší',
+    long: 'Minimální rychlost',
     help: 'Při pomalejším přesunu mezi místy se kombinace nezapočítá (přesun byl přerušen).',
   },
-  { key: 'average_speed', label: 'Obvyklá rychlost', help: 'Běžné tempo daného sportu. Údaj je informativní.' },
+  { key: 'average_speed', label: 'Obvyklá', long: 'Obvyklá rychlost', help: 'Běžné tempo sportu, údaj je jen informativní.' },
   {
     key: 'max_speed',
-    label: 'Maximální rychlost',
-    help: 'Při rychlejším přesunu se kombinace nezapočítá (pravděpodobně dopravním prostředkem).',
+    label: 'Nejvyšší',
+    long: 'Maximální rychlost',
+    help: 'Při rychlejším přesunu se kombinace nezapočítá (nejspíš šlo o dopravní prostředek).',
   },
 ];
 
-const MULTIPLIERS: { key: NumberKey; label: string }[] = [
-  { key: 'comb_mult_1', label: '2. místo v řadě' },
-  { key: 'comb_mult_2', label: '3. místo v řadě' },
-  { key: 'comb_mult_3', label: '4. místo v řadě' },
-  { key: 'comb_mult_4', label: '5. a každé další' },
+const MULTIPLIERS: { key: NumberKey; label: string; long: string }[] = [
+  { key: 'comb_mult_1', label: '2. místo', long: 'Násobitel pro 2. místo v řadě' },
+  { key: 'comb_mult_2', label: '3. místo', long: 'Násobitel pro 3. místo v řadě' },
+  { key: 'comb_mult_3', label: '4. místo', long: 'Násobitel pro 4. místo v řadě' },
+  { key: 'comb_mult_4', label: '5. a další', long: 'Násobitel pro 5. a každé další místo' },
 ];
+
+const SPEED_HELP = 'Kombinace se uzná, jen když přesun mezi místy odpovídá rychlosti sportu.';
+const MULTIPLIER_HELP =
+  'Když uživatel naváže na předchozí návštěvu stejným sportem, body za další místo se vynásobí; násobitel roste s délkou řady. ' +
+  'Náročnějším sportům (běh) dejte vyšší násobitele, méně náročným (kolo) nižší. Body za kilometry jsou u všech sportů stejné.';
+const ROUTE_HELP = 'Jak Mapy.com naplánují trasu po klepnutí na Navigovat. Nemá vliv na body.';
+
+const ROUTE_ICONS: Record<string, React.ComponentProps<typeof Ionicons>['name']> = {
+  foot_fast: 'walk-outline',
+  foot_hiking: 'trail-sign-outline',
+  bike_road: 'bicycle-outline',
+  bike_mountain: 'bicycle',
+};
 
 const LABELS: Record<string, string> = {
   name: 'Název',
-  ...Object.fromEntries([...SPEEDS, ...MULTIPLIERS].map((f) => [f.key, f.label])),
+  ...Object.fromEntries([...SPEEDS, ...MULTIPLIERS].map((f) => [f.key, f.long])),
 };
 
 const EMPTY: Record<NumberKey, string> = {
@@ -119,68 +136,74 @@ function NewSportForm({ sports, onCreated, onCancel }: { sports: Sport[]; onCrea
   return (
     <Card>
       <Text style={adminStyles.sectionTitle}>Nový sport</Text>
-      <Field
-        label="Název"
-        value={name}
-        onChangeText={(t) => {
-          setName(t);
-          setErrors((e) => ({ ...e, name: '' }));
-        }}
-        placeholder="Např. Běh"
-        error={errors.name}
-        maxLength={255}
-      />
-
-      {sports.length > 0 && (
-        <View style={styles.copy}>
-          <Text style={adminStyles.muted}>Hodnoty lze převzít z existujícího sportu a následně upravit:</Text>
-          <View style={adminStyles.wrapRow}>
-            {sports.map((s) => (
-              <Pressable key={s.id} onPress={() => copyFrom(s)} style={styles.copyChip} accessibilityRole="button">
-                <Text style={styles.copyChipText}>Převzít z: {s.name}</Text>
-              </Pressable>
-            ))}
+      <View style={adminStyles.formRow}>
+        <Field
+          label="Název"
+          half
+          value={name}
+          onChangeText={(t) => {
+            setName(t);
+            setErrors((e) => ({ ...e, name: '' }));
+          }}
+          placeholder="Např. Běh"
+          error={errors.name}
+          maxLength={255}
+        />
+        {sports.length > 0 && (
+          <View style={styles.copy}>
+            <View style={styles.copyHead}>
+              <Ionicons name="copy-outline" size={14} color={colors.muted} />
+              <Text style={styles.copyLabel}>Předvyplnit podle</Text>
+            </View>
+            <View style={adminStyles.wrapRow}>
+              {sports.map((s) => (
+                <Pressable key={s.id} onPress={() => copyFrom(s)} style={styles.copyChip} accessibilityRole="button">
+                  <Text style={styles.copyChipText}>{s.name}</Text>
+                </Pressable>
+              ))}
+            </View>
           </View>
+        )}
+      </View>
+
+      <FormSection icon="speedometer-outline" title="Rychlost přesunu" help={SPEED_HELP}>
+        <View style={adminStyles.formRow}>
+          {SPEEDS.map((f) => (
+            <Field
+              key={f.key}
+              half
+              label={f.label}
+              value={values[f.key]}
+              onChangeText={(v) => set(f.key, v)}
+              keyboardType="decimal-pad"
+              suffix="km/h"
+              help={f.help}
+              error={errors[f.key]}
+            />
+          ))}
         </View>
-      )}
+      </FormSection>
 
-      <Text style={styles.groupTitle}>Rychlost přesunu mezi místy</Text>
-      <View style={adminStyles.wrapRow}>
-        {SPEEDS.map((f) => (
-          <Field
-            key={f.key}
-            half
-            label={f.label}
-            value={values[f.key]}
-            onChangeText={(v) => set(f.key, v)}
-            keyboardType="decimal-pad"
-            suffix="km/h"
-            help={f.help}
-            error={errors[f.key]}
-          />
-        ))}
-      </View>
+      <FormSection icon="git-merge-outline" title="Násobitele v kombinaci" help={MULTIPLIER_HELP}>
+        <View style={adminStyles.formRow}>
+          {MULTIPLIERS.map((f) => (
+            <Field
+              key={f.key}
+              half
+              label={f.label}
+              value={values[f.key]}
+              onChangeText={(v) => set(f.key, v)}
+              keyboardType="decimal-pad"
+              suffix="×"
+              error={errors[f.key]}
+            />
+          ))}
+        </View>
+      </FormSection>
 
-      <Text style={styles.groupTitle}>Násobitele bodů v kombinaci</Text>
-      <Notice text="Pokud uživatel naváže na předchozí návštěvu stejným sportem, body za další místo se vynásobí. Násobitel roste s délkou řady. Náročnějším sportům (např. běh) nastavte vyšší násobitele, méně náročným (např. cyklistika) nižší – body za ujeté kilometry se přičítají u všech sportů stejně." />
-      <View style={adminStyles.wrapRow}>
-        {MULTIPLIERS.map((f) => (
-          <Field
-            key={f.key}
-            half
-            label={f.label}
-            value={values[f.key]}
-            onChangeText={(v) => set(f.key, v)}
-            keyboardType="decimal-pad"
-            suffix="×"
-            error={errors[f.key]}
-          />
-        ))}
-      </View>
-
-      <Text style={styles.groupTitle}>Navigace k místům</Text>
-      <Text style={adminStyles.muted}>Způsob plánování trasy v Mapy.com, který se použije po klepnutí na Navigovat u místa.</Text>
-      <RouteTypeOptions value={routeType} onChange={setRouteType} />
+      <FormSection icon="navigate-outline" title="Navigace k místům" help={ROUTE_HELP}>
+        <RouteTypeOptions value={routeType} onChange={setRouteType} />
+      </FormSection>
 
       {!!serverError && <Notice tone="danger" text={serverError} />}
 
@@ -205,6 +228,7 @@ function RouteTypeOptions({ value, onChange }: { value: string; onChange: (v: st
             accessibilityRole="radio"
             accessibilityState={{ checked: active }}
           >
+            <Ionicons name={ROUTE_ICONS[t.value] ?? 'navigate-outline'} size={16} color={active ? colors.white : colors.navy} />
             <Text style={[styles.routeOptionText, active && styles.routeOptionTextActive]}>{t.label}</Text>
           </Pressable>
         );
@@ -230,7 +254,7 @@ const sportColumns: Column<Sport>[] = [
   },
   {
     key: 'mult',
-    title: 'Násobitele (2. / 3. / 4. / 5.+ místo)',
+    title: 'Násobitele',
     flex: 2.4,
     render: (s) => (
       <View style={styles.mults}>
@@ -326,7 +350,7 @@ export default function AdminSports() {
   return (
     <AdminPage
       title="Sporty"
-      description="Sporty nabízené uživatelům při zaznamenání návštěvy. Vyřazený sport nelze zvolit, dosavadní návštěvy zůstávají zachovány."
+      description="Sporty, které si uživatel vybírá při návštěvě místa"
       actions={!adding && <Button label="Přidat sport" icon="add" onPress={() => setAdding(true)} />}
     >
       {dialog}
@@ -379,9 +403,7 @@ export default function AdminSports() {
         <Pressable style={styles.backdrop} onPress={() => setRouteEdit(null)}>
           <Pressable style={styles.dialog} onPress={() => {}}>
             <Text style={adminStyles.sectionTitle}>Navigace pro sport {routeEdit?.sport.name}</Text>
-            <Text style={adminStyles.muted}>
-              Způsob plánování trasy v Mapy.com po klepnutí na Navigovat u místa. Změna nemá vliv na body ani na dosavadní návštěvy.
-            </Text>
+            <Text style={adminStyles.muted}>{ROUTE_HELP}</Text>
             {routeEdit && <RouteTypeOptions value={routeEdit.value} onChange={(v) => setRouteEdit({ ...routeEdit, value: v })} />}
             <View style={styles.formActions}>
               <Button label="Zrušit" variant="secondary" onPress={() => setRouteEdit(null)} disabled={savingRoute} />
@@ -396,17 +418,28 @@ export default function AdminSports() {
 
 const styles = StyleSheet.create({
   routeOptions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  routeOption: { paddingHorizontal: 12, height: 36, justifyContent: 'center', borderRadius: 8, borderWidth: 1, borderColor: '#D3DACB', backgroundColor: colors.white },
+  routeOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    height: 36,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#D3DACB',
+    backgroundColor: colors.white,
+  },
   routeOptionActive: { backgroundColor: colors.navy, borderColor: colors.navy },
   routeOptionText: { color: colors.navy, fontSize: 13, fontWeight: '700' },
   routeOptionTextActive: { color: colors.white },
   backdrop: { flex: 1, backgroundColor: 'rgba(5, 16, 26, 0.5)', alignItems: 'center', justifyContent: 'center', padding: 20 },
   dialog: { width: '100%', maxWidth: 480, backgroundColor: colors.surface, borderRadius: 10, padding: 22, gap: 12 },
-  groupTitle: { color: colors.navy, fontSize: 15, fontWeight: '900', marginTop: 4 },
-  copy: { gap: 8 },
+  copy: { gap: 6, flexGrow: 1, flexBasis: 200 },
+  copyHead: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  copyLabel: { color: colors.navy, fontSize: 13, fontWeight: '800' },
   copyChip: {
     paddingHorizontal: 12,
-    height: 32,
+    height: 42,
     justifyContent: 'center',
     borderRadius: 8,
     borderWidth: 1,

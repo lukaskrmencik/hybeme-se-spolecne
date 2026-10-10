@@ -157,7 +157,7 @@ export default function AdminReports() {
   };
 
   return (
-    <AdminPage title="Nahlášení" description="Obsah, který uživatelé označili jako nevhodný. Posuďte ho a rozhodněte o dalším postupu.">
+    <AdminPage title="Nahlášení" description="Obsah, který uživatelé označili jako nevhodný">
       {dialog}
       <Segmented<Status>
         value={status}

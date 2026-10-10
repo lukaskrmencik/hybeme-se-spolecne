@@ -62,7 +62,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         accessibilityRole="link"
         accessibilityState={{ selected: active }}
       >
-        <Ionicons name={item.icon} size={18} color={active ? (wide ? colors.primary : colors.white) : colors.muted} />
+        <Ionicons name={item.icon} size={18} color={active ? (wide ? colors.navy : colors.white) : colors.muted} />
         <Text style={[styles.navText, active && (wide ? styles.sideTextActive : styles.tabTextActive)]}>{item.label}</Text>
         {item.href === '/admin/reports' && openReports > 0 && (
           <View style={styles.count}>
@@ -148,8 +148,9 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   sideItem: { flexDirection: 'row', alignItems: 'center', gap: 10, height: 44, paddingHorizontal: 12, borderRadius: radius.sm },
-  sideItemActive: { backgroundColor: colors.primaryBg },
-  sideTextActive: { color: colors.primary },
+  // Navy with a thin green edge: calmer than a green block for a working tool.
+  sideItemActive: { backgroundColor: colors.navyBg, borderLeftWidth: 3, borderLeftColor: colors.accent, paddingLeft: 9 },
+  sideTextActive: { color: colors.navy },
   content: { flex: 1 },
 
   tabsBar: { backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.border },

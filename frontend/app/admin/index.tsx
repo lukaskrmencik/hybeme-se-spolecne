@@ -83,7 +83,7 @@ export default function AdminHome() {
   return (
     <AdminPage
       title="Přehled"
-      description="Souhrn obsahu aplikace a poslední aktivita uživatelů."
+      description="Souhrn a poslední aktivita"
       actions={
         <View style={adminStyles.wrapRow}>
           <Button label="Nové místo" icon="add" variant="secondary" onPress={() => go('/admin/places?new=1')} />

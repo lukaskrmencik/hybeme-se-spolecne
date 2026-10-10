@@ -93,7 +93,48 @@ export function Button({
   );
 }
 
-/** Text field with a label, a short help line and an error. */
+/**
+ * Small „i“ next to a label: the explanation appears on hover (computer) or tap (phone),
+ * so forms show only what has to be filled in.
+ */
+export function InfoTip({ text }: { text: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <View style={[styles.tipWrap, open && styles.tipWrapOpen]}>
+      <Pressable
+        onPress={() => setOpen((o) => !o)}
+        onHoverIn={() => setOpen(true)}
+        onHoverOut={() => setOpen(false)}
+        hitSlop={8}
+        accessibilityRole="button"
+        accessibilityLabel={text}
+      >
+        <Ionicons name={open ? 'information-circle' : 'information-circle-outline'} size={16} color={colors.skyText} />
+      </Pressable>
+      {open && (
+        <View style={styles.tip} pointerEvents="none">
+          <Text style={styles.tipText}>{text}</Text>
+        </View>
+      )}
+    </View>
+  );
+}
+
+/** Heading of a group of fields: an icon, the name and optionally an explanation behind the „i“. */
+export function FormSection({ icon, title, help, children }: { icon: IconName; title: string; help?: string; children: React.ReactNode }) {
+  return (
+    <View style={styles.formSection}>
+      <View style={styles.formSectionHead}>
+        <Ionicons name={icon} size={17} color={colors.navy} />
+        <Text style={styles.formSectionTitle}>{title}</Text>
+        {!!help && <InfoTip text={help} />}
+      </View>
+      {children}
+    </View>
+  );
+}
+
+/** Text field with a label, an optional explanation behind the „i“ and an error. */
 export function Field({
   label,
   help,
@@ -115,7 +156,10 @@ export function Field({
   const [focused, setFocused] = useState(false);
   return (
     <View style={[styles.field, half && styles.fieldHalf]}>
-      <Text style={styles.fieldLabel}>{label}</Text>
+      <View style={styles.fieldLabelRow}>
+        <Text style={styles.fieldLabel}>{label}</Text>
+        {!!help && <InfoTip text={help} />}
+      </View>
       <View style={[styles.inputWrap, focused && styles.inputFocus, !!error && styles.inputError]}>
         <TextInput
           ref={ref}
@@ -133,7 +177,7 @@ export function Field({
         />
         {!!suffix && <Text style={styles.suffix}>{suffix}</Text>}
       </View>
-      {!!error ? <Text style={styles.fieldError}>{error}</Text> : !!help && <Text style={styles.fieldHelp}>{help}</Text>}
+      {!!error && <Text style={styles.fieldError}>{error}</Text>}
     </View>
   );
 }
@@ -383,6 +427,8 @@ export function StatCard({ label, value, note, icon }: { label: string; value: s
 export const adminStyles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   wrapRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 },
+  /** Fields side by side, aligned at the top (an error under one must not shift the others). */
+  formRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-start', gap: 12 },
   muted: { color: colors.muted, fontSize: 13, fontWeight: '600' },
   strong: { color: colors.navy, fontSize: 15, fontWeight: '800' },
   sectionTitle: { color: colors.navy, fontSize: 17, fontWeight: '900' },
@@ -426,7 +472,25 @@ const styles = StyleSheet.create({
 
   field: { gap: 6 },
   fieldHalf: { flexGrow: 1, flexBasis: 200 },
+  fieldLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 5, zIndex: 2 },
   fieldLabel: { color: colors.navy, fontSize: 13, fontWeight: '800' },
+  tipWrap: { position: 'relative' },
+  tipWrapOpen: { zIndex: 50 },
+  tip: {
+    position: 'absolute',
+    top: 22,
+    left: -12,
+    width: 260,
+    backgroundColor: colors.navy,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    boxShadow: '0px 6px 18px rgba(5, 16, 26, 0.25)',
+  },
+  tipText: { color: colors.white, fontSize: 12, lineHeight: 17, fontWeight: '600' },
+  formSection: { gap: 10, paddingTop: 14, borderTopWidth: 1, borderTopColor: colors.border, zIndex: 1 },
+  formSectionHead: { flexDirection: 'row', alignItems: 'center', gap: 7, zIndex: 3 },
+  formSectionTitle: { color: colors.navy, fontSize: 14, fontWeight: '900' },
   inputWrap: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -441,7 +505,6 @@ const styles = StyleSheet.create({
   inputError: { borderColor: colors.danger },
   input: { flex: 1, fontSize: 15, fontWeight: '600', color: colors.navy, paddingVertical: 10, outlineWidth: 0 },
   suffix: { color: colors.muted, fontSize: 13, fontWeight: '800', marginLeft: 6 },
-  fieldHelp: { color: colors.muted, fontSize: 12, lineHeight: 16, fontWeight: '600' },
   fieldError: { color: colors.dangerText, fontSize: 12, fontWeight: '700' },
 
   search: {

@@ -124,7 +124,7 @@ export default function AdminPhotos() {
   return (
     <AdminPage
       title="Fotografie"
-      description="Fotografie, které uživatelé přiložili k návštěvám. Nevhodné fotografie lze odstranit, návštěva a body uživateli zůstanou."
+      description="Fotky návštěvníků. Po smazání fotky zůstane návštěva i body."
     >
       {dialog}
       <View style={adminStyles.wrapRow}>

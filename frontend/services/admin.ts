@@ -1,5 +1,7 @@
+import { Platform } from 'react-native';
 import { apiFetch, ApiError, resolveMediaUrl } from './api';
 import { Place, PlacesApiResponse } from '../types/place';
+import { LocalPhoto } from '../types/visit';
 import { Sport } from '../types/sport';
 
 /** Paged list as the backend returns it (response()->pagination). */
@@ -64,8 +66,9 @@ export interface NewPlace {
   lng: number;
 }
 
-export async function createPlace(place: NewPlace): Promise<void> {
-  await apiFetch('places', {
+/** Returns the id of the new place. */
+export async function createPlace(place: NewPlace): Promise<number> {
+  const res = await apiFetch<{ data: { id: number } }>('places', {
     method: 'POST',
     body: JSON.stringify({
       name: place.name,
@@ -74,10 +77,38 @@ export async function createPlace(place: NewPlace): Promise<void> {
       coordinates: { type: 'Point', coordinates: [place.lng, place.lat] },
     }),
   });
+  return res.data.id;
 }
 
 export async function setPlaceActive(id: number, active: boolean): Promise<void> {
   await apiFetch(`places/${id}`, { method: 'PATCH', body: JSON.stringify({ is_active: active }) });
+}
+
+export interface PlaceAdminPhoto {
+  id: number;
+  photo_url: string;
+}
+
+/** Photos of the place added in the administration (visitors' photos are under Fotografie). */
+export async function fetchPlaceAdminPhotos(placeId: number): Promise<PlaceAdminPhoto[]> {
+  const res = await apiFetch<{ data: { admin_photos?: PlaceAdminPhoto[] } }>(`places/${placeId}`);
+  return (res.data.admin_photos ?? []).map((p) => ({ ...p, photo_url: resolveMediaUrl(p.photo_url) }));
+}
+
+export async function uploadPlaceAdminPhoto(placeId: number, photo: LocalPhoto): Promise<PlaceAdminPhoto> {
+  const form = new FormData();
+  const name = `place-${Date.now()}.jpg`;
+  if (Platform.OS === 'web') {
+    form.append('photo', await (await fetch(photo.uri)).blob(), name);
+  } else {
+    form.append('photo', { uri: photo.uri, name, type: 'image/jpeg' } as unknown as Blob);
+  }
+  const res = await apiFetch<{ data: PlaceAdminPhoto }>(`places/${placeId}/photos`, { method: 'POST', body: form, timeoutMs: 60_000 });
+  return { ...res.data, photo_url: resolveMediaUrl(res.data.photo_url) };
+}
+
+export async function deletePlaceAdminPhoto(photoId: number): Promise<void> {
+  await apiFetch(`places/photos/${photoId}`, { method: 'DELETE' });
 }
 
 // ---- Sports -------------------------------------------------------------

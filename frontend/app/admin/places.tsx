@@ -12,6 +12,7 @@ import {
   EmptyState,
   ErrorBlock,
   Field,
+  FormSection,
   LoadingBlock,
   Notice,
   SearchBox,
@@ -19,10 +20,12 @@ import {
   useConfirm,
 } from '../../components/admin/ui';
 import { LatLng, LocationPicker } from '../../components/admin/LocationPicker';
+import { PlacePhotosDialog } from '../../components/admin/PlacePhotosDialog';
 import { createPlace, describeValidationError, fetchAllPlaces, setPlaceActive } from '../../services/admin';
 import { getErrorMessage } from '../../services/api';
 import { showToast } from '../../utils/alert';
 import { Place } from '../../types/place';
+import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../utils/theme';
 
 type StatusFilter = 'all' | 'active' | 'inactive';
@@ -43,7 +46,15 @@ function parseCoordinates(text: string): LatLng | null {
 const formatCoords = (p: LatLng) => `${p.lat.toFixed(5)}, ${p.lng.toFixed(5)}`;
 const placeCoords = (p: Place): LatLng => ({ lat: p.coordinates.coordinates[1], lng: p.coordinates.coordinates[0] });
 
-function NewPlaceForm({ places, onCreated, onCancel }: { places: Place[]; onCreated: () => void; onCancel: () => void }) {
+function NewPlaceForm({
+  places,
+  onCreated,
+  onCancel,
+}: {
+  places: Place[];
+  onCreated: (id: number) => void;
+  onCancel: () => void;
+}) {
   const [name, setName] = useState('');
   const [reward, setReward] = useState('10');
   const [position, setPosition] = useState<LatLng | null>(null);
@@ -86,9 +97,9 @@ function NewPlaceForm({ places, onCreated, onCancel }: { places: Place[]; onCrea
     setSaving(true);
     setServerError(null);
     try {
-      await createPlace({ name: trimmed, defaultReward: points, ...position });
+      const id = await createPlace({ name: trimmed, defaultReward: points, ...position });
       showToast('Místo bylo přidáno', `${trimmed} se uživatelům zobrazí při příštím otevření aplikace.`, 'success');
-      onCreated();
+      onCreated(id);
     } catch (err) {
       setServerError(describeValidationError(err, { name: 'Název', default_reward: 'Body', coordinates: 'Poloha' }, 'Místo se nepodařilo uložit.'));
     } finally {
@@ -99,7 +110,7 @@ function NewPlaceForm({ places, onCreated, onCancel }: { places: Place[]; onCrea
   return (
     <Card>
       <Text style={adminStyles.sectionTitle}>Nové místo</Text>
-      <View style={adminStyles.wrapRow}>
+      <View style={adminStyles.formRow}>
         <Field
           label="Název"
           half
@@ -110,7 +121,6 @@ function NewPlaceForm({ places, onCreated, onCancel }: { places: Place[]; onCrea
           }}
           placeholder="Např. Rozhledna Bezděčín"
           error={errors.name}
-          help="Název, pod kterým se místo zobrazí v aplikaci."
           maxLength={255}
         />
         <Field
@@ -124,27 +134,31 @@ function NewPlaceForm({ places, onCreated, onCancel }: { places: Place[]; onCrea
           keyboardType="number-pad"
           suffix="b."
           error={errors.reward}
-          help="Body za samostatnou návštěvu. Doporučený rozsah je 10–50 bodů."
+          help="Body za samostatnou návštěvu, v kombinaci se násobí. Obvykle 10–50 bodů."
         />
       </View>
 
-      <Text style={styles.label}>Poloha</Text>
-      <LocationPicker value={position} onChange={pick} existing={existing} />
-      <Field
-        label="Souřadnice"
-        value={coordsText}
-        onChangeText={typeCoords}
-        placeholder="50.2931, 14.8291"
-        error={errors.position}
-        help="Vyplní se automaticky po kliknutí do mapy, případně je lze vložit ve formátu zeměpisná šířka, délka (např. z Mapy.com). Tečky v mapě označují již existující místa."
-        autoCapitalize="none"
-      />
+      <FormSection
+        icon="location-outline"
+        title="Poloha"
+        help="Klikněte do mapy, špendlík lze potom posunout. Souřadnice lze také vložit, např. z Mapy.com. Tečky v mapě jsou již existující místa."
+      >
+        <LocationPicker value={position} onChange={pick} existing={existing} />
+        <Field
+          label="Souřadnice"
+          value={coordsText}
+          onChangeText={typeCoords}
+          placeholder="50.2931, 14.8291"
+          error={errors.position}
+          autoCapitalize="none"
+        />
+      </FormSection>
 
       {!!serverError && <Notice tone="danger" text={serverError} />}
 
       <View style={styles.formActions}>
         <Button label="Zrušit" variant="secondary" onPress={onCancel} disabled={saving} />
-        <Button label="Uložit místo" icon="checkmark" onPress={() => void save()} loading={saving} />
+        <Button label="Uložit a přidat fotky" icon="checkmark" onPress={() => void save()} loading={saving} />
       </View>
     </Card>
   );
@@ -167,6 +181,17 @@ const placeColumns: Column<Place>[] = [
     },
   },
   {
+    key: 'photos',
+    title: 'Fotky',
+    flex: 0.8,
+    render: (p) => (
+      <View style={styles.photoCount}>
+        <Ionicons name="images-outline" size={15} color={p.admin_photos_count ? colors.navy : colors.inactive} />
+        <Text style={[styles.cell, !p.admin_photos_count && styles.cellMuted]}>{p.admin_photos_count ?? 0}</Text>
+      </View>
+    ),
+  },
+  {
     key: 'status',
     title: 'Stav',
     flex: 1,
@@ -182,14 +207,18 @@ export default function AdminPlaces() {
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState<StatusFilter>('all');
   const [busyId, setBusyId] = useState<number | null>(null);
+  const [photosPlace, setPhotosPlace] = useState<Place | null>(null);
   const [dialog, confirm] = useConfirm();
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (): Promise<Place[] | null> => {
     setError(null);
     try {
-      setPlaces(await fetchAllPlaces());
+      const list = await fetchAllPlaces();
+      setPlaces(list);
+      return list;
     } catch (err) {
       setError(getErrorMessage(err, 'Místa se nepodařilo načíst.'));
+      return null;
     }
   }, []);
 
@@ -240,11 +269,7 @@ export default function AdminPlaces() {
   return (
     <AdminPage
       title="Místa"
-      description={
-        places
-          ? `Aktivních míst: ${activeCount} z ${places.length}. Vyřazené místo se nezobrazuje na mapě, historie návštěv zůstává zachována.`
-          : undefined
-      }
+      description={places ? `Aktivních ${activeCount} z ${places.length}` : undefined}
       actions={!adding && <Button label="Přidat místo" icon="add" onPress={() => setAdding(true)} />}
     >
       {dialog}
@@ -252,9 +277,11 @@ export default function AdminPlaces() {
         <NewPlaceForm
           places={places}
           onCancel={() => setAdding(false)}
-          onCreated={() => {
+          onCreated={async (id) => {
             setAdding(false);
-            void load();
+            // Straight on to the photos, so a new place does not stay without a picture.
+            const list = await load();
+            setPhotosPlace(list?.find((p) => p.id === id) ?? null);
           }}
         />
       )}
@@ -283,25 +310,37 @@ export default function AdminPlaces() {
           rows={shown}
           rowKey={(p) => p.id}
           columns={placeColumns}
+          actionsWidth={210}
           actions={(p) => (
-            <Button
-              small
-              label={p.is_active ? 'Vyřadit' : 'Aktivovat'}
-              icon={p.is_active ? 'eye-off-outline' : 'eye-outline'}
-              variant="secondary"
-              loading={busyId === p.id}
-              onPress={() => void toggle(p)}
-            />
+            <>
+              <Button small label="Fotky" icon="images-outline" variant="secondary" onPress={() => setPhotosPlace(p)} />
+              <Button
+                small
+                label={p.is_active ? 'Vyřadit' : 'Aktivovat'}
+                icon={p.is_active ? 'eye-off-outline' : 'eye-outline'}
+                variant="secondary"
+                loading={busyId === p.id}
+                onPress={() => void toggle(p)}
+              />
+            </>
           )}
         />
       )}
+      <PlacePhotosDialog
+        place={photosPlace}
+        onClose={() => setPhotosPlace(null)}
+        onChanged={(count) =>
+          setPlaces((list) => list?.map((p) => (p.id === photosPlace?.id ? { ...p, admin_photos_count: count } : p)) ?? list)
+        }
+      />
     </AdminPage>
   );
 }
 
 const styles = StyleSheet.create({
-  label: { color: colors.navy, fontSize: 13, fontWeight: '800', marginBottom: -4 },
   formActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 8, flexWrap: 'wrap' },
   cell: { color: colors.navy, fontSize: 14, fontWeight: '700' },
+  cellMuted: { color: colors.inactive },
+  photoCount: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   link: { color: colors.skyText, fontSize: 13, fontWeight: '700', textDecorationLine: 'underline' },
 });

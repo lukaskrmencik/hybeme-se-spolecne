@@ -10,6 +10,8 @@ export interface Place {
   image_url: string | null;
   default_reward: number;
   is_active: boolean;
+  /** Only in the list of places: photos added by an admin. */
+  admin_photos_count?: number;
   created_at: string;
   updated_at: string;
 }
