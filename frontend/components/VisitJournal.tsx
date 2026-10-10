@@ -20,6 +20,8 @@ interface VisitJournalProps {
   own?: boolean;
   /** Adds photos to a saved visit; resolves when they are uploaded or queued. */
   onAddPhotos?: (visit: JournalVisit) => Promise<void>;
+  /** Deletes an own photo; offered in the photo viewer. */
+  onDeletePhoto?: (photoId: number, visit: JournalVisit) => Promise<void>;
   header?: React.ReactElement;
   empty?: React.ReactElement;
   refreshControl?: React.ComponentProps<typeof FlatList>['refreshControl'];
@@ -66,9 +68,9 @@ function Photos({
 }
 
 /** Own visits and other players' profiles: combinations with their route, visits on their own, photos. */
-export function VisitJournal({ visits, own = false, onAddPhotos, header, empty, refreshControl }: VisitJournalProps) {
+export function VisitJournal({ visits, own = false, onAddPhotos, onDeletePhoto, header, empty, refreshControl }: VisitJournalProps) {
   const entries = useMemo(() => groupJournal(visits), [visits]);
-  const [viewer, setViewer] = useState<{ photos: PlacePhoto[]; index: number } | null>(null);
+  const [viewer, setViewer] = useState<{ photos: PlacePhoto[]; index: number; visit: JournalVisit } | null>(null);
   const [addingId, setAddingId] = useState<number | null>(null);
   const [bigMap, setBigMap] = useState<{ title: string; visits: JournalVisit[] } | null>(null);
   const insets = useSafeAreaInsets();
@@ -77,6 +79,7 @@ export function VisitJournal({ visits, own = false, onAddPhotos, header, empty, 
     setViewer({
       photos: visit.photos.map((p) => ({ id: p.id, visitId: visit.id, url: p.url, author: null, takenAt: null })),
       index,
+      visit,
     });
 
   const add = onAddPhotos
@@ -222,6 +225,7 @@ export function VisitJournal({ visits, own = false, onAddPhotos, header, empty, 
         index={viewer?.index ?? null}
         onClose={() => setViewer(null)}
         canReport={own ? () => false : () => true}
+        onDelete={onDeletePhoto && viewer ? (photo) => onDeletePhoto(photo.id, viewer.visit) : undefined}
       />
     </>
   );

@@ -122,6 +122,8 @@ export function LandingPage() {
   const { canInstall, install } = useInstallPrompt();
   const [device, setDevice] = useState<DeviceTab>('android');
   const scrollRef = useRef<ScrollView>(null);
+  // onLayout gives the position inside the parent: the guide sits in the sheet, which sits below the hero.
+  const sheetY = useRef(0);
   const guideY = useRef(0);
 
   useEffect(() => setDevice(detectDevice()), []);
@@ -129,7 +131,7 @@ export function LandingPage() {
   const appUrl = mounted ? window.location.origin : '';
   const appHost = appUrl.replace(/^https?:\/\//, '');
   const openApp = () => router.push(token ? '/map' : '/login');
-  const toGuide = () => scrollRef.current?.scrollTo({ y: guideY.current - 16, animated: true });
+  const toGuide = () => scrollRef.current?.scrollTo({ y: sheetY.current + guideY.current - 16, animated: true });
 
   return (
     <ScrollView ref={scrollRef} style={styles.page} contentContainerStyle={styles.pageContent}>
@@ -179,7 +181,7 @@ export function LandingPage() {
         </View>
       </View>
 
-      <View style={styles.sheet}>
+      <View style={styles.sheet} onLayout={(e) => (sheetY.current = e.nativeEvent.layout.y)}>
         {/* About: who is behind the app, also the words people search for (the school, the town). */}
         <View style={[styles.inner, styles.about, wide && styles.aboutWide]}>
           <View style={wide ? styles.aboutTextWide : undefined}>

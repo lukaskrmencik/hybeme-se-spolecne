@@ -7,7 +7,8 @@ import { formatVisitTime } from '../../../utils/dates';
 import { VisitJournal } from '../../../components/VisitJournal';
 import { fromOwnVisit, JournalVisit } from '../../../utils/visitJournal';
 import { pickPhotos } from '../../../services/pickPhotos';
-import { MAX_PHOTOS_PER_VISIT } from '../../../services/photos';
+import { deleteVisitPhoto, MAX_PHOTOS_PER_VISIT } from '../../../services/photos';
+import { invalidatePlacePhotos } from '../../../services/placePhotos';
 import { plural } from '../../../utils/plural';
 import { colors, radius, shadows, typography } from '../../../utils/theme';
 
@@ -57,6 +58,16 @@ export default function VisitsScreen() {
             await refreshStats();
         },
         [uploadVisitPhotos, refreshStats]
+    );
+
+    const deletePhoto = useCallback(
+        async (photoId: number, visit: JournalVisit) => {
+            await deleteVisitPhoto(photoId);
+            // The place's gallery on the map must not keep showing it.
+            invalidatePlacePhotos(visit.placeId);
+            await refreshStats();
+        },
+        [refreshStats]
     );
 
     const handleRefresh = useCallback(async () => {
@@ -138,6 +149,7 @@ export default function VisitsScreen() {
             visits={history}
             own
             onAddPhotos={addPhotos}
+            onDeletePhoto={deletePhoto}
             refreshControl={
                 <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.primary} />
             }

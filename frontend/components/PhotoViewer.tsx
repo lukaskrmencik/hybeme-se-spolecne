@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { FlatList, Image, Modal, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
+import { ActivityIndicator, FlatList, Image, Modal, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { PlacePhoto } from '../types/photo';
 import { formatVisitTime } from '../utils/dates';
 import { ReportDialog } from './ReportDialog';
 import { ReportTarget } from '../services/reports';
+import { confirmAction, showToast } from '../utils/alert';
+import { getErrorMessage } from '../services/api';
 import { colors } from '../utils/theme';
 
 interface PhotoViewerProps {
@@ -15,14 +17,17 @@ interface PhotoViewerProps {
   onClose: () => void;
   /** Whether the photo can be reported to the admins; not shown when missing (e.g. in the administration). */
   canReport?: (photo: PlacePhoto) => boolean;
+  /** Deletes the photo (own photos); the viewer closes after it. */
+  onDelete?: (photo: PlacePhoto) => Promise<void>;
 }
 
 /** Full-screen gallery, swiping goes to the next photo. */
-export function PhotoViewer({ photos, index, onClose, canReport }: PhotoViewerProps) {
+export function PhotoViewer({ photos, index, onClose, canReport, onDelete }: PhotoViewerProps) {
   const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const [current, setCurrent] = useState(0);
   const [reportTarget, setReportTarget] = useState<ReportTarget | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const open = index != null && photos.length > 0;
 
   useEffect(() => {
@@ -30,6 +35,22 @@ export function PhotoViewer({ photos, index, onClose, canReport }: PhotoViewerPr
   }, [index]);
 
   const shown = photos[current] ?? photos[0];
+
+  const remove = async () => {
+    if (!onDelete || !shown) return;
+    const ok = await confirmAction('Smazat fotku?', 'Fotka zmizí z aplikace. Tento krok nelze vrátit.', 'Smazat', true);
+    if (!ok) return;
+    setDeleting(true);
+    try {
+      await onDelete(shown);
+      onClose();
+      showToast('Fotka smazána', undefined, 'success');
+    } catch (err) {
+      showToast('Fotku se nepodařilo smazat', getErrorMessage(err, 'Zkuste to prosím znovu.'), 'danger');
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   return (
     <Modal visible={open} animationType="fade" onRequestClose={onClose} transparent>
@@ -59,6 +80,21 @@ export function PhotoViewer({ photos, index, onClose, canReport }: PhotoViewerPr
             {Math.min(current + 1, photos.length)} / {photos.length}
           </Text>
           <View style={styles.topActions}>
+          {shown && onDelete && (
+            <TouchableOpacity
+              onPress={() => void remove()}
+              disabled={deleting}
+              style={styles.close}
+              hitSlop={10}
+              accessibilityLabel="Smazat fotku"
+            >
+              {deleting ? (
+                <ActivityIndicator size="small" color={colors.white} />
+              ) : (
+                <Ionicons name="trash-outline" size={20} color={colors.white} />
+              )}
+            </TouchableOpacity>
+          )}
           {shown && canReport?.(shown) && (
             <TouchableOpacity
               onPress={() => setReportTarget({ kind: 'photo', photoId: shown.id })}

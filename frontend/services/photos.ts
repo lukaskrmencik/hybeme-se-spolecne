@@ -169,3 +169,8 @@ export function flushPhotoQueue(userId: number | null): Promise<PhotoFlushResult
 export async function getQueuedPhotoCount(userId: number | null): Promise<number> {
   return (await readQueue()).filter((q) => q.userId === userId || q.userId == null).length;
 }
+
+/** Removes one of the user's own photos (the server checks the visit is theirs). */
+export async function deleteVisitPhoto(photoId: number): Promise<void> {
+  await apiFetch(`visits/photo/${photoId}`, { method: 'DELETE' });
+}

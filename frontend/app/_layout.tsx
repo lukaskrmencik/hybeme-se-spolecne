@@ -13,8 +13,10 @@ import { takeAfterLogin } from '../utils/afterLogin';
 import { nunitoFonts } from '../utils/fonts';
 import { colors } from '../utils/theme';
 import { syncOfflineMapFiles } from '../services/offlineMapFiles';
+import { printConsoleNote } from '../utils/consoleNote';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
+printConsoleNote();
 
 /**
  * Public pages of the web are rendered into the HTML at build time, so search engines (and visitors on a slow
