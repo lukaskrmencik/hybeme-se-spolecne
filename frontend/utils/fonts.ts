@@ -64,7 +64,8 @@ export const nunitoFonts = {
  * react-native-web gives every Text and TextInput `font: 14px System`, which beats a font-family
  * set on body, so the app silently rendered in the system font. Register one "Nunito" family
  * with the real weights from the bundled files and force it on every element except icons
- * (those carry an inline font-family and keep it).
+ * (those carry an inline font-family and keep it). `:is(#root, body)` also reaches dialogs (Modal),
+ * which are rendered outside #root, and keeps the id's weight that beats react-native-web's classes.
  */
 function installWebFont() {
   if (Platform.OS !== 'web' || typeof document === 'undefined') return;
@@ -90,7 +91,7 @@ function installWebFont() {
   const style = document.createElement('style');
   style.id = 'nunito-web-font';
   style.textContent = `${fontFaces}
-#root div, #root span, #root h1, #root h2, #root h3, #root input, #root textarea, #root button { font-family: Nunito, sans-serif; }
+:is(#root, body) :is(div, span, h1, h2, h3, input, textarea, button) { font-family: Nunito, sans-serif; }
 #root *:focus, #root *:focus-visible { outline: none !important; -webkit-tap-highlight-color: transparent; }
 #root input, #root textarea { box-shadow: none !important; }`;
   document.head.appendChild(style);

@@ -13,6 +13,9 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, radius } from '../../utils/theme';
+import { InfoTip } from './InfoTip';
+
+export { InfoTip };
 
 type IconName = ComponentProps<typeof Ionicons>['name'];
 
@@ -90,33 +93,6 @@ export function Button({
         </>
       )}
     </Pressable>
-  );
-}
-
-/**
- * Small „i“ next to a label: the explanation appears on hover (computer) or tap (phone),
- * so forms show only what has to be filled in.
- */
-export function InfoTip({ text }: { text: string }) {
-  const [open, setOpen] = useState(false);
-  return (
-    <View style={[styles.tipWrap, open && styles.tipWrapOpen]}>
-      <Pressable
-        onPress={() => setOpen((o) => !o)}
-        onHoverIn={() => setOpen(true)}
-        onHoverOut={() => setOpen(false)}
-        hitSlop={8}
-        accessibilityRole="button"
-        accessibilityLabel={text}
-      >
-        <Ionicons name={open ? 'information-circle' : 'information-circle-outline'} size={16} color={colors.skyText} />
-      </Pressable>
-      {open && (
-        <View style={styles.tip} pointerEvents="none">
-          <Text style={styles.tipText}>{text}</Text>
-        </View>
-      )}
-    </View>
   );
 }
 
@@ -472,24 +448,10 @@ const styles = StyleSheet.create({
 
   field: { gap: 6 },
   fieldHalf: { flexGrow: 1, flexBasis: 200 },
-  fieldLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 5, zIndex: 2 },
+  fieldLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   fieldLabel: { color: colors.navy, fontSize: 13, fontWeight: '800' },
-  tipWrap: { position: 'relative' },
-  tipWrapOpen: { zIndex: 50 },
-  tip: {
-    position: 'absolute',
-    top: 22,
-    left: -12,
-    width: 260,
-    backgroundColor: colors.navy,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 9,
-    boxShadow: '0px 6px 18px rgba(5, 16, 26, 0.25)',
-  },
-  tipText: { color: colors.white, fontSize: 12, lineHeight: 17, fontWeight: '600' },
-  formSection: { gap: 10, paddingTop: 14, borderTopWidth: 1, borderTopColor: colors.border, zIndex: 1 },
-  formSectionHead: { flexDirection: 'row', alignItems: 'center', gap: 7, zIndex: 3 },
+  formSection: { gap: 10, paddingTop: 14, borderTopWidth: 1, borderTopColor: colors.border },
+  formSectionHead: { flexDirection: 'row', alignItems: 'center', gap: 7 },
   formSectionTitle: { color: colors.navy, fontSize: 14, fontWeight: '900' },
   inputWrap: {
     flexDirection: 'row',

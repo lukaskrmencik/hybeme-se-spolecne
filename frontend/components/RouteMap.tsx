@@ -9,10 +9,13 @@ import { colors, radius } from '../utils/theme';
 interface RouteMapProps {
   /** [lat, lng] in the order they were visited. */
   points: [number, number][];
+  /** Without a height the map fills its parent (the full-screen view). */
   height?: number;
+  /** Can be moved and zoomed; the small map in the list is only a picture. */
+  interactive?: boolean;
 }
 
-const buildHtml = (points: [number, number][], tiles: TileSource, libs: MapLibs | null) => `
+const buildHtml = (points: [number, number][], tiles: TileSource, libs: MapLibs | null, interactive: boolean) => `
 <!DOCTYPE html>
 <html>
 <head>
@@ -41,9 +44,12 @@ const buildHtml = (points: [number, number][], tiles: TileSource, libs: MapLibs 
     if (typeof L === 'undefined') return;
     var P = ${JSON.stringify(points)};
     var TILES = ${JSON.stringify(tiles)};
-    // A picture of the route, not a map to explore: it must not catch the scrolling of the list around it.
-    var map = L.map('map', { zoomControl: false, attributionControl: false, dragging: false, touchZoom: false,
-      scrollWheelZoom: false, doubleClickZoom: false, boxZoom: false, keyboard: false, tap: false });
+    var INTERACTIVE = ${interactive};
+    // In the list the map is only a picture of the route: it must not catch the scrolling of the list around it.
+    var map = INTERACTIVE
+      ? L.map('map', { zoomControl: true, attributionControl: false })
+      : L.map('map', { zoomControl: false, attributionControl: false, dragging: false, touchZoom: false,
+          scrollWheelZoom: false, doubleClickZoom: false, boxZoom: false, keyboard: false });
     L.control.attribution({ prefix: false, position: 'bottomright' }).addTo(map);
     L.tileLayer(TILES.url.replace('{r}', L.Browser.retina ? '@2x' : ''), { maxZoom: TILES.maxZoom, tileSize: 256, attribution: TILES.attribution }).addTo(map);
     if (TILES.mapyLogo) {
@@ -57,14 +63,14 @@ const buildHtml = (points: [number, number][], tiles: TileSource, libs: MapLibs 
     P.forEach(function (p, i) {
       L.marker(p, { icon: L.divIcon({ className: 'num' + (i === 0 ? ' first' : ''), html: '<div>' + (i + 1) + '</div>', iconSize: [0, 0] }) }).addTo(map);
     });
-    map.fitBounds(L.latLngBounds(P), { padding: [28, 28], maxZoom: 15 });
+    map.fitBounds(L.latLngBounds(P), { padding: INTERACTIVE ? [48, 48] : [28, 28], maxZoom: 15 });
   })();
   </script>
 </body>
 </html>`;
 
 /** Small, still map of a combination: the visited places numbered in order and joined by a line. */
-export function RouteMap({ points, height = 170 }: RouteMapProps) {
+export function RouteMap({ points, height, interactive = false }: RouteMapProps) {
   // Native: the map libraries downloaded to the phone, so the map also draws without signal.
   const [libs, setLibs] = useState<MapLibs | null | undefined>(Platform.OS === 'web' ? null : undefined);
   useEffect(() => {
@@ -73,19 +79,20 @@ export function RouteMap({ points, height = 170 }: RouteMapProps) {
 
   const key = JSON.stringify(points);
   const html = useMemo(
-    () => (libs === undefined ? '' : buildHtml(points, tileSource(), libs)),
+    () => (libs === undefined ? '' : buildHtml(points, tileSource(), libs, interactive)),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [key, libs]
+    [key, libs, interactive]
   );
 
+  const touch = interactive ? 'auto' : 'none';
   return (
-    <View style={[styles.wrap, { height }]}>
+    <View style={[styles.wrap, height != null ? { height } : styles.fill, interactive && styles.square]}>
       {!html ? null : Platform.OS === 'web' ? (
-        // No pointer events: the wheel and touches then scroll the list instead of getting stuck in the frame.
-        <iframe srcDoc={html} title="Mapa kombinace" style={{ width: '100%', height: '100%', border: 'none', pointerEvents: 'none' }} />
+        // The small map takes no pointer events: the wheel and touches then scroll the list, a tap opens the big map.
+        <iframe srcDoc={html} title="Mapa kombinace" style={{ width: '100%', height: '100%', border: 'none', pointerEvents: touch }} />
       ) : (
-        <View style={styles.wrap} pointerEvents="none">
-          <WebView originWhitelist={['*']} source={{ html }} javaScriptEnabled scrollEnabled={false} style={styles.wrap} />
+        <View style={styles.fill} pointerEvents={touch}>
+          <WebView originWhitelist={['*']} source={{ html }} javaScriptEnabled scrollEnabled={false} style={styles.fill} />
         </View>
       )}
     </View>
@@ -94,4 +101,6 @@ export function RouteMap({ points, height = 170 }: RouteMapProps) {
 
 const styles = StyleSheet.create({
   wrap: { width: '100%', borderRadius: radius.md, overflow: 'hidden', backgroundColor: '#E7EBE3' },
+  fill: { flex: 1, width: '100%' },
+  square: { borderRadius: 0 },
 });

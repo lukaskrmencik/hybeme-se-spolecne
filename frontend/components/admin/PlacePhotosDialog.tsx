@@ -152,7 +152,7 @@ export function PlacePhotosDialog({ place, onClose, onChanged }: { place: Place 
 const styles = StyleSheet.create({
   backdrop: { flex: 1, backgroundColor: 'rgba(5, 16, 26, 0.5)', alignItems: 'center', justifyContent: 'center', padding: 20 },
   dialog: { width: '100%', maxWidth: 640, maxHeight: '90%', backgroundColor: colors.surface, borderRadius: 10, padding: 20, gap: 14 },
-  head: { flexDirection: 'row', alignItems: 'center', gap: 8, zIndex: 5 },
+  head: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   title: { flexShrink: 1, color: colors.navy, fontSize: 18, fontWeight: '900' },
   close: { marginLeft: 'auto', width: 32, height: 32, alignItems: 'center', justifyContent: 'center' },
   body: { flexGrow: 0 },

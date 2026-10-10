@@ -151,10 +151,10 @@ function NavigateButton({ onNavigate, routeType }: { onNavigate: () => void; rou
       <View style={styles.navigateLogo}>
         <MapyComLogo size={26} />
       </View>
-      <View style={styles.buttonTextWrap}>
-        <Text style={styles.buttonCaption}>{routeTypeLabel(routeType, true)}</Text>
-        <Text style={styles.buttonText}>Navigovat</Text>
-      </View>
+      <Text style={styles.buttonText}>Navigovat</Text>
+      <Text style={styles.navigateMode} numberOfLines={1}>
+        {routeTypeLabel(routeType, true)}
+      </Text>
     </TouchableOpacity>
   );
 }
@@ -394,6 +394,7 @@ const styles = StyleSheet.create({
   navigateButton: { backgroundColor: colors.mapyCom, boxShadow: '0px 6px 16px rgba(30, 174, 0, 0.3)' },
   // A white ring keeps the green symbol visible on the green button.
   navigateLogo: { borderRadius: 999, borderWidth: 2, borderColor: colors.white },
+  navigateMode: { color: 'rgba(255,255,255,0.85)', fontSize: 13, fontWeight: '800', flexShrink: 1 },
   tagNavyText: { color: colors.navy, fontSize: 12, fontWeight: '800' },
   close: {
     width: 32,

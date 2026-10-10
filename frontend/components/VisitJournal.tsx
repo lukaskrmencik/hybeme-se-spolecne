@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
-import { ActivityIndicator, FlatList, Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, FlatList, Image, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { groupJournal, JournalEntry, JournalVisit } from '../utils/visitJournal';
 import { PlacePhoto } from '../types/photo';
@@ -69,6 +70,8 @@ export function VisitJournal({ visits, own = false, onAddPhotos, header, empty, 
   const entries = useMemo(() => groupJournal(visits), [visits]);
   const [viewer, setViewer] = useState<{ photos: PlacePhoto[]; index: number } | null>(null);
   const [addingId, setAddingId] = useState<number | null>(null);
+  const [bigMap, setBigMap] = useState<{ title: string; visits: JournalVisit[] } | null>(null);
+  const insets = useSafeAreaInsets();
 
   const openPhoto = (visit: JournalVisit, index: number) =>
     setViewer({
@@ -132,7 +135,18 @@ export function VisitJournal({ visits, own = false, onAddPhotos, header, empty, 
           <Text style={styles.points}>+{formatNumber(item.total)}</Text>
         </View>
 
-        {points.length >= 2 && <RouteMap points={points} />}
+        {points.length >= 2 && (
+          <Pressable
+            onPress={() => setBigMap({ title: `${first.sportName} · ${first.when}`, visits: item.visits })}
+            accessibilityRole="button"
+            accessibilityLabel="Zobrazit kombinaci na velké mapě"
+          >
+            <RouteMap points={points} height={170} />
+            <View style={styles.expand} pointerEvents="none">
+              <Ionicons name="expand-outline" size={16} color={colors.navy} />
+            </View>
+          </Pressable>
+        )}
 
         <View style={styles.steps}>
           {item.visits.map((v, i) => (
@@ -171,6 +185,38 @@ export function VisitJournal({ visits, own = false, onAddPhotos, header, empty, 
         ListEmptyComponent={empty}
         refreshControl={refreshControl}
       />
+      <Modal visible={!!bigMap} animationType="slide" onRequestClose={() => setBigMap(null)}>
+        <View style={styles.bigMap}>
+          <View style={[styles.bigHead, { paddingTop: insets.top + 10 }]}>
+            <View style={styles.rowText}>
+              <Text style={styles.bigTitle}>Kombinace</Text>
+              <Text style={styles.bigSub}>{bigMap?.title}</Text>
+            </View>
+            <Pressable onPress={() => setBigMap(null)} style={styles.bigClose} hitSlop={8} accessibilityLabel="Zavřít mapu">
+              <Ionicons name="close" size={22} color={colors.navy} />
+            </Pressable>
+          </View>
+          {bigMap && (
+            <RouteMap
+              interactive
+              points={bigMap.visits.map((v) => v.position).filter((p): p is [number, number] => !!p)}
+            />
+          )}
+          <ScrollView style={styles.bigListBox} contentContainerStyle={[styles.bigList, { paddingBottom: insets.bottom + 12 }]}>
+            {bigMap?.visits.map((v, i) => (
+              <View key={v.id} style={styles.bigItem}>
+                <View style={[styles.stepDot, i === 0 && styles.stepDotFirst]}>
+                  <Text style={styles.stepDotText}>{i + 1}</Text>
+                </View>
+                <Text style={[styles.place, styles.rowText]} numberOfLines={1}>
+                  {v.placeName}
+                </Text>
+                <Text style={styles.stepPoints}>+{formatNumber(v.reward)}</Text>
+              </View>
+            ))}
+          </ScrollView>
+        </View>
+      </Modal>
       <PhotoViewer
         photos={viewer?.photos ?? []}
         index={viewer?.index ?? null}
@@ -219,6 +265,42 @@ const styles = StyleSheet.create({
   stepConnector: { flex: 1, width: 2, backgroundColor: colors.border, marginVertical: 2 },
   stepBody: { flex: 1, gap: 8, paddingTop: 2, paddingBottom: 14 },
   stepPoints: { fontSize: 14, fontWeight: '900', color: colors.navy },
+
+  expand: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...shadows.float,
+  },
+  bigMap: { flex: 1, backgroundColor: colors.surface },
+  bigHead: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  bigTitle: { fontSize: 18, fontWeight: '900', color: colors.skyText },
+  bigSub: { fontSize: 13, fontWeight: '700', color: colors.muted, marginTop: 2 },
+  bigClose: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: colors.background,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bigListBox: { flexGrow: 0, maxHeight: '35%', borderTopWidth: 1, borderTopColor: colors.border },
+  bigList: { paddingHorizontal: 16, paddingTop: 10, gap: 8 },
+  bigItem: { flexDirection: 'row', alignItems: 'center', gap: 10 },
 
   photos: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   thumb: { width: THUMB, height: THUMB, borderRadius: radius.sm, backgroundColor: colors.background },
