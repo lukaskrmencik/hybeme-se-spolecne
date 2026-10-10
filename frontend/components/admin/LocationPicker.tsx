@@ -1,6 +1,9 @@
-import React, { useCallback, useEffect, useMemo, useRef } from 'react';
-import { Platform, StyleSheet, View } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Modal, Platform, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { WebView } from 'react-native-webview';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
+import { Button } from './ui';
 import { tileSource, TileSource } from '../LeafletMapView';
 import { config } from '../../constants/config';
 import { mapLibsHead } from '../../utils/mapLibs';
@@ -16,14 +19,20 @@ interface LocationPickerProps {
   onChange: (value: LatLng) => void;
   /** Places that already exist, shown as small dots so the same place is not added twice. */
   existing: { name: string; lat: number; lng: number; active: boolean }[];
+}
+
+interface PickerMapProps extends LocationPickerProps {
+  /** Fixed height; without it the map fills its parent. */
   height?: number;
+  /** Hint in the corner of the map; without it the map is only a preview (no zoom buttons either). */
+  hint?: string;
 }
 
 type PickerMessage =
   | { type: 'value'; value: LatLng | null; recenter: boolean }
   | { type: 'existing'; places: LocationPickerProps['existing'] };
 
-const buildHtml = (tiles: TileSource, lat: number, lng: number, colorsJson: string) => `
+const buildHtml = (tiles: TileSource, lat: number, lng: number, colorsJson: string, hint: string | undefined) => `
 <!DOCTYPE html>
 <html>
 <head>
@@ -47,7 +56,7 @@ const buildHtml = (tiles: TileSource, lat: number, lng: number, colorsJson: stri
     if (typeof L === 'undefined') { window.__pick = function () {}; return; }
     var C = ${colorsJson};
     var TILES = ${JSON.stringify(tiles)};
-    var map = L.map('map', { zoomControl: true, attributionControl: false }).setView([${lat}, ${lng}], 13);
+    var map = L.map('map', { zoomControl: ${hint ? 'true' : 'false'}, attributionControl: false }).setView([${lat}, ${lng}], 13);
     L.control.attribution({ prefix: false }).addTo(map);
     L.tileLayer(TILES.url.replace('{r}', L.Browser.retina ? '@2x' : ''), { maxZoom: TILES.maxZoom, tileSize: 256, attribution: TILES.attribution }).addTo(map);
     if (TILES.mapyLogo) {
@@ -57,8 +66,8 @@ const buildHtml = (tiles: TileSource, lat: number, lng: number, colorsJson: stri
       new Logo().addTo(map);
     }
     var Hint = L.Control.extend({ options: { position: 'topright' }, onAdd: function () {
-      var d = L.DomUtil.create('div', 'hint'); d.innerHTML = 'Klikněte do mapy na místo'; return d; } });
-    new Hint().addTo(map);
+      var d = L.DomUtil.create('div', 'hint'); d.textContent = ${JSON.stringify(hint)}; return d; } });
+    if (${JSON.stringify(!!hint)}) new Hint().addTo(map);
 
     var existingLayer = L.layerGroup().addTo(map);
     var marker = null;
@@ -103,7 +112,7 @@ const buildHtml = (tiles: TileSource, lat: number, lng: number, colorsJson: stri
 </html>`;
 
 /** Map where the admin clicks the spot of a new place; the pin can be dragged to adjust it. */
-export function LocationPicker({ value, onChange, existing, height = 320 }: LocationPickerProps) {
+function PickerMap({ value, onChange, existing, height, hint }: PickerMapProps) {
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const webViewRef = useRef<WebView | null>(null);
   const readyRef = useRef(false);
@@ -115,7 +124,8 @@ export function LocationPicker({ value, onChange, existing, height = 320 }: Loca
         tileSource(),
         value?.lat ?? config.defaultLat,
         value?.lng ?? config.defaultLng,
-        JSON.stringify({ primary: colors.primary, inactive: colors.inactive })
+        JSON.stringify({ primary: colors.primary, inactive: colors.inactive }),
+        hint
       ),
     // The map is built once; later changes go through messages.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -166,7 +176,7 @@ export function LocationPicker({ value, onChange, existing, height = 320 }: Loca
   }, [handle]);
 
   return (
-    <View style={[styles.wrap, { height }]}>
+    <View style={[styles.wrap, height != null ? { height } : styles.fill]}>
       {Platform.OS === 'web' ? (
         <iframe ref={iframeRef} srcDoc={html} title="Výběr polohy" style={{ width: '100%', height: '100%', border: 'none' }} />
       ) : (
@@ -175,6 +185,7 @@ export function LocationPicker({ value, onChange, existing, height = 320 }: Loca
           originWhitelist={['*']}
           source={{ html }}
           javaScriptEnabled
+          nestedScrollEnabled
           onMessage={(e) => {
             try {
               handle(JSON.parse(e.nativeEvent.data));
@@ -189,6 +200,82 @@ export function LocationPicker({ value, onChange, existing, height = 320 }: Loca
   );
 }
 
+/** Below this width the form scrolls under the finger, so the map opens full screen instead of being used inline. */
+const COMPACT_WIDTH = 700;
+
+export function LocationPicker(props: LocationPickerProps) {
+  const { width } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  const [open, setOpen] = useState(false);
+
+  if (width >= COMPACT_WIDTH) return <PickerMap {...props} height={320} hint="Klikněte do mapy na místo" />;
+
+  return (
+    <>
+      <View style={styles.preview}>
+        <PickerMap {...props} height={190} />
+        {/* Covers the map: in the scrolling form a drag would move the map and the page at once. */}
+        <Pressable
+          style={[StyleSheet.absoluteFill, styles.previewCover]}
+          onPress={() => setOpen(true)}
+          accessibilityRole="button"
+          accessibilityLabel="Otevřít mapu pro výběr polohy"
+        >
+          <View style={styles.openBadge}>
+            <Ionicons name="expand-outline" size={16} color={colors.white} />
+            <Text style={styles.openText}>{props.value ? 'Upravit na mapě' : 'Vybrat na mapě'}</Text>
+          </View>
+        </Pressable>
+      </View>
+
+      <Modal visible={open} animationType="slide" onRequestClose={() => setOpen(false)}>
+        <View style={styles.full}>
+          <View style={[styles.head, { paddingTop: insets.top + 10 }]}>
+            <View style={styles.fill}>
+              <Text style={styles.title}>Poloha místa</Text>
+              <Text style={styles.sub}>Klepněte na místo, špendlík lze potom posunout.</Text>
+            </View>
+            <Pressable onPress={() => setOpen(false)} style={styles.close} hitSlop={8} accessibilityLabel="Zavřít mapu">
+              <Ionicons name="close" size={22} color={colors.navy} />
+            </Pressable>
+          </View>
+          <View style={styles.fill}>{open && <PickerMap {...props} hint="Klepněte na místo" />}</View>
+          <View style={[styles.foot, { paddingBottom: insets.bottom + 12 }]}>
+            <Button label={props.value ? 'Hotovo' : 'Zavřít'} icon={props.value ? 'checkmark' : undefined} onPress={() => setOpen(false)} />
+          </View>
+        </View>
+      </Modal>
+    </>
+  );
+}
+
 const styles = StyleSheet.create({
   wrap: { width: '100%', borderRadius: radius.md, overflow: 'hidden', backgroundColor: '#E7EBE3' },
+  fill: { flex: 1 },
+  preview: { width: '100%', height: 190 },
+  previewCover: { alignItems: 'center', justifyContent: 'flex-end', paddingBottom: 14 },
+  openBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 14,
+    height: 36,
+    borderRadius: radius.full,
+    backgroundColor: colors.navy,
+  },
+  openText: { color: colors.white, fontSize: 14, fontWeight: '800' },
+  full: { flex: 1, backgroundColor: colors.surface },
+  head: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingHorizontal: 16,
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  title: { fontSize: 18, fontWeight: '900', color: colors.navy },
+  sub: { fontSize: 13, fontWeight: '700', color: colors.muted, marginTop: 2 },
+  close: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background },
+  foot: { paddingHorizontal: 16, paddingTop: 12, borderTopWidth: 1, borderTopColor: colors.border, alignItems: 'stretch' },
 });
