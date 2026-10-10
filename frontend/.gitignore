@@ -42,3 +42,5 @@ yarn-error.*
 
 # Built by deploy/offline-map.sh, too big for git.
 public/offline-map/
+# The Android installer (APK), copied to the server by hand.
+public/download/

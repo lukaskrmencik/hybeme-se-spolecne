@@ -149,7 +149,8 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(request.url);
 
   if (url.origin === self.location.origin) {
-    if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/storage/')) return;
+    // The Android installer goes straight to the network, it must not end up in the cache.
+    if (['/api/', '/storage/', '/download/'].some((prefix) => url.pathname.startsWith(prefix))) return;
     if (url.pathname === MAP_URL) {
       event.respondWith(offlineMap(request));
       return;

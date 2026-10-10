@@ -6,6 +6,7 @@ import QRCode from 'react-native-qrcode-svg';
 import { useAuth } from '../../context/AuthContext';
 import { PartnerLogos } from '../PartnerLogos';
 import { LandingLeaderboard } from './LandingLeaderboard';
+import { ApkDownload } from './ApkDownload';
 import { LegalLinks } from '../legal/LegalLinks';
 import { LEGAL } from '../../constants/legal';
 import Svg, { Path } from 'react-native-svg';
@@ -56,6 +57,18 @@ const STEPS: Record<DeviceTab, { icon: IconName; text: string }[]> = {
     { icon: 'checkmark-circle-outline', text: 'Vpravo nahoře klepni na „Přidat“.' },
   ],
 };
+
+const FACTS: { icon: IconName; text: string }[] = [
+  { icon: 'gift-outline', text: 'Zdarma' },
+  { icon: 'people-outline', text: 'Pro žáky i veřejnost' },
+  { icon: 'location-outline', text: 'Benátky nad Jizerou a okolí' },
+];
+
+const BOARDS: { icon: IconName; title: string; text: string }[] = [
+  { icon: 'trophy-outline', title: 'Celkový', text: 'Všechny body od začátku.' },
+  { icon: 'calendar-outline', title: 'Tento týden', text: 'Každé pondělí začíná nový souboj.' },
+  { icon: 'time-outline', title: 'Historie', text: 'Nejlepší tři z minulých týdnů.' },
+];
 
 const BENEFITS: { icon: IconName; text: string }[] = [
   { icon: 'expand-outline', text: 'Běží na celou obrazovku, bez lišty prohlížeče.' },
@@ -191,6 +204,12 @@ export function LandingPage() {
                 />
               </View>
             )}
+            {mounted && device === 'android' && (
+              <View style={styles.playSoon}>
+                <Ionicons name="logo-google-playstore" size={15} color={colors.accent} />
+                <Text style={styles.playSoonText}>Již brzy i na Google Play</Text>
+              </View>
+            )}
           </View>
 
           {isDesktop ? (
@@ -218,18 +237,48 @@ export function LandingPage() {
         <HeroWave />
       </View>
 
+      {/* About: who is behind the app, also the words people search for (the school, the town). */}
+      <View style={[styles.inner, styles.aboutSection]}>
+        <View style={[styles.about, wide && styles.aboutWide]}>
+          <View style={wide ? styles.aboutTextWide : undefined}>
+            <Text style={styles.kicker}>O projektu</Text>
+            <Text role="heading" aria-level={2} style={styles.sectionTitle}>
+              Aplikace z Benátek nad Jizerou
+            </Text>
+            <Text style={styles.sectionLead}>
+              Hýbeme se společně připravila {LEGAL.operatorName} pro své žáky i pro všechny, kdo chtějí poznávat
+              Benátky nad Jizerou a jejich okolí. Projekt podporuje hlavní partner {LEGAL.partner}.
+            </Text>
+            <View style={styles.facts}>
+              {FACTS.map((f) => (
+                <View key={f.text} style={styles.fact}>
+                  <Ionicons name={f.icon} size={15} color={colors.primary} />
+                  <Text style={styles.factText}>{f.text}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+          <View style={[styles.aboutLogos, wide && styles.aboutLogosWide]}>
+            <PartnerLogos />
+          </View>
+        </View>
+      </View>
+
       {/* Features */}
       <View style={[styles.inner, styles.section]}>
         <Text style={styles.kicker}>Jak to funguje</Text>
         <Text role="heading" aria-level={2} style={styles.sectionTitle}>Pohyb, který se počítá</Text>
         <View style={[styles.features, wide && styles.featuresWide]}>
-          {FEATURES.map((f) => (
+          {FEATURES.map((f, i) => (
             <View key={f.title} style={[styles.feature, wide ? styles.featureWide : styles.featureRow]}>
               <View style={styles.featureIcon}>
                 <Ionicons name={f.icon} size={22} color={colors.primary} />
               </View>
               <View style={styles.featureBody}>
-                <Text style={styles.featureTitle}>{f.title}</Text>
+                <Text style={styles.featureTitle}>
+                  <Text style={styles.featureNumber}>{i + 1}. </Text>
+                  {f.title}
+                </Text>
                 <Text style={styles.featureText}>{f.text}</Text>
               </View>
             </View>
@@ -237,18 +286,33 @@ export function LandingPage() {
         </View>
       </View>
 
-      {/* Public leaderboards */}
-      <View style={[styles.inner, styles.section, wide && styles.boardWide]}>
-        <View style={wide && styles.boardText}>
-          <Text style={styles.kicker}>Žebříček</Text>
-          <Text role="heading" aria-level={2} style={styles.sectionTitle}>Kdo se hýbe nejvíc</Text>
-          <Text style={styles.sectionLead}>
-            Za každou návštěvu a kombinaci přibývají body. Vedle celkového pořadí běží každý týden nový žebříček, takže
-            se do čela může dostat kdokoli. Týden začíná vždy v pondělí.
-          </Text>
-        </View>
-        <View style={wide ? styles.boardCard : styles.boardCardNarrow}>
-          <LandingLeaderboard />
+      {/* Public leaderboards, on their own band */}
+      <View style={styles.band}>
+        <View style={[styles.inner, wide && styles.boardWide]}>
+          <View style={wide && styles.boardText}>
+            <Text style={styles.kicker}>Žebříček</Text>
+            <Text role="heading" aria-level={2} style={styles.sectionTitle}>Kdo se hýbe nejvíc</Text>
+            <Text style={styles.sectionLead}>
+              Za každou návštěvu a kombinaci přibývají body. Vedle celkového pořadí běží každý týden nový žebříček,
+              takže se do čela může dostat kdokoli.
+            </Text>
+            <View style={styles.boardPoints}>
+              {BOARDS.map((b) => (
+                <View key={b.title} style={styles.boardPoint}>
+                  <View style={styles.boardPointIcon}>
+                    <Ionicons name={b.icon} size={17} color={colors.navy} />
+                  </View>
+                  <View style={styles.featureBody}>
+                    <Text style={styles.boardPointTitle}>{b.title}</Text>
+                    <Text style={styles.boardPointText}>{b.text}</Text>
+                  </View>
+                </View>
+              ))}
+            </View>
+          </View>
+          <View style={wide ? styles.boardCard : styles.boardCardNarrow}>
+            <LandingLeaderboard />
+          </View>
         </View>
       </View>
 
@@ -274,38 +338,47 @@ export function LandingPage() {
           </View>
         </View>
 
-        <View style={[styles.guide, wide && styles.guideWide]}>
-          <View style={styles.tabs} accessibilityRole="tablist">
-            {(['android', 'ios'] as DeviceTab[]).map((tab) => {
-              const active = device === tab;
-              return (
-                <Pressable
-                  key={tab}
-                  onPress={() => setDevice(tab)}
-                  style={[styles.tab, active && styles.tabActive]}
-                  accessibilityRole="tab"
-                  accessibilityState={{ selected: active }}
-                >
-                  <Ionicons name={tab === 'android' ? 'logo-android' : 'logo-apple'} size={18} color={active ? colors.white : colors.navy} />
-                  <Text style={[styles.tabText, active && styles.tabTextActive]}>{tab === 'android' ? 'Android' : 'iPhone'}</Text>
-                </Pressable>
-              );
-            })}
+        <View style={[styles.guideColumn, wide && styles.guideWide]}>
+          <View style={styles.guide}>
+            <View style={styles.tabs} accessibilityRole="tablist">
+              {(['android', 'ios'] as DeviceTab[]).map((tab) => {
+                const active = device === tab;
+                return (
+                  <Pressable
+                    key={tab}
+                    onPress={() => setDevice(tab)}
+                    style={[styles.tab, active && styles.tabActive]}
+                    accessibilityRole="tab"
+                    accessibilityState={{ selected: active }}
+                  >
+                    <Ionicons name={tab === 'android' ? 'logo-android' : 'logo-apple'} size={18} color={active ? colors.white : colors.navy} />
+                    <Text style={[styles.tabText, active && styles.tabTextActive]}>{tab === 'android' ? 'Android' : 'iPhone'}</Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+
+            <View style={styles.recommended}>
+              <Ionicons name="star" size={13} color={colors.primary} />
+              <Text style={styles.recommendedText}>Doporučujeme: přímo z prohlížeče</Text>
+            </View>
+
+            {STEPS[device].map((step, i) => (
+              <View key={step.text} style={styles.step}>
+                <View style={styles.stepNumber}>
+                  <Text style={styles.stepNumberText}>{i + 1}</Text>
+                </View>
+                <Text style={styles.stepText}>{step.text}</Text>
+                <Ionicons name={step.icon} size={22} color={colors.muted} />
+              </View>
+            ))}
+
+            {device === 'android' && canInstall && (
+              <Button label="Nainstalovat jedním klepnutím" icon="download-outline" onPress={() => void install()} />
+            )}
           </View>
 
-          {STEPS[device].map((step, i) => (
-            <View key={step.text} style={styles.step}>
-              <View style={styles.stepNumber}>
-                <Text style={styles.stepNumberText}>{i + 1}</Text>
-              </View>
-              <Text style={styles.stepText}>{step.text}</Text>
-              <Ionicons name={step.icon} size={22} color={colors.muted} />
-            </View>
-          ))}
-
-          {device === 'android' && canInstall && (
-            <Button label="Nainstalovat jedním klepnutím" icon="download-outline" variant="outline" onPress={() => void install()} />
-          )}
+          {device === 'android' && <ApkDownload onDesktop={isDesktop} />}
         </View>
       </View>
 
@@ -320,24 +393,16 @@ export function LandingPage() {
         </View>
       )}
 
-      {/* About: who is behind the app, also the words people search for (the school, the town). */}
-      <View style={[styles.inner, styles.section]}>
-        <Text style={styles.kicker}>O projektu</Text>
-        <Text role="heading" aria-level={2} style={styles.sectionTitle}>
-          Aplikace z Benátek nad Jizerou
-        </Text>
-        <Text style={styles.sectionLead}>
-          Hýbeme se společně připravila {LEGAL.operatorName} pro své žáky i pro všechny, kdo chtějí poznávat Benátky
-          nad Jizerou a jejich okolí. Projekt podporuje hlavní partner {LEGAL.partner}. Aplikace je zdarma a funguje
-          v každém telefonu přímo v prohlížeči.
-        </Text>
-      </View>
-
-      {/* Operator and sponsor */}
       <View style={styles.footer}>
         <View style={[styles.inner, styles.footerInner]}>
-          <PartnerLogos />
-          <LegalLinks />
+          <View style={styles.footerBrand}>
+            <Image source={logo} style={styles.footerLogo} />
+            <Text style={styles.footerName}>Hýbeme se společně</Text>
+          </View>
+          <Text style={styles.footerText}>
+            Provozuje {LEGAL.operatorName}, {LEGAL.operatorAddress}
+          </Text>
+          <LegalLinks onDark />
           <Text style={styles.copyright}>© {new Date().getFullYear()} Hýbeme se společně</Text>
         </View>
       </View>
@@ -401,11 +466,48 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   buttonLight: { backgroundColor: colors.white },
-  buttonOutline: { backgroundColor: colors.surface, borderWidth: 1.5, borderColor: colors.border, marginTop: 6 },
+  buttonOutline: { backgroundColor: colors.surface, borderWidth: 1.5, borderColor: colors.border },
   buttonText: { color: colors.white, fontSize: 16, fontWeight: '900' },
   buttonTextDark: { color: colors.navy },
 
-  section: { paddingTop: 32 },
+  section: { paddingTop: 40 },
+  playSoon: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 },
+  playSoonText: { color: 'rgba(255,255,255,0.75)', fontSize: 13, fontWeight: '800' },
+
+  aboutSection: { paddingTop: 8 },
+  about: { backgroundColor: colors.surface, borderRadius: radius.lg, padding: 22, gap: 20, ...shadows.card },
+  aboutWide: { flexDirection: 'row', alignItems: 'center', gap: 40, padding: 32 },
+  aboutTextWide: { flex: 1.6 },
+  facts: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 16 },
+  fact: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: colors.primaryBg,
+    borderRadius: radius.full,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  factText: { color: colors.primaryDark, fontSize: 13, fontWeight: '800' },
+  aboutLogos: { borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 18 },
+  aboutLogosWide: { flex: 1, borderTopWidth: 0, borderLeftWidth: 1, borderLeftColor: colors.border, paddingTop: 0, paddingLeft: 32 },
+
+  band: { backgroundColor: colors.navyBg, marginTop: 48, paddingVertical: 40 },
+  boardPoints: { gap: 12, marginTop: 20 },
+  boardPoint: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  boardPointIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  boardPointTitle: { color: colors.navy, fontSize: 15, fontWeight: '900' },
+  boardPointText: { color: colors.muted, fontSize: 14, fontWeight: '600' },
+  recommended: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 },
+  recommendedText: { color: colors.primary, fontSize: 13, fontWeight: '900' },
+  featureNumber: { color: colors.accent },
   kicker: { color: colors.primary, fontSize: 13, fontWeight: '900', letterSpacing: 1, textTransform: 'uppercase' },
   sectionTitle: { color: colors.navy, fontSize: 28, lineHeight: 34, fontWeight: '900', marginTop: 4 },
   sectionLead: { color: colors.muted, fontSize: 15, lineHeight: 22, fontWeight: '600', marginTop: 8, maxWidth: 640 },
@@ -430,22 +532,15 @@ const styles = StyleSheet.create({
   boardWide: { flexDirection: 'row', alignItems: 'flex-start', gap: 48 },
   boardText: { flex: 1, paddingTop: 8 },
   boardCard: { flex: 1.2 },
-  boardCardNarrow: { marginTop: 18 },
-  installWide: { flexDirection: 'row', alignItems: 'center', gap: 48 },
+  boardCardNarrow: { marginTop: 22 },
+  installWide: { flexDirection: 'row', alignItems: 'flex-start', gap: 48 },
   installText: { flex: 1 },
   benefits: { gap: 10, marginTop: 18 },
   benefit: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   benefitText: { flex: 1, color: colors.navy, fontSize: 15, fontWeight: '700' },
+  guideColumn: { marginTop: 18, maxWidth: 640 },
   guideWide: { flex: 1, marginTop: 0 },
-  guide: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    padding: 18,
-    gap: 10,
-    marginTop: 18,
-    maxWidth: 640,
-    ...shadows.card,
-  },
+  guide: { backgroundColor: colors.surface, borderRadius: radius.lg, padding: 18, gap: 10, ...shadows.card },
   tabs: { flexDirection: 'row', backgroundColor: colors.background, borderRadius: radius.md, padding: 4, marginBottom: 6 },
   tab: {
     flex: 1,
@@ -475,7 +570,11 @@ const styles = StyleSheet.create({
   ctaTitle: { color: colors.white, fontSize: 20, fontWeight: '900' },
   ctaText: { color: 'rgba(255,255,255,0.85)', fontSize: 15, fontWeight: '600', marginBottom: 8 },
 
-  footer: { marginTop: 48, backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: colors.border },
-  footerInner: { paddingVertical: 24, gap: 16, alignItems: 'center' },
-  copyright: { color: colors.inactive, fontSize: 12, fontWeight: '700' },
+  footer: { marginTop: 48, backgroundColor: colors.navy },
+  footerInner: { paddingVertical: 28, gap: 12, alignItems: 'center' },
+  footerBrand: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  footerLogo: { width: 34, height: 34, borderRadius: 8, backgroundColor: colors.white },
+  footerName: { color: colors.white, fontSize: 16, fontWeight: '900' },
+  footerText: { color: 'rgba(255,255,255,0.65)', fontSize: 13, fontWeight: '600', textAlign: 'center' },
+  copyright: { color: 'rgba(255,255,255,0.45)', fontSize: 12, fontWeight: '700' },
 });
