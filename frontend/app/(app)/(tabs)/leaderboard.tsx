@@ -244,8 +244,8 @@ const styles = StyleSheet.create({
     },
     headTitle: { color: colors.white, fontSize: 18, fontWeight: '900', marginBottom: 14 },
     me: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-    meRank: { color: colors.white, fontSize: 38, fontWeight: '900', lineHeight: 38 },
-    meHash: { fontSize: 15, lineHeight: 15, fontWeight: '800', opacity: 0.7 },
+    meRank: { color: colors.white, fontSize: 38, fontWeight: '900', lineHeight: 48 },
+    meHash: { fontSize: 15, fontWeight: '800', opacity: 0.7 },
     meWho: { color: 'rgba(255,255,255,0.8)', fontSize: 14, fontWeight: '700', flex: 1 },
     mePoints: { alignItems: 'flex-end' },
     meIcon: {
