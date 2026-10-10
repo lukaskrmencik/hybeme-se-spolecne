@@ -3,6 +3,7 @@ import { PlacePhoto, VisitPhoto } from '../types/photo';
 
 interface PlaceDetail {
   photos?: VisitPhoto[];
+  admin_photos?: { id: number; photo_url: string; created_at?: string }[];
   latest_visits?: { id: number; timestamp: string; user?: { name: string } | null }[];
 }
 
@@ -19,7 +20,7 @@ export function isPlacePhotosFresh(placeId: number): boolean {
   return !!hit && Date.now() - hit.at < MAX_AGE_MS;
 }
 
-/** Newest first. The author is known for photos of the latest visits of the place. */
+/** The admin's photos first, then visitors' photos newest first. The author is known for the latest visits. */
 export async function fetchPlacePhotos(placeId: number): Promise<PlacePhoto[]> {
   const res = await apiFetch<{ data: PlaceDetail }>(`places/${placeId}`);
   const visits = new Map((res.data.latest_visits ?? []).map((v) => [v.id, v]));
@@ -35,8 +36,17 @@ export async function fetchPlacePhotos(placeId: number): Promise<PlacePhoto[]> {
         takenAt: visit?.timestamp ?? p.created_at ?? null,
       };
     });
-  cache.set(placeId, { at: Date.now(), photos });
-  return photos;
+  // Ids of the two tables can collide, so the admin's ones get a negative id in the gallery.
+  const official = (res.data.admin_photos ?? []).map((p) => ({
+    id: -p.id,
+    url: resolveMediaUrl(p.photo_url),
+    author: null,
+    takenAt: null,
+    official: true,
+  }));
+  const all = [...official, ...photos];
+  cache.set(placeId, { at: Date.now(), photos: all });
+  return all;
 }
 
 /** Called after new photos of the place were uploaded, so an open gallery reloads. */

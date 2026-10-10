@@ -1,10 +1,13 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { isPendingVisit, useUserStats } from '../../../context/UserStatsContext';
 import { QueuedVisit } from '../../../types/visit';
-import { Visit } from '../../../types/user';
 import { formatVisitTime } from '../../../utils/dates';
+import { VisitJournal } from '../../../components/VisitJournal';
+import { fromOwnVisit, JournalVisit } from '../../../utils/visitJournal';
+import { pickPhotos } from '../../../services/pickPhotos';
+import { MAX_PHOTOS_PER_VISIT } from '../../../services/photos';
 import { plural } from '../../../utils/plural';
 import { colors, radius, shadows, typography } from '../../../utils/theme';
 
@@ -28,37 +31,13 @@ function QueuedRow({ item }: { item: QueuedVisit }) {
     );
 }
 
-function VisitRow({ item }: { item: Visit }) {
-    const comboLevel = Math.min(item.combination_order ?? 1, 4);
-    return (
-        <View style={styles.visitItem}>
-            <View style={styles.itemBody}>
-                <Text style={styles.itemTitle} numberOfLines={1}>
-                    {item.place?.name || `Místo #${item.place_id}`}
-                </Text>
-                <Text style={styles.itemMeta} numberOfLines={1}>
-                    {item.sport?.name ?? 'Sport'} · {formatVisitTime(item.timestamp)}
-                </Text>
-                {item.is_combination && (
-                    <View style={styles.comboTagRow}>
-                        <Ionicons name="git-merge-outline" size={12} color={colors.skyText} />
-                        <Text style={styles.comboTag}>Kombinace ×{comboLevel}</Text>
-                    </View>
-                )}
-            </View>
-            <View style={styles.rewardTag}>
-                <Text style={styles.rewardTagText}>+{item.reward} b.</Text>
-            </View>
-        </View>
-    );
-}
-
 export default function VisitsScreen() {
-    const { visits, totalPoints, queuedVisits, pendingCount, refreshStats, flushNow, loading, profile } = useUserStats();
+    const { visits, totalPoints, queuedVisits, pendingCount, refreshStats, flushNow, loading, profile, uploadVisitPhotos } =
+        useUserStats();
     const [syncing, setSyncing] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
 
-    const history = useMemo(() => visits.filter((v) => !isPendingVisit(v)), [visits]);
+    const history = useMemo(() => visits.filter((v) => !isPendingVisit(v)).map(fromOwnVisit), [visits]);
     const comboCount = useMemo(() => visits.filter((v) => v.is_combination).length, [visits]);
 
     const handleSync = useCallback(async () => {
@@ -69,6 +48,16 @@ export default function VisitsScreen() {
             setSyncing(false);
         }
     }, [flushNow]);
+
+    const addPhotos = useCallback(
+        async (visit: JournalVisit) => {
+            const photos = await pickPhotos(MAX_PHOTOS_PER_VISIT - visit.photos.length);
+            if (photos.length === 0) return;
+            await uploadVisitPhotos(visit.id, visit.placeId, photos);
+            await refreshStats();
+        },
+        [uploadVisitPhotos, refreshStats]
+    );
 
     const handleRefresh = useCallback(async () => {
         setRefreshing(true);
@@ -105,27 +94,18 @@ export default function VisitsScreen() {
                 </View>
             </View>
 
-            <View style={styles.syncCard}>
-                <View style={styles.syncIcon}>
-                    <Ionicons
-                        name={pendingCount > 0 ? 'cloud-offline-outline' : 'cloud-done-outline'}
-                        size={22}
-                        color={pendingCount > 0 ? colors.warnText : colors.primaryDark}
-                    />
-                </View>
-                <View style={styles.syncBody}>
-                    <Text style={styles.syncTitle}>
-                        {pendingCount > 0
-                            ? `${pendingCount} ${plural(pendingCount, ['návštěva čeká', 'návštěvy čekají', 'návštěv čeká'])} na odeslání`
-                            : 'Vše je synchronizováno'}
-                    </Text>
-                    <Text style={styles.syncMeta}>
-                        {pendingCount > 0
-                            ? 'Nahraje se automaticky, jakmile budeš mít signál.'
-                            : 'Offline fronta je prázdná.'}
-                    </Text>
-                </View>
-                {pendingCount > 0 && (
+            {/* Only when something waits: an empty queue is nothing the user needs to know about. */}
+            {pendingCount > 0 && (
+                <View style={styles.syncCard}>
+                    <View style={styles.syncIcon}>
+                        <Ionicons name="cloud-offline-outline" size={22} color={colors.warnText} />
+                    </View>
+                    <View style={styles.syncBody}>
+                        <Text style={styles.syncTitle}>
+                            {pendingCount} {plural(pendingCount, ['návštěva čeká', 'návštěvy čekají', 'návštěv čeká'])} na odeslání
+                        </Text>
+                        <Text style={styles.syncMeta}>Nahraje se automaticky, jakmile budeš mít signál.</Text>
+                    </View>
                     <TouchableOpacity
                         style={[styles.syncButton, syncing && styles.syncButtonDisabled]}
                         onPress={handleSync}
@@ -137,8 +117,8 @@ export default function VisitsScreen() {
                             <Text style={styles.syncButtonText}>Odeslat</Text>
                         )}
                     </TouchableOpacity>
-                )}
-            </View>
+                </View>
+            )}
 
             {queuedVisits.length > 0 && (
                 <View style={styles.list}>
@@ -154,17 +134,15 @@ export default function VisitsScreen() {
     );
 
     return (
-        <FlatList
-            style={styles.container}
-            contentContainerStyle={styles.content}
-            data={history}
-            keyExtractor={(item) => String(item.id)}
-            renderItem={({ item }) => <VisitRow item={item} />}
+        <VisitJournal
+            visits={history}
+            own
+            onAddPhotos={addPhotos}
             refreshControl={
                 <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.primary} />
             }
-            ListHeaderComponent={header}
-            ListEmptyComponent={
+            header={header}
+            empty={
                 <View style={styles.emptyBox}>
                     <Ionicons name="footsteps-outline" size={40} color={colors.inactive} />
                     <Text style={styles.emptyText}>Zatím žádné návštěvy.</Text>
@@ -176,8 +154,6 @@ export default function VisitsScreen() {
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: colors.background },
-    content: { padding: 16, paddingBottom: 40 },
     center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background },
     statsGrid: { flexDirection: 'row', gap: 8, marginBottom: 16 },
     statCard: {
@@ -206,7 +182,7 @@ const styles = StyleSheet.create({
         width: 42,
         height: 42,
         borderRadius: 21,
-        backgroundColor: colors.primaryBg,
+        backgroundColor: colors.warnBg,
         alignItems: 'center',
         justifyContent: 'center',
         marginRight: 12,
@@ -244,36 +220,10 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         marginRight: 12,
     },
-    visitItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: colors.surface,
-        borderRadius: radius.md,
-        padding: 14,
-        borderWidth: 1,
-        borderColor: colors.border,
-        marginBottom: 8,
-        ...shadows.card,
-    },
-    visitIcon: {
-        width: 40,
-        height: 40,
-        borderRadius: radius.full,
-        backgroundColor: colors.primaryBg,
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginRight: 12,
-    },
     itemBody: { flex: 1, marginRight: 8 },
     itemTitle: { fontSize: 15, fontWeight: '700', color: colors.text },
     itemMeta: { fontSize: 12, color: colors.muted, marginTop: 2 },
-    comboTagRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 5 },
-    comboTag: { color: colors.skyText, fontSize: 12, fontWeight: '800' },
-    rewardTag: { backgroundColor: colors.primaryBg, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4 },
-    rewardTagText: { color: colors.primary, fontSize: 13, fontWeight: '800' },
-    rewardWrap: { alignItems: 'flex-end' },
     itemReward: { fontSize: 17, fontWeight: '900', color: colors.primary },
-    rewardUnit: { fontSize: 11, color: colors.muted, fontWeight: '700', textTransform: 'uppercase' },
     emptyBox: {
         backgroundColor: colors.surface,
         borderRadius: radius.md,

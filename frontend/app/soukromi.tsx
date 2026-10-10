@@ -9,6 +9,7 @@ const SUMMARY = [
   'Ukládáme jen to, co aplikace potřebuje: účet, návštěvy, body a fotky, které přidáš.',
   'Tvoje GPS poloha zůstává v telefonu. Na server posíláme jen to, které místo jsi navštívil(a) a kdy.',
   'Jméno, profilová fotka a body jsou vidět v žebříčku, i na webu. Klidně používej přezdívku.',
+  'Přihlášení hráči si v žebříčku můžou otevřít tvoje návštěvy: místa, den, sport, body a fotky. Návštěvy z posledních 24 hodin neuvidí.',
   'Mladším 15 let musí registraci povolit rodič nebo jiný zákonný zástupce.',
   'Údaje neprodáváme a nepoužíváme k reklamě. Účet i se všemi údaji můžeš kdykoli smazat.',
 ];
@@ -54,7 +55,7 @@ const SECTIONS: LegalSection[] = [
     blocks: [
       {
         list: [
-          'Ostatní uživatelé a veřejnost: jméno, profilová fotografie a body uživatele jsou zobrazeny v žebříčcích, a to i na veřejně přístupné úvodní stránce aplikace. U fotografií přidaných k místům je zobrazeno jméno jejich autora.',
+          'Ostatní uživatelé a veřejnost: jméno, profilová fotografie a body uživatele jsou zobrazeny v žebříčcích, a to i na veřejně přístupné úvodní stránce aplikace. U fotografií přidaných k místům je zobrazeno jméno jejich autora. Přihlášení uživatelé si mohou z žebříčku zobrazit přehled návštěv jiného uživatele (navštívené místo, den návštěvy bez času, zvolený sport, přidělené body a fotografie); návštěvy z posledních 24 hodin se v přehledu nezobrazují, aby jej nebylo možné využít ke zjištění, kde se uživatel právě nachází.',
           'Pověření pracovníci správce, kteří aplikaci spravují, v rozsahu nezbytném pro její správu.',
           'Hetzner Online GmbH, Německo, jako zpracovatel zajišťující provoz serverů v Evropské unii.',
           'Sendinblue SAS (Brevo), Francie, jako zpracovatel zajišťující odesílání e-mailů, v rozsahu e-mailové adresy uživatele.',

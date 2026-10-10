@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, FlatList, ActivityIndicator, RefreshControl, TouchableOpacity, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useIsFocused } from 'expo-router';
+import { useIsFocused, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../../context/AuthContext';
@@ -44,6 +44,8 @@ export default function LeaderboardScreen() {
     const insets = useSafeAreaInsets();
     const focused = useIsFocused();
     const [reportTarget, setReportTarget] = useState<ReportTarget | null>(null);
+    const router = useRouter();
+    const openProfile = (id: number) => router.push({ pathname: '/player', params: { id: String(id) } });
 
     const { entries, currentUser, totalUsers, week, loading, refreshing, error, refresh } = board;
     const currentUserId = Number(userId ?? currentUser?.id ?? 0);
@@ -51,7 +53,12 @@ export default function LeaderboardScreen() {
     const renderRow = ({ item }: { item: LeaderboardEntry }) => {
         const isMe = item.id === currentUserId;
         return (
-            <View style={[styles.row, isMe && styles.rowMe]}>
+            <Pressable
+                onPress={() => openProfile(item.id)}
+                style={({ pressed }) => [styles.row, isMe && styles.rowMe, pressed && styles.pressed]}
+                accessibilityRole="button"
+                accessibilityLabel={`Návštěvy hráče ${item.name}`}
+            >
                 <Text style={[styles.rank, item.rank === 1 && styles.rankFirst]}>{item.rank}</Text>
                 <Avatar name={item.name} url={item.avatar_url} size={38} background={isMe ? colors.surface : undefined} />
                 <Text style={styles.name} numberOfLines={1}>
@@ -71,7 +78,8 @@ export default function LeaderboardScreen() {
                         <Ionicons name="flag-outline" size={15} color={colors.inactive} />
                     </TouchableOpacity>
                 )}
-            </View>
+                <Ionicons name="chevron-forward" size={16} color={colors.inactive} />
+            </Pressable>
         );
     };
 
@@ -82,7 +90,12 @@ export default function LeaderboardScreen() {
                 const medal = MEDALS[p.rank] ?? MEDALS[3];
                 const isMe = p.id === currentUserId;
                 return (
-                    <View key={`${p.rank}-${p.id}`} style={styles.podiumRow}>
+                    <Pressable
+                        key={`${p.rank}-${p.id}`}
+                        onPress={() => openProfile(p.id)}
+                        style={({ pressed }) => [styles.podiumRow, pressed && styles.pressed]}
+                        accessibilityRole="button"
+                    >
                         <View style={[styles.medal, { backgroundColor: medal.bg }]}>
                             <Text style={[styles.medalText, { color: medal.fg }]}>{p.rank}</Text>
                         </View>
@@ -91,7 +104,7 @@ export default function LeaderboardScreen() {
                             {isMe ? `${p.name} (ty)` : p.name}
                         </Text>
                         <Text style={styles.podiumPoints}>{formatNumber(p.points)} b.</Text>
-                    </View>
+                    </Pressable>
                 );
             })}
         </View>
@@ -129,7 +142,8 @@ export default function LeaderboardScreen() {
         <View style={styles.container}>
             {focused && <StatusBar style="light" />}
             <View style={[styles.head, { paddingTop: insets.top + 18 }]}>
-                <View style={styles.arc} />
+                {/* Moves down with the status bar, so on a phone it stays clear of the points as on the web. */}
+                <View style={[styles.arc, { top: insets.top - 60 }]} />
                 <Text style={styles.headTitle}>Žebříček</Text>
                 {currentUser?.rank ? (
                     <View style={styles.me}>
@@ -146,9 +160,6 @@ export default function LeaderboardScreen() {
                 ) : (
                     // Without points there is no place yet: invite to the first visit instead of showing "#–".
                     <View style={styles.me}>
-                        <View style={styles.meIcon}>
-                            <Ionicons name="trophy-outline" size={24} color={colors.accent} />
-                        </View>
                         <View style={styles.meInvite}>
                             <Text style={styles.meInviteTitle}>
                                 {tab === 'week' ? 'Tento týden ještě nemáš body' : 'Zatím nejsi v žebříčku'}
@@ -235,7 +246,6 @@ const styles = StyleSheet.create({
     arc: {
         position: 'absolute',
         right: -40,
-        top: -60,
         width: 200,
         height: 200,
         borderRadius: 100,
@@ -248,14 +258,6 @@ const styles = StyleSheet.create({
     meHash: { fontSize: 15, fontWeight: '800', opacity: 0.7 },
     meWho: { color: 'rgba(255,255,255,0.8)', fontSize: 14, fontWeight: '700', flex: 1 },
     mePoints: { alignItems: 'flex-end' },
-    meIcon: {
-        width: 46,
-        height: 46,
-        borderRadius: 23,
-        backgroundColor: 'rgba(255,255,255,0.1)',
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
     meInvite: { flex: 1, gap: 2 },
     meInviteTitle: { color: colors.white, fontSize: 17, fontWeight: '900' },
     meInviteText: { color: 'rgba(255,255,255,0.75)', fontSize: 13, fontWeight: '600' },
@@ -293,6 +295,7 @@ const styles = StyleSheet.create({
         borderColor: colors.border,
     },
     rowMe: { borderColor: colors.accent, backgroundColor: colors.accentBg },
+    pressed: { opacity: 0.7 },
     rank: { width: 26, textAlign: 'center', fontWeight: '900', color: colors.muted, fontSize: 16 },
     rankFirst: { color: colors.primary },
     name: { flex: 1, fontSize: 15, fontWeight: '800', color: colors.navy },

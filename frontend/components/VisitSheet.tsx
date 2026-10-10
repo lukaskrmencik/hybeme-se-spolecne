@@ -37,6 +37,8 @@ interface VisitSheetProps {
   isCombination: boolean;
   onToggleCombination: (value: boolean) => void;
   allowed: boolean;
+  /** The user is close enough to visit the place; otherwise the card offers the way there instead. */
+  inRange: boolean;
   blocked: BlockInfo | null;
   /** Points for the current choice, they follow the switch and the sport live. */
   reward: number;
@@ -137,6 +139,26 @@ function SaveButton({
   );
 }
 
+/** Instead of a greyed-out „Jsem tu!“ while the user is still away: the route to the place in Mapy.com. */
+function NavigateButton({ onNavigate, routeType }: { onNavigate: () => void; routeType?: string }) {
+  return (
+    <TouchableOpacity
+      style={[styles.button, styles.navigateButton]}
+      onPress={onNavigate}
+      accessibilityRole="link"
+      accessibilityLabel="Navigovat v Mapy.com"
+    >
+      <View style={styles.navigateLogo}>
+        <MapyComLogo size={26} />
+      </View>
+      <View style={styles.buttonTextWrap}>
+        <Text style={styles.buttonCaption}>{routeTypeLabel(routeType, true)}</Text>
+        <Text style={styles.buttonText}>Navigovat</Text>
+      </View>
+    </TouchableOpacity>
+  );
+}
+
 /** The sport is picked right where the visit is saved, so a wrong one is hard to miss. */
 function SportPicker({ sport, sports, onSelectSport, sportHint }: Pick<VisitSheetProps, 'sport' | 'sports' | 'onSelectSport' | 'sportHint'>) {
   if (sports.length === 0) return null;
@@ -187,6 +209,7 @@ export function VisitSheet({
   isCombination,
   onToggleCombination,
   allowed,
+  inRange,
   blocked,
   reward,
   comboReward,
@@ -257,18 +280,6 @@ export function VisitSheet({
               </Text>
             </View>
           </View>
-          <TouchableOpacity
-            onPress={onNavigate}
-            style={styles.navigate}
-            accessibilityRole="link"
-            accessibilityLabel="Navigovat v Mapy.com"
-          >
-            <View style={styles.navigateLogo}>
-              <MapyComLogo size={22} />
-            </View>
-            <Text style={styles.navigateText}>Navigovat</Text>
-            <Text style={styles.navigateSub}>{routeTypeLabel(sport?.mapy_route_type, true)}</Text>
-          </TouchableOpacity>
         </View>
         <TouchableOpacity
           onPress={onClose}
@@ -315,7 +326,11 @@ export function VisitSheet({
         {blocked && <BlockNote blocked={blocked} />}
       </ScrollView>
 
-      <SaveButton allowed={allowed} isSaving={isSaving} reward={reward} onSave={onSave} />
+      {allowed || inRange ? (
+        <SaveButton allowed={allowed} isSaving={isSaving} reward={reward} onSave={onSave} />
+      ) : (
+        <NavigateButton onNavigate={onNavigate} routeType={sport?.mapy_route_type} />
+      )}
     </Animated.View>
   );
 }
@@ -376,22 +391,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
   },
-  navigate: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'flex-start',
-    gap: 7,
-    marginTop: 10,
-    backgroundColor: colors.mapyCom,
-    borderRadius: 999,
-    paddingLeft: 4,
-    paddingRight: 14,
-    paddingVertical: 4,
-  },
+  navigateButton: { backgroundColor: colors.mapyCom, boxShadow: '0px 6px 16px rgba(30, 174, 0, 0.3)' },
   // A white ring keeps the green symbol visible on the green button.
   navigateLogo: { borderRadius: 999, borderWidth: 2, borderColor: colors.white },
-  navigateText: { color: colors.white, fontSize: 14, fontWeight: '900' },
-  navigateSub: { color: 'rgba(255,255,255,0.85)', fontSize: 12, fontWeight: '700' },
   tagNavyText: { color: colors.navy, fontSize: 12, fontWeight: '800' },
   close: {
     width: 32,

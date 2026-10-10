@@ -42,7 +42,7 @@ export function PlacePhotoStrip({ placeId }: { placeId: number }) {
         photos={photos ?? []}
         index={openIndex}
         onClose={() => setOpenIndex(null)}
-        canReport={(p) => p.visitId == null || !myVisitIds.has(p.visitId)}
+        canReport={(p) => !p.official && (p.visitId == null || !myVisitIds.has(p.visitId))}
       />
     </View>
   );

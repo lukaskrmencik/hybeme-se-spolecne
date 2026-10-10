@@ -370,6 +370,7 @@ export default function MapScreen() {
           isCombination={useCombo}
           onToggleCombination={setIsCombination}
           allowed={allowed}
+          inRange={inRange}
           blocked={blocked}
           reward={reward}
           comboReward={comboReward}

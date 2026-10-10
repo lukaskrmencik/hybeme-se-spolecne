@@ -13,4 +13,6 @@ export interface PlacePhoto {
   url: string;
   author: string | null;
   takenAt: string | null;
+  /** Added by an admin in the administration, not by a visitor; cannot be reported. */
+  official?: boolean;
 }
