@@ -80,6 +80,51 @@ class UserController extends Controller
     }
 
     /**
+     * What other players see after tapping someone in the leaderboard: name, points and visits with their
+     * combinations and photos. No e-mail, only the day of each visit, and nothing from the last
+     * publicVisitDelayHours hours, so the profile cannot be used to find out where somebody is right now.
+     */
+    public function profile(Request $request, User $user)
+    {
+        $this->authorize('viewProfile', $user);
+
+        $own = $request->user()->id === $user->id;
+        $visibleBefore = now()->subHours(config('general.publicVisitDelayHours', 24));
+
+        // Orders are computed over all visits, so a chain keeps its numbers when its newest part is still hidden.
+        $visits = $user->visitsCombinations()
+            ->filter(fn (Visit $v) => $own || $v->timestamp->lt($visibleBefore))
+            ->sortByDesc('timestamp')
+            ->values()
+            ->map(fn (Visit $v) => [
+                'id' => $v->id,
+                'place_id' => $v->place_id,
+                'sport_id' => $v->sport_id,
+                'reward' => $v->reward,
+                'is_combination' => $v->is_combination,
+                'combination_order' => $v->combination_order,
+                'date' => $v->timestamp->copy()->setTimezone('Europe/Prague')->toDateString(),
+                'place' => $v->place ? [
+                    'id' => $v->place->id,
+                    'name' => $v->place->name,
+                    'coordinates' => $v->place->coordinates,
+                ] : null,
+                'sport' => $v->sport ? ['id' => $v->sport->id, 'name' => $v->sport->name] : null,
+                'photos' => $v->photos->map(fn ($p) => ['id' => $p->id, 'photo_url' => $p->photo_url])->values(),
+            ]);
+
+        return response()->success([
+            'id' => $user->id,
+            'name' => $user->name,
+            'avatar_url' => $user->avatar_url,
+            'total_points' => $user->totalPoints(),
+            'visits_count' => $user->visits->count(),
+            'hidden_recent' => !$own && $user->visits->contains(fn (Visit $v) => $v->timestamp->gte($visibleBefore)),
+            'visits' => $visits,
+        ]);
+    }
+
+    /**
      * Update the specified resource in storage.
      */
     public function update(Request $request, User $user)

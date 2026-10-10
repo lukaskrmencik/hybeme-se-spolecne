@@ -220,6 +220,11 @@ class VisitController extends Controller
             'photo' => 'required|image|mimes:jpeg,png,jpg,webp|max:2048',
         ]);
 
+        $maxPhotos = config('general.maxPhotosPerVisit', 5);
+        if ($visit->photos()->count() >= $maxPhotos) {
+            return response()->error("K jedné návštěvě lze přidat nejvýš {$maxPhotos} fotek.", 422);
+        }
+
         $file = $request->file('photo');
 
         if (!$imageModerationService->isSafe($file)) {

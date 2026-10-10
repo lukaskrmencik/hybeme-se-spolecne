@@ -59,4 +59,10 @@ class Place extends Model
     {
         return $this->hasManyThrough(VisitsPhoto::class, Visit::class);
     }
+
+    /** Photos added by an admin, oldest first (the admin decides the order by adding them). */
+    public function adminPhotos(): HasMany
+    {
+        return $this->hasMany(PlacePhoto::class)->orderBy('id');
+    }
 }

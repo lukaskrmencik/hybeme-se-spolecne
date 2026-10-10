@@ -29,6 +29,7 @@ Route::group(['middleware' => 'auth:api'], function () {
 
     Route::group(['prefix' => 'users'], function () {
         Route::get('{user}', [UserController::class, 'show']);
+        Route::get('{user}/profile', [UserController::class, 'profile']);
         Route::patch('{user}', [UserController::class, 'update']);
         Route::patch('{user}/role', [UserController::class, 'updateRole']);
         Route::post('{user}/terms', [UserController::class, 'acceptTerms']);
@@ -44,6 +45,8 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::get('{place}', [PlaceController::class, 'show']);
         Route::get('', [PlaceController::class, 'index']);
         Route::post('{place}/image', [PlaceController::class, 'uploadImage']);
+        Route::post('{place}/photos', [PlaceController::class, 'uploadAdminPhoto']);
+        Route::delete('photos/{placePhoto}', [PlaceController::class, 'deleteAdminPhoto']);
     });
 
     Route::group(['prefix' => 'sports'], function () {

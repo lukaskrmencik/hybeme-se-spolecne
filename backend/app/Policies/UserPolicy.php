@@ -22,6 +22,12 @@ class UserPolicy
         return $user->id === $model->id || $user->role === 'admin';
     }
 
+    /** The public profile (visits, combinations, photos) opened from the leaderboard; for every signed-in user. */
+    public function viewProfile(User $user, User $model): bool
+    {
+        return true;
+    }
+
     /**
      * Determine whether the user can create models.
      */

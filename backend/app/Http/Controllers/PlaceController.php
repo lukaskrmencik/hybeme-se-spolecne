@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Place;
+use App\Models\PlacePhoto;
 use App\Services\ImageModerationService;
 use Clickbar\Magellan\Data\Geometries\Point;
 use Clickbar\Magellan\IO\Parser\Geojson\GeojsonParser;
@@ -34,7 +35,7 @@ class PlaceController extends Controller
 
         $onlyActive = $request->boolean('only_active', true);
 
-        $query = Place::query();
+        $query = Place::query()->withCount('adminPhotos');
 
         if ($onlyActive) {
             $query->where('is_active', true);
@@ -97,6 +98,7 @@ class PlaceController extends Controller
             'is_active' => $place->is_active,
             'latest_visits' => $place->latestVisits(),
             'photos' => $place->photos,
+            'admin_photos' => $place->adminPhotos,
         ]);
     }
 
@@ -170,5 +172,39 @@ class PlaceController extends Controller
         return response()->success([
             'image_url' => $publicUrl
         ]);
+    }
+
+    /** Admin: a photo of the place without visiting it, e.g. before anyone else has taken one. */
+    public function uploadAdminPhoto(Request $request, Place $place)
+    {
+        $this->authorize('update', $place);
+
+        $request->validate([
+            'photo' => 'required|image|mimes:jpeg,png,jpg,webp|max:4096',
+        ]);
+
+        $file = $request->file('photo');
+        $filename = uniqid() . '.' . $file->getClientOriginalExtension();
+        Storage::disk('public')->putFileAs('place_photos', $file, $filename);
+
+        $photo = PlacePhoto::create([
+            'place_id' => $place->id,
+            'photo_url' => url('storage/place_photos/' . $filename),
+        ]);
+
+        return response()->success($photo, 201);
+    }
+
+    public function deleteAdminPhoto(PlacePhoto $placePhoto)
+    {
+        $this->authorize('update', $placePhoto->place);
+
+        $path = str_replace(url('storage/'), '', $placePhoto->photo_url);
+        if (Storage::disk('public')->exists($path)) {
+            Storage::disk('public')->delete($path);
+        }
+        $placePhoto->delete();
+
+        return response()->success(['message' => 'Fotka byla smazána.']);
     }
 }
