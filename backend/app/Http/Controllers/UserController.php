@@ -6,6 +6,7 @@ use App\Models\Cheat;
 use App\Models\User;
 use App\Models\Visit;
 use App\Models\VisitsPhoto;
+use App\Services\AvatarImage;
 use App\Services\ImageModerationService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
@@ -235,6 +236,7 @@ class UserController extends Controller
         Storage::disk('public')->putFileAs('avatars', $file, $filename);
 
         $path = 'avatars/' . $filename;
+        AvatarImage::shrink(Storage::disk('public')->path($path));
 
         $publicUrl = url('storage/' . $path);
 

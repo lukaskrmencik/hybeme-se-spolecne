@@ -9,7 +9,8 @@ ENV PHP_OPCACHE_ENABLE=1 \
     AUTORUN_ENABLED=false
 
 USER root
-RUN install-php-extensions intl bcmath
+# gd + exif: profile photos are shrunk on upload (App\Services\AvatarImage).
+RUN install-php-extensions intl bcmath gd exif
 USER www-data
 
 WORKDIR /var/www/html

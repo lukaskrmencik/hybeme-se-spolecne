@@ -73,6 +73,8 @@ const PRELOADED_FONTS = ['regular', 'extrabold', 'black'];
  * forced on every element except icons (those carry an inline font-family and keep it). `:is(#root, body)` also
  * reaches dialogs (Modal), which are rendered outside #root, and keeps the id's weight that beats react-native-web's classes.
  */
+// public/fonts/ionicons-landing.woff2 holds only the icons of components/landing/LandingIcon.tsx, cut from
+// node_modules/@expo/vector-icons/.../Fonts/Ionicons.ttf with the npm package subset-font (target woff2).
 const FONT_FILES: [number, string][] = [
   [400, 'regular'],
   [500, 'semibold'],
@@ -86,6 +88,8 @@ const webFont = `${FONT_FILES.map(
     `@font-face { font-family: 'Nunito'; font-style: normal; font-weight: ${weight}; font-display: swap; src: url('/fonts/nunito-${name}.woff2') format('woff2'); }`
 ).join('\n')}
 :is(#root, body) :is(div, span, h1, h2, h3, input, textarea, button) { font-family: Nunito, sans-serif; }
+@font-face { font-family: 'ionicons-landing'; font-display: block; src: url('/fonts/ionicons-landing.woff2') format('woff2'); }
+:is(#root, body) [data-landing-icon] { font-family: 'ionicons-landing' !important; }
 #root *:focus, #root *:focus-visible { outline: none !important; -webkit-tap-highlight-color: transparent; }
 #root input, #root textarea { box-shadow: none !important; }`;
 

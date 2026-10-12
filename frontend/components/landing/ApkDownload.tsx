@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import Ionicons from '@expo/vector-icons/Ionicons';
+import { LandingIcon } from './LandingIcon';
 import { colors, radius } from '../../utils/theme';
 
 /**
@@ -55,7 +55,7 @@ export function ApkDownload({ onDesktop }: { onDesktop: boolean }) {
       <View style={styles.row}>
         <Text style={styles.title}>Raději klasickou aplikaci?</Text>
         <View style={styles.soon}>
-          <Ionicons name="logo-google-playstore" size={13} color={colors.primary} />
+          <LandingIcon name="logo-google-playstore" size={13} color={colors.primary} />
           <Text style={styles.soonText}>Brzy na Google Play</Text>
         </View>
       </View>
@@ -70,7 +70,7 @@ export function ApkDownload({ onDesktop }: { onDesktop: boolean }) {
       <View style={styles.actions}>
         {apk && !onDesktop && (
           <Pressable onPress={download} accessibilityRole="button" style={({ pressed }) => [styles.button, pressed && styles.pressed]}>
-            <Ionicons name="download-outline" size={18} color={colors.navy} />
+            <LandingIcon name="download-outline" size={18} color={colors.navy} />
             <Text style={styles.buttonText}>Stáhnout APK{sizeMb}</Text>
           </Pressable>
         )}
@@ -82,7 +82,7 @@ export function ApkDownload({ onDesktop }: { onDesktop: boolean }) {
             accessibilityState={{ expanded: open }}
           >
             <Text style={styles.toggleText}>Jak ho nainstalovat</Text>
-            <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={15} color={colors.primary} />
+            <LandingIcon name={open ? 'chevron-up' : 'chevron-down'} size={15} color={colors.primary} />
           </Pressable>
         )}
       </View>

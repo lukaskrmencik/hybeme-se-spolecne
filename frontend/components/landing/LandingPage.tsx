@@ -1,6 +1,6 @@
 import React, { ComponentProps, Suspense, lazy, useEffect, useRef, useState } from 'react';
 import { Image, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
-import Ionicons from '@expo/vector-icons/Ionicons';
+import { LandingIcon, LandingIconName } from './LandingIcon';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
 import { PartnerLogos } from '../PartnerLogos';
@@ -48,7 +48,6 @@ const PHOTO_CREDIT = {
 /** Same breakpoint as the desktop gate in the root layout. */
 export const DESKTOP_MIN_WIDTH = 1024;
 
-type IconName = ComponentProps<typeof Ionicons>['name'];
 type DeviceTab = 'android' | 'ios';
 
 const HOW: { title: string; text: string }[] = [
@@ -116,7 +115,7 @@ function Button({
   variant = 'primary',
 }: {
   label: string;
-  icon?: IconName;
+  icon?: LandingIconName;
   onPress: () => void;
   variant?: 'primary' | 'glass';
 }) {
@@ -127,7 +126,7 @@ function Button({
       style={({ pressed }) => [styles.button, variant === 'glass' && styles.buttonGlass, pressed && styles.pressed]}
     >
       <Text style={styles.buttonText}>{label}</Text>
-      {icon && <Ionicons name={icon} size={19} color={colors.white} />}
+      {icon && <LandingIcon name={icon} size={19} color={colors.white} />}
     </Pressable>
   );
 }

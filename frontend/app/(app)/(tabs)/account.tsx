@@ -22,7 +22,8 @@ import { colors, radius } from '../../../utils/theme';
  * often over the server's 2 MB, or a HEIC, and the server refused it as invalid data.
  */
 async function buildAvatarForm(asset: ImagePicker.ImagePickerAsset): Promise<{ form: FormData; photo: LocalPhoto }> {
-    const photo = await preparePhoto(asset);
+    // A profile photo is shown at most about 100 px big; the leaderboard loads dozens of them.
+    const photo = await preparePhoto(asset, 512);
     const form = new FormData();
     await appendFile(form, 'avatar', { uri: photo.uri, name: `avatar-${Date.now()}.jpg`, type: 'image/jpeg' });
     return { form, photo };

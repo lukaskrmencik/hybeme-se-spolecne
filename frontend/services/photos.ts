@@ -18,11 +18,11 @@ const isWeb = Platform.OS === 'web';
 const randomName = () => `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`;
 
 /** Shrinks the picked photo and keeps it where it survives until the upload (also offline). */
-export async function preparePhoto(asset: ImagePickerAsset): Promise<LocalPhoto> {
+export async function preparePhoto(asset: ImagePickerAsset, maxSide = MAX_SIDE): Promise<LocalPhoto> {
   let context = ImageManipulator.manipulate(asset.uri);
   const longest = Math.max(asset.width || 0, asset.height || 0);
-  if (longest > MAX_SIDE) {
-    context = context.resize(asset.width >= asset.height ? { width: MAX_SIDE } : { height: MAX_SIDE });
+  if (longest > maxSide) {
+    context = context.resize(asset.width >= asset.height ? { width: maxSide } : { height: maxSide });
   }
   const image = await context.renderAsync();
   const result = await image.saveAsync({ compress: 0.7, format: SaveFormat.JPEG, base64: isWeb });

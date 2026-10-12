@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet } from 'react-native';
+import { View, Text, Image, StyleSheet, Platform } from 'react-native';
 import { colors } from '../utils/theme';
 
 interface AvatarProps {
@@ -23,6 +23,21 @@ export const Avatar = ({ name, url, size = 44, background }: AvatarProps) => {
         .toUpperCase();
 
     const radius = size / 2;
+
+    if (url && Platform.OS === 'web') {
+        // A plain img on the web: the browser loads it only when it scrolls into view (long leaderboards).
+        return (
+            <img
+                src={url}
+                alt=""
+                loading="lazy"
+                decoding="async"
+                width={size}
+                height={size}
+                style={{ width: size, height: size, borderRadius: radius, objectFit: 'cover', backgroundColor: colors.primaryBg, flexShrink: 0 }}
+            />
+        );
+    }
 
     if (url) {
         return (

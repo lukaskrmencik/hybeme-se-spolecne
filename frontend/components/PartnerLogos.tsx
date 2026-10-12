@@ -41,7 +41,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: 0.8,
     textTransform: 'uppercase',
-    color: colors.inactive,
+    color: colors.muted,
     marginBottom: 4,
   },
   labelOnDark: { color: 'rgba(255,255,255,0.62)' },
