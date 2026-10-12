@@ -19,14 +19,61 @@ async function browserPermission(): Promise<PermissionState | null> {
   }
 }
 
+function watchBrowser(
+  onPosition: (position: GpsPosition) => void,
+  onError: (error: GeolocationPositionError) => void
+): { remove: () => void } {
+  const id = navigator.geolocation.watchPosition(
+    (p) => onPosition({ lat: p.coords.latitude, lng: p.coords.longitude, accuracy: p.coords.accuracy }),
+    onError,
+    { enableHighAccuracy: true, maximumAge: 10_000, timeout: 30_000 }
+  );
+  return { remove: () => navigator.geolocation.clearWatch(id) };
+}
+
 export function useLocation() {
   const [position, setPosition] = useState<GpsPosition | null>(null);
   const [status, setStatus] = useState<LocationStatus>('pending');
-  const subscription = useRef<Location.LocationSubscription | null>(null);
+  const subscription = useRef<{ remove: () => void } | null>(null);
   const mounted = useRef(true);
+
+  const startWeb = useCallback(async (ask: boolean) => {
+    if (typeof navigator === 'undefined' || !navigator.geolocation) {
+      setStatus('error');
+      return;
+    }
+    const webState = await browserPermission();
+    if (!mounted.current) return;
+    if (webState === 'denied') {
+      setStatus('blocked');
+      return;
+    }
+    if (!ask && webState !== 'granted') return;
+
+    let located = false;
+    subscription.current = watchBrowser(
+      (next) => {
+        if (!mounted.current) return;
+        located = true;
+        setPosition(next);
+        setStatus('granted');
+      },
+      (error) => {
+        if (!mounted.current) return;
+        if (error.code === error.PERMISSION_DENIED) {
+          subscription.current?.remove();
+          subscription.current = null;
+          setStatus('blocked');
+        } else if (!located) {
+          setStatus('error');
+        }
+      }
+    );
+  }, []);
 
   const start = useCallback(async (ask: boolean) => {
     if (subscription.current) return;
+    if (Platform.OS === 'web') return startWeb(ask);
     try {
       const webState = await browserPermission();
       if (webState === 'denied') {
@@ -58,7 +105,7 @@ export function useLocation() {
       const webState = await browserPermission();
       if (mounted.current) setStatus(webState === 'denied' ? 'blocked' : webState === 'prompt' ? 'denied' : 'error');
     }
-  }, []);
+  }, [startWeb]);
 
   useEffect(() => {
     mounted.current = true;
@@ -91,7 +138,11 @@ export function useLocation() {
     };
   }, [start]);
 
-  const retry = useCallback(() => start(true), [start]);
+  const retry = useCallback(() => {
+    subscription.current?.remove();
+    subscription.current = null;
+    return start(true);
+  }, [start]);
 
   return { position, status, retry };
 }

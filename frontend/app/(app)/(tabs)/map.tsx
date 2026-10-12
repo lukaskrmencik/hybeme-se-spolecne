@@ -286,7 +286,11 @@ export default function MapScreen() {
               </TouchableOpacity>
             )}
           </View>
-          <TouchableOpacity style={styles.locate} onPress={() => setRecenter((n) => n + 1)} accessibilityLabel="Moje poloha">
+          <TouchableOpacity
+            style={styles.locate}
+            onPress={() => (position ? setRecenter((n) => n + 1) : void retryLocation())}
+            accessibilityLabel="Moje poloha"
+          >
             <Ionicons name="locate-outline" size={21} color={colors.navy} />
           </TouchableOpacity>
           <TouchableOpacity
