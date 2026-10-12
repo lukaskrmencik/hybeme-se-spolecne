@@ -3,7 +3,7 @@ import { ActivityIndicator, Pressable, RefreshControl, StyleSheet, Text, View } 
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { apiFetch, getErrorMessage, resolveMediaUrl } from '../../services/api';
 import { PublicProfile } from '../../types/user';
 import { Avatar } from '../../components/Avatar';

@@ -25,7 +25,7 @@ import { createPlace, describeValidationError, fetchAllPlaces, setPlaceActive } 
 import { getErrorMessage } from '../../services/api';
 import { showToast } from '../../utils/alert';
 import { Place } from '../../types/place';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { colors } from '../../utils/theme';
 
 type StatusFilter = 'all' | 'active' | 'inactive';

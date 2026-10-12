@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { colors } from '../../utils/theme';
 
 /** Phone (native): a tap shows the explanation under the label, in the flow, so nothing can cover it. */

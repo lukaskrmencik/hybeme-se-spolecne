@@ -3,7 +3,7 @@
 // Mapy.com tiles are not stored (their terms); instead the OpenStreetMap map of the area (offline-map) is
 // downloaded once in the background and shown when there is no signal. Leaflet and the font come from /vendor and /fonts.
 
-const VERSION = 'v4';
+const VERSION = 'v5';
 const CACHE = `hybeme-${VERSION}`;
 // Pages the installed app opens on; any of them boots the whole app.
 const SHELL = [
@@ -15,6 +15,11 @@ const SHELL = [
   '/vendor/leaflet/leaflet.js',
   '/vendor/leaflet/leaflet.css',
   '/vendor/protomaps-leaflet/protomaps-leaflet.js',
+  '/fonts/nunito-regular.woff2',
+  '/fonts/nunito-semibold.woff2',
+  '/fonts/nunito-bold.woff2',
+  '/fonts/nunito-extrabold.woff2',
+  '/fonts/nunito-black.woff2',
 ];
 // Its own cache, so a new app version does not throw away 20+ MB that would have to be downloaded again.
 const MAP_CACHE = 'offline-map';
@@ -30,6 +35,7 @@ self.addEventListener('install', (event) => {
       const assets = [...html.matchAll(/(?:src|href)="(\/_expo\/[^"]+)"/g)].map((m) => m[1]);
       // One missing file must not stop the installation, the rest is cached on first use anyway.
       await Promise.allSettled([...new Set(assets)].map((asset) => cache.add(asset)));
+      await precacheBuild();
       await self.skipWaiting();
     })()
   );
@@ -46,6 +52,25 @@ self.addEventListener('activate', (event) => {
     })()
   );
 });
+
+/**
+ * Each screen has its own script, loaded only when the screen is opened. The build lists all of them
+ * (scripts/precache-list.cjs); the missing ones are downloaded so every screen opens offline too.
+ * Runs at install and on every app start, because a deploy brings new scripts without a new service worker.
+ */
+async function precacheBuild() {
+  try {
+    const list = await (await fetch('/precache.json', { cache: 'no-store' })).json();
+    if (!Array.isArray(list)) return;
+    const cache = await caches.open(CACHE);
+    const wanted = list.filter((a) => typeof a === 'string' && a.startsWith('/_expo/'));
+    const missing = [];
+    for (const asset of wanted) if (!(await cache.match(asset))) missing.push(asset);
+    await Promise.allSettled(missing.map((asset) => cache.add(asset)));
+  } catch {
+    // Offline, or a build without the list: the screens are cached the first time they are opened.
+  }
+}
 
 async function cacheFirst(request) {
   const cached = await caches.match(request);
@@ -128,7 +153,7 @@ async function offlineMap(request) {
 }
 
 self.addEventListener('message', (event) => {
-  if (event.data === 'sync-offline-map') event.waitUntil(syncOfflineMap());
+  if (event.data === 'sync-offline-map') event.waitUntil(Promise.all([syncOfflineMap(), precacheBuild()]));
 });
 
 // Pages: always the newest version when online, the stored one when not.

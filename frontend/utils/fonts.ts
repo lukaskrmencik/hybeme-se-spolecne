@@ -1,5 +1,4 @@
 import React from 'react';
-import { Asset } from 'expo-asset';
 import { Platform, StyleSheet, Text, TextInput } from 'react-native';
 
 const FAMILIES: Record<string, string> = {
@@ -52,49 +51,14 @@ const files = {
   black: require('../assets/fonts/Nunito-Black.ttf'),
 };
 
-export const nunitoFonts = {
-  'Nunito-Regular': files.regular,
-  'Nunito-SemiBold': files.semiBold,
-  'Nunito-Bold': files.bold,
-  'Nunito-ExtraBold': files.extraBold,
-  'Nunito-Black': files.black,
-};
-
-/**
- * react-native-web gives every Text and TextInput `font: 14px System`, which beats a font-family
- * set on body, so the app silently rendered in the system font. Register one "Nunito" family
- * with the real weights from the bundled files and force it on every element except icons
- * (those carry an inline font-family and keep it). `:is(#root, body)` also reaches dialogs (Modal),
- * which are rendered outside #root, and keeps the id's weight that beats react-native-web's classes.
- */
-function installWebFont() {
-  if (Platform.OS !== 'web' || typeof document === 'undefined') return;
-  if (document.getElementById('nunito-web-font')) return;
-
-  const faces: [number, unknown][] = [
-    [400, files.regular],
-    [500, files.semiBold],
-    [600, files.semiBold],
-    [700, files.bold],
-    [800, files.extraBold],
-    [900, files.black],
-  ];
-  const fontFaces = faces
-    .map(
-      ([weight, file]) =>
-        `@font-face { font-family: 'Nunito'; font-style: normal; font-weight: ${weight}; font-display: block; src: url('${
-          Asset.fromModule(file as number).uri
-        }') format('truetype'); }`
-    )
-    .join('\n');
-
-  const style = document.createElement('style');
-  style.id = 'nunito-web-font';
-  style.textContent = `${fontFaces}
-:is(#root, body) :is(div, span, h1, h2, h3, input, textarea, button) { font-family: Nunito, sans-serif; }
-#root *:focus, #root *:focus-visible { outline: none !important; -webkit-tap-highlight-color: transparent; }
-#root input, #root textarea { box-shadow: none !important; }`;
-  document.head.appendChild(style);
-}
-
-installWebFont();
+// The web gets Nunito from the stylesheet in app/+html.tsx (smaller WOFF2 files, there before any JavaScript).
+export const nunitoFonts: Record<string, number> =
+  Platform.OS === 'web'
+    ? {}
+    : {
+        'Nunito-Regular': files.regular,
+        'Nunito-SemiBold': files.semiBold,
+        'Nunito-Bold': files.bold,
+        'Nunito-ExtraBold': files.extraBold,
+        'Nunito-Black': files.black,
+      };

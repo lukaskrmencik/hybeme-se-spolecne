@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { usePlacePhotos } from '../hooks/usePlacePhotos';
 import { useUserStats } from '../context/UserStatsContext';
 import { PhotoViewer } from './PhotoViewer';

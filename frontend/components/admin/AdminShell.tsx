@@ -1,7 +1,7 @@
 import React, { ComponentProps, useEffect, useState } from 'react';
 import { Image, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { usePathname, useRouter } from 'expo-router';
 import { colors, radius } from '../../utils/theme';
 import { fetchReports } from '../../services/reports';

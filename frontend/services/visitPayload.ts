@@ -1,4 +1,3 @@
-import { gcm } from '@noble/ciphers/aes.js';
 import { VisitSubmission } from '../types/visit';
 
 /**
@@ -38,8 +37,10 @@ function nonce(): Uint8Array {
 }
 
 /** Body of POST /visits. Without a key (local development) the visit goes as plain JSON. */
-export function sealVisit(submission: VisitSubmission): string {
+export async function sealVisit(submission: VisitSubmission): Promise<string> {
   if (!KEY) return JSON.stringify(submission);
+  // Loaded on the first visit sent, not with the app (the landing page has no use for it).
+  const { gcm } = await import('@noble/ciphers/aes.js');
   const iv = nonce();
   const sealed = gcm(KEY, iv).encrypt(new TextEncoder().encode(JSON.stringify(submission)));
   const out = new Uint8Array(iv.length + sealed.length);

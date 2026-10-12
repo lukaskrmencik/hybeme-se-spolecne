@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, Image, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { groupJournal, JournalEntry, JournalVisit } from '../utils/visitJournal';
 import { PlacePhoto } from '../types/photo';
 import { PhotoViewer } from './PhotoViewer';

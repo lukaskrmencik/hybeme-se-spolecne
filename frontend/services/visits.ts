@@ -53,7 +53,7 @@ export async function submitVisit(input: SubmitVisitInput): Promise<SubmitVisitR
     try {
       const res = await apiFetch<{ data: CreatedVisit }>('visits', {
         method: 'POST',
-        body: sealVisit(submission),
+        body: await sealVisit(submission),
       });
       return { kind: 'saved', visit: res.data };
     } catch (err) {

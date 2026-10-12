@@ -1,8 +1,7 @@
-import React, { ComponentProps, useEffect, useRef, useState } from 'react';
+import React, { ComponentProps, Suspense, lazy, useEffect, useRef, useState } from 'react';
 import { Image, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
-import QRCode from 'react-native-qrcode-svg';
 import { useAuth } from '../../context/AuthContext';
 import { PartnerLogos } from '../PartnerLogos';
 import { LandingLeaderboard } from './LandingLeaderboard';
@@ -11,8 +10,34 @@ import { LegalLinks } from '../legal/LegalLinks';
 import { LEGAL } from '../../constants/legal';
 import { colors, radius, shadows } from '../../utils/theme';
 
-const logo = require('../../assets/images/logos/logo_hss_mark.png');
+// Only the desktop shows the code, phones do not download the QR and SVG libraries at all.
+const QRCode = lazy(() => import('react-native-qrcode-svg'));
+
+const logo = require('../../assets/images/web/logo-hss-128.png');
 const heroPhoto = require('../../assets/images/benatky-zamek.webp');
+
+/**
+ * On the web the photo is a plain <img> in the prerendered HTML: react-native-web's Image shows its picture only
+ * once the app's JavaScript runs, which made the largest element of the page appear many seconds late.
+ * Sized copies in public/images, the phone gets the small one.
+ */
+function HeroPhoto() {
+  if (Platform.OS !== 'web') {
+    return <Image source={heroPhoto} resizeMode="cover" style={[StyleSheet.absoluteFill, styles.heroPhoto]} />;
+  }
+  return (
+    <img
+      src="/images/benatky-zamek-800.webp"
+      srcSet="/images/benatky-zamek-800.webp 800w, /images/benatky-zamek-1600.webp 1600w"
+      sizes="100vw"
+      width={1600}
+      height={1067}
+      alt="Zámek Benátky nad Jizerou z výšky"
+      fetchPriority="high"
+      style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+    />
+  );
+}
 
 /** The hero photo is CC BY-SA 3.0, which requires naming the author and the licence. */
 const PHOTO_CREDIT = {
@@ -134,23 +159,21 @@ export function LandingPage() {
   const toGuide = () => scrollRef.current?.scrollTo({ y: sheetY.current + guideY.current - 16, animated: true });
 
   return (
-    <ScrollView ref={scrollRef} style={styles.page} contentContainerStyle={styles.pageContent}>
+    <ScrollView ref={scrollRef} role="main" style={styles.page} contentContainerStyle={styles.pageContent}>
       {/* Hero over a photo of the castle */}
       <View style={styles.hero}>
-        <Image
-          source={heroPhoto}
-          resizeMode="cover"
-          style={[StyleSheet.absoluteFill, styles.heroPhoto]}
-          accessibilityLabel="Zámek Benátky nad Jizerou z výšky"
-        />
+        <HeroPhoto />
         <View style={[StyleSheet.absoluteFill, styles.heroShade]} />
         <View style={[styles.inner, styles.heroInner, wide && styles.heroInnerWide]}>
           <View style={[styles.heroText, wide && styles.heroTextWide]}>
             <View style={styles.brand}>
               <Image source={logo} style={styles.brandLogo} accessibilityLabel="Hýbeme se společně" />
-              <Text style={styles.brandName}>Hýbeme se společně</Text>
+              {/* The name is the main heading: people search for it, the slogan below only looks bigger. */}
+              <Text role="heading" aria-level={1} style={styles.brandName}>
+                Hýbeme se společně
+              </Text>
             </View>
-            <Text role="heading" aria-level={1} style={[styles.heroTitle, wide && styles.heroTitleWide]}>
+            <Text style={[styles.heroTitle, wide && styles.heroTitleWide]}>
               Objevuj Benátecko pěšky i na kole
             </Text>
             <Text style={styles.heroLead}>Navštěvuj zajímavá místa v okolí, sbírej body a poměř síly s ostatními.</Text>
@@ -169,7 +192,11 @@ export function LandingPage() {
 
           {isDesktop && (
             <View style={styles.qrCard}>
-              {!!appUrl && <QRCode value={appUrl} size={150} color={colors.navy} backgroundColor={colors.white} />}
+              {!!appUrl && (
+                <Suspense fallback={<View style={styles.qrPlaceholder} />}>
+                  <QRCode value={appUrl} size={150} color={colors.navy} backgroundColor={colors.white} />
+                </Suspense>
+              )}
               <Text style={styles.qrTitle}>Otevři v telefonu</Text>
               <Text style={styles.qrText}>
                 Aplikace pracuje s polohou, proto běží jen v mobilu. Naskenuj kód
@@ -302,6 +329,7 @@ const styles = StyleSheet.create({
   inner: { width: '100%', maxWidth: 1080, alignSelf: 'center', paddingHorizontal: 20 },
   pressed: { opacity: 0.85 },
 
+  qrPlaceholder: { width: 150, height: 150 },
   hero: { minHeight: 560, justifyContent: 'center', backgroundColor: colors.navy },
   heroPhoto: { width: '100%', height: '100%' },
   heroShade: { backgroundColor: 'rgba(12, 38, 61, 0.58)' },

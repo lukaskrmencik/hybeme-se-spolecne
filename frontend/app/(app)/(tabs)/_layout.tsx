@@ -1,5 +1,5 @@
 import React, { ComponentProps } from 'react';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { Tabs, BottomTabBarButtonProps } from 'expo-router/js-tabs';
 import { View, Text, Image, Pressable, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';

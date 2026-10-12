@@ -4,7 +4,7 @@ import Head from 'expo-router/head';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { GestureRoot } from '../components/GestureRoot';
 import { ActivityIndicator, Platform, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { AuthProvider, useAuth } from '../context/AuthContext';
 import { ToastHost } from '../components/ToastHost';
@@ -98,14 +98,14 @@ export default function RootLayout() {
   if ((!fontsLoaded || !webFontsReady) && !isPrerendered(pathname)) return defaultHead;
 
   return (
-    <GestureHandlerRootView style={styles.root}>
+    <GestureRoot style={styles.root}>
       {defaultHead}
       <StatusBar style="dark" />
       <AuthProvider>
         <InitialLayout />
       </AuthProvider>
       <ToastHost />
-    </GestureHandlerRootView>
+    </GestureRoot>
   );
 }
 

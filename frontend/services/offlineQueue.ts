@@ -125,7 +125,7 @@ export async function flushQueue(
       try {
         const res = await apiFetch<{ data: { id: number } }>('visits', {
           method: 'POST',
-          body: sealVisit(toSubmission(entry)),
+          body: await sealVisit(toSubmission(entry)),
         });
         synced++;
         processed.add(entry.id);

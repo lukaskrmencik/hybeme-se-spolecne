@@ -40,7 +40,7 @@ docker run --rm \
     -v "$REPO_DIR/frontend:/app" \
     -w /app \
     node:22-alpine \
-    sh -c "npm ci --no-audit --no-fund --loglevel=error && npx expo export --platform web --output-dir dist"
+    sh -c "npm ci --no-audit --no-fund --loglevel=error && npx expo export --platform web --output-dir dist && node scripts/precache-list.cjs dist"
 mkdir -p "$WEB_ROOT"
 rsync -a --delete "$REPO_DIR/frontend/dist/" "$WEB_ROOT/"
 

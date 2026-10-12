@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, ScrollView } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { Place } from '../types/place';
 import { Sport } from '../types/sport';
 import { colors, radius, shadows } from '../utils/theme';

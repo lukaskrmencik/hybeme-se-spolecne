@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { reportContent, ReportTarget, ReportType } from '../services/reports';
 import { getErrorMessage } from '../services/api';
 import { showToast } from '../utils/alert';

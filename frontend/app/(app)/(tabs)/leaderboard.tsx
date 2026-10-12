@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, FlatList, ActivityIndicator, RefreshControl, To
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useIsFocused, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useAuth } from '../../../context/AuthContext';
 import { useLeaderboard, useLeaderboardWeeks, LeaderboardEntry, LeaderboardWeek } from '../../../hooks/useLeaderboard';
 import { Avatar } from '../../../components/Avatar';

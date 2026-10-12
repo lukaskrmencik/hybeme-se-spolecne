@@ -34,6 +34,12 @@ export default function Root({ children }: { children: ReactNode }) {
         <meta name="apple-mobile-web-app-title" content="Hýbeme se společně" />
         {isProduction && <script dangerouslySetInnerHTML={{ __html: registerServiceWorker }} />}
 
+        {/* The weights the first screen of the landing page uses, so its text does not wait for them. */}
+        {PRELOADED_FONTS.map((name) => (
+          <link key={name} rel="preload" href={`/fonts/nunito-${name}.woff2`} as="font" type="font/woff2" crossOrigin="" />
+        ))}
+        <style dangerouslySetInnerHTML={{ __html: webFont }} />
+
         <ScrollViewStyleReset />
         <style dangerouslySetInnerHTML={{ __html: responsiveBackground }} />
         {/* Add any additional <head> elements that you want globally available on web... */}
@@ -56,6 +62,32 @@ if ('serviceWorker' in navigator) {
     });
   });
 }`;
+
+const PRELOADED_FONTS = ['regular', 'extrabold', 'black'];
+
+/**
+ * Nunito on the web: one family with real weights, in the HTML itself, so prerendered pages show it before any
+ * JavaScript runs. The files in public/fonts are cut down to Latin with Czech letters and WOFF2 (17 kB instead
+ * of 125 kB each; native uses the full TTFs from assets/fonts).
+ * react-native-web gives every text `font: 14px System`, which beats a font-family set on body, so the family is
+ * forced on every element except icons (those carry an inline font-family and keep it). `:is(#root, body)` also
+ * reaches dialogs (Modal), which are rendered outside #root, and keeps the id's weight that beats react-native-web's classes.
+ */
+const FONT_FILES: [number, string][] = [
+  [400, 'regular'],
+  [500, 'semibold'],
+  [600, 'semibold'],
+  [700, 'bold'],
+  [800, 'extrabold'],
+  [900, 'black'],
+];
+const webFont = `${FONT_FILES.map(
+  ([weight, name]) =>
+    `@font-face { font-family: 'Nunito'; font-style: normal; font-weight: ${weight}; font-display: swap; src: url('/fonts/nunito-${name}.woff2') format('woff2'); }`
+).join('\n')}
+:is(#root, body) :is(div, span, h1, h2, h3, input, textarea, button) { font-family: Nunito, sans-serif; }
+#root *:focus, #root *:focus-visible { outline: none !important; -webkit-tap-highlight-color: transparent; }
+#root input, #root textarea { box-shadow: none !important; }`;
 
 const responsiveBackground = `
 body {

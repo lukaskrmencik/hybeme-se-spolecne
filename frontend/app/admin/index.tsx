@@ -3,7 +3,7 @@ import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { AdminPage, adminStyles, Badge, Button, Card, ErrorBlock, LoadingBlock, StatCard } from '../../components/admin/ui';
 import { fetchReports } from '../../services/reports';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { Avatar } from '../../components/Avatar';
 import { AdminPhoto, AdminUser, fetchAllPlaces, fetchAllSports, fetchPhotos, fetchUsers } from '../../services/admin';
 import { formatNumber } from '../../utils/format';
