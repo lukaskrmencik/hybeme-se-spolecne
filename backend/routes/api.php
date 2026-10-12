@@ -1,7 +1,6 @@
 <?php
 
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\CheatController;
 use App\Http\Controllers\PlaceController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SportController;
@@ -44,7 +43,6 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::patch('{place}', [PlaceController::class, 'update']);
         Route::get('{place}', [PlaceController::class, 'show']);
         Route::get('', [PlaceController::class, 'index']);
-        Route::post('{place}/image', [PlaceController::class, 'uploadImage']);
         Route::post('{place}/photos', [PlaceController::class, 'uploadAdminPhoto']);
         Route::delete('photos/{placePhoto}', [PlaceController::class, 'deleteAdminPhoto']);
     });
@@ -52,15 +50,11 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::group(['prefix' => 'sports'], function () {
         Route::post('', [SportController::class, 'store']);
         Route::patch('{sport}', [SportController::class, 'update']);
-        Route::get('{sport}', [SportController::class, 'show']);
         Route::get('', [SportController::class, 'index']);
-        Route::post('{sport}/icon', [SportController::class, 'uploadIcon']);
     });
 
     Route::group(['prefix' => 'visits'], function () {
         Route::post('', [VisitController::class, 'store']);
-        Route::get('', [VisitController::class, 'index']);
-        Route::get('{visit}', [VisitController::class, 'show']);
         Route::post('{visit}/photo', [VisitController::class, 'uploadPhoto']);
         Route::delete('/photo/{visitsPhoto}', [VisitController::class, 'deletePhoto']);
     });
@@ -72,11 +66,4 @@ Route::group(['middleware' => 'auth:api'], function () {
 
     // Admin: every visit photo with filters (deleting is visits/photo/{id}).
     Route::get('photos', [VisitController::class, 'photos']);
-
-    Route::group(['prefix' => 'cheats'], function () {
-        Route::get('', [CheatController::class, 'index']);
-        Route::get('{cheat}', [CheatController::class, 'show']);
-        Route::post('{cheat}/deny', [CheatController::class, 'denyCheat']);
-        Route::post('{cheat}/message', [CheatController::class, 'messageAdmin']);
-    });
 });

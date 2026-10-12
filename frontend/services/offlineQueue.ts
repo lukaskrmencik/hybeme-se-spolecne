@@ -59,12 +59,12 @@ export function toSubmission(entry: VisitSubmission): VisitSubmission {
   };
 }
 
-export interface DroppedVisit {
+interface DroppedVisit {
   entry: QueuedVisit;
   reason: string;
 }
 
-export interface FlushResult {
+interface FlushResult {
   synced: number;
   dropped: DroppedVisit[];
 }
@@ -74,7 +74,7 @@ export interface FlushResult {
  * stored the visit, the visit is queued anyway; sending it again is refused ("earlier than the last
  * visit"), which must not be reported as a rejected visit.
  */
-export type ExistingVisitLookup = (entry: QueuedVisit) => Promise<number | null>;
+type ExistingVisitLookup = (entry: QueuedVisit) => Promise<number | null>;
 
 /** Looks the visit up among the user's visits on the server, downloaded once per flush. */
 export function createExistingVisitLookup(userId: number): ExistingVisitLookup {

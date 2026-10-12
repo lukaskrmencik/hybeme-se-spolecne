@@ -1,4 +1,4 @@
-import React, { ComponentProps, forwardRef, useState } from 'react';
+import { ComponentProps, forwardRef, useState } from 'react';
 import { View, Text, TextInput, TextInputProps, TouchableOpacity, StyleSheet } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { colors, radius } from '../../utils/theme';

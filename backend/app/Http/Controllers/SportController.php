@@ -6,7 +6,6 @@ use App\Models\Sport;
 use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Validation\Rule;
-use Illuminate\Support\Facades\Storage;
 
 class SportController extends Controller
 {
@@ -71,31 +70,6 @@ class SportController extends Controller
         ], 201);
     }
 
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(Sport $sport)
-    {
-        $this->authorize('view', $sport);
-
-        return response()->success([
-            'id' => $sport->id,
-            'name' => $sport->name,
-            'icon_url' => $sport->icon_url,
-            'average_speed' => $sport->average_speed,
-            'max_speed' => $sport->max_speed,
-            'min_speed' => $sport->min_speed,
-            'comb_mult_1' => $sport->comb_mult_1,
-            'comb_mult_2' => $sport->comb_mult_2,
-            'comb_mult_3' => $sport->comb_mult_3,
-            'comb_mult_4' => $sport->comb_mult_4,
-            'mapy_route_type' => $sport->mapy_route_type,
-            'is_active' => $sport->is_active,
-        ]);
-    }
-
-
     /**
      * Update the specified resource in storage.
      */
@@ -134,34 +108,6 @@ class SportController extends Controller
             'comb_mult_4' => $sport->comb_mult_4,
             'mapy_route_type' => $sport->mapy_route_type,
             'is_active' => $sport->is_active,
-        ]);
-    }
-
-    public function uploadIcon(Request $request, Sport $sport)
-    {
-        $this->authorize('update', $sport);
-
-        $request->validate([
-            'icon' => 'required|file|mimes:svg|max:512',
-        ]);
-
-        if ($sport->icon_url && $sport->icon_url !== config('general.default_sport_icon_url')) {
-            $oldPath = str_replace(url('storage/'), '', $sport->icon_url);
-            if (Storage::disk('public')->exists($oldPath)) {
-                Storage::disk('public')->delete($oldPath);
-            }
-        }
-
-        $path = $request->file('icon')->store('sport_icons', 'public');
-
-        $publicUrl = url('storage/' . $path);
-
-        $sport->update([
-            'icon_url' => $publicUrl
-        ]);
-
-        return response()->success([
-            'icon_url' => $publicUrl
         ]);
     }
 }

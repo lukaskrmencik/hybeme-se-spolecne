@@ -79,7 +79,7 @@ export function onTokenRefreshed(fn: (token: string) => void): () => void {
     };
 }
 
-export interface ApiOptions extends RequestInit {
+interface ApiOptions extends RequestInit {
     /** Uploads over mobile data need longer than the default 15 s. */
     timeoutMs?: number;
 }

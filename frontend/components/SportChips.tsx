@@ -1,4 +1,3 @@
-import React from 'react';
 import { ScrollView, Pressable, Text, StyleSheet } from 'react-native';
 import { Sport } from '../types/sport';
 import { colors, shadows } from '../utils/theme';

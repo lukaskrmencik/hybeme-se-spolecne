@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { View, Text, TextInput, StyleSheet, ActivityIndicator, TouchableOpacity, Pressable, Keyboard } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 

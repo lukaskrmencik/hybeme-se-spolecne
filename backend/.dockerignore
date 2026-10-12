@@ -13,7 +13,6 @@ storage/app/public/*
 storage/app/private/*
 public/storage
 bootstrap/cache/*.php
-tests
 compose.yaml
 compose.prod.yaml
 Dockerfile

@@ -20,43 +20,6 @@ class VisitController extends Controller
     use AuthorizesRequests;
 
     /**
-     * Display a listing of the resource.
-     */
-    public function index(Request $request)
-    {
-        $this->authorize('viewAny', Visit::class);
-
-        $perPage = (int) $request->input('per_page', config('pagination.per_page_default'));
-        if (
-            $perPage < config('pagination.per_page_min') ||
-            $perPage > config('pagination.per_page_max')
-        ){
-            $perPage = config('pagination.per_page_default');
-        }
-
-        $query = Visit::query()->with(['user', 'place', 'sport', 'photos']);
-
-        if ($request->filled('search')) {
-            $searchTerm = $request->input('search');
-
-            $query->where(function ($q) use ($searchTerm) {
-                $q->whereHas('user', function ($userQuery) use ($searchTerm) {
-                    $userQuery->where('name', 'ILIKE', '%' . $searchTerm . '%');
-                })
-                ->orWhereHas('place', function ($placeQuery) use ($searchTerm) {
-                    $placeQuery->where('name', 'ILIKE', '%' . $searchTerm . '%');
-                })
-                ->orWhereHas('sport', function ($sportQuery) use ($searchTerm) {
-                    $sportQuery->where('name', 'ILIKE', '%' . $searchTerm . '%');
-                });
-            });
-        }
-        $visits = $query->paginate($perPage);
-
-        return response()->pagination($visits);
-    }
-
-    /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request, AntiCheatService $antiCheatService)
@@ -113,11 +76,8 @@ class VisitController extends Controller
 
         if ($antiCheatResult->isCheating) {
             if($antiCheatResult->solution === "not_save") {
-
                 return response()->error($antiCheatResult->cheatMessage, 400);
-
             } elseif ($antiCheatResult->solution === "not_combination") {
-
                 $cheatNote = $antiCheatResult->cheatMessage;
                 $validatedData['is_combination'] = false;
             }
@@ -126,9 +86,7 @@ class VisitController extends Controller
         $defaultReward = Place::findOrFail($validatedData['place_id'])->default_reward;
 
         if($validatedData['is_combination'] === true) {
-
             $reward = calc_combination_reward($user, $validatedData['sport_id'], $validatedData['place_id'], $defaultReward, $lastVisit);
-
         } else {
             $reward = $defaultReward;
         }
@@ -157,30 +115,6 @@ class VisitController extends Controller
             'timestamp' => $visit->timestamp,
             'cheat_note' => $cheatNote,
         ], 201);
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(Visit $visit)
-    {
-        $this->authorize('view', $visit);
-
-        $visit->load(['user', 'place', 'sport', 'photos']);
-
-        return response()->success([
-            'id' => $visit->id,
-            'place_id' => $visit->place_id,
-            'sport_id' => $visit->sport_id,
-            'user_id' => $visit->user_id,
-            'place' => $visit->place,
-            'sport' => $visit->sport,
-            'photos' => $visit->photos,
-            'user' => $visit->user,
-            'reward' => $visit->reward,
-            'is_combination' => $visit->is_combination,
-            'timestamp' => $visit->timestamp,
-        ]);
     }
 
     /**
@@ -275,7 +209,6 @@ class VisitController extends Controller
     }
 
     public function deletePhoto(Request $request, VisitsPhoto $visitsPhoto){
-
         $this->authorize('deletePhoto', $visitsPhoto->visit);
 
         $path = str_replace(url('storage/'), '', $visitsPhoto->photo_url);

@@ -17,6 +17,3 @@ export const LEGAL = {
   partner: 'ŠKOENERGO',
   website: 'https://hybemesespolecne.cz',
 } as const;
-
-/** True for a value the school still has to fill in. */
-export const isPlaceholder = (value: string) => value.startsWith('[DOPLNIT');

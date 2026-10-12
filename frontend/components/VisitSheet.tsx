@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Animated, View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, ScrollView } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Place } from '../types/place';
@@ -12,7 +12,7 @@ import { PlacePhotoStrip } from './PlacePhotoStrip';
 import { PhotoAttach } from './PhotoAttach';
 import { LocalPhoto } from '../types/visit';
 
-export interface BlockInfo {
+interface BlockInfo {
   text: string;
   /** `info` is a temporary or neutral reason (too far, wait a bit), `danger` is a hard no. */
   tone: 'info' | 'danger';

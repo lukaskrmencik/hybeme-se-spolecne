@@ -6,15 +6,12 @@ use App\Models\Visit;
 use App\Models\VisitsPhoto;
 use Clickbar\Magellan\Data\Geometries\Point;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class Place extends Model
 {
-    use HasFactory;
-
     /**
      * The attributes that are mass assignable.
      *

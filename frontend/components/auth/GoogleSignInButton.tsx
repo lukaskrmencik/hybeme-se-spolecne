@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { ActivityIndicator, Platform, StyleSheet, Text, TouchableOpacity, TurboModuleRegistry } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { config } from '../../constants/config';

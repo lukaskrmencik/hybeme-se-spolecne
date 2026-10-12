@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Place;
 use App\Models\PlacePhoto;
-use App\Services\ImageModerationService;
 use Clickbar\Magellan\Data\Geometries\Point;
 use Clickbar\Magellan\IO\Parser\Geojson\GeojsonParser;
 use Clickbar\Magellan\Rules\GeometryGeojsonRule;
@@ -133,44 +132,6 @@ class PlaceController extends Controller
             'image_url' => $place->image_url,
             'default_reward' => $place->default_reward,
             'is_active' => $place->is_active,
-        ]);
-    }
-
-    public function uploadImage(Request $request, Place $place, ImageModerationService $imageModerationService)
-    {
-        $this->authorize('update', $place);
-
-        $request->validate([
-            'image' => 'required|image|mimes:jpeg,png,jpg,webp|max:2048',
-        ]);
-
-        $file = $request->file('image');
-
-        if (!$imageModerationService->isSafe($file)) {
-            return response()->error('Fotka nesplňuje podmínky aplikace.', 422);
-        }
-
-        if ($place->image_url) {
-            $oldPath = str_replace(url('storage/'), '', $place->image_url);
-            if (Storage::disk('public')->exists($oldPath)) {
-                Storage::disk('public')->delete($oldPath);
-            }
-        }
-
-        $filename = uniqid() . '.' . $file->getClientOriginalExtension();
-
-        Storage::disk('public')->putFileAs('place_images', $file, $filename);
-
-        $path = 'place_images/' . $filename;
-
-        $publicUrl = url('storage/' . $path);
-
-        $place->update([
-            'image_url' => $publicUrl
-        ]);
-
-        return response()->success([
-            'image_url' => $publicUrl
         ]);
     }
 

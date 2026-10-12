@@ -1,4 +1,3 @@
-import React from 'react';
 import { View, Text, Image, StyleSheet, Platform } from 'react-native';
 import { colors } from '../utils/theme';
 

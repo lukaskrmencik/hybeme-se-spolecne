@@ -38,7 +38,3 @@ export function formatVisitTime(value: string): string {
     minute: '2-digit',
   });
 }
-
-export function sortNewestFirst<T extends { timestamp: string }>(items: T[]): T[] {
-  return [...items].sort((a, b) => parseVisitTime(b.timestamp) - parseVisitTime(a.timestamp));
-}

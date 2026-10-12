@@ -2,13 +2,10 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Sport extends Model
 {
-    use HasFactory;
-
     /** Route planning types of Mapy.com used for navigation to a place. */
     public const MAPY_ROUTE_TYPES = ['foot_fast', 'foot_hiking', 'bike_road', 'bike_mountain'];
 

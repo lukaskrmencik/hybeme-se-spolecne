@@ -6,7 +6,7 @@ import { Place } from '../types/place';
 import { Sport } from '../types/sport';
 import { LocalPhoto, QueuedVisit } from '../types/visit';
 
-export interface SubmitVisitInput {
+interface SubmitVisitInput {
   userId: number | null;
   place: Place;
   sport: Sport;
@@ -28,7 +28,7 @@ export interface CreatedVisit {
   cheat_note: string | null;
 }
 
-export type SubmitVisitResult =
+type SubmitVisitResult =
   | { kind: 'saved'; visit: CreatedVisit }
   /** `photosDropped`: the photos did not fit into the device storage (the web allows only a few MB). */
   | { kind: 'queued'; photosDropped: boolean };

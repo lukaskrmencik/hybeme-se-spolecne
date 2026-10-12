@@ -5,7 +5,7 @@ import { LocalPhoto } from '../types/visit';
 import { Sport } from '../types/sport';
 
 /** Paged list as the backend returns it (response()->pagination). */
-export interface Page<T> {
+interface Page<T> {
   page: number;
   totalPages: number;
   totalItems: number;
@@ -59,7 +59,7 @@ export async function fetchAllPlaces(): Promise<Place[]> {
   return all.sort((a, b) => a.name.localeCompare(b.name, 'cs'));
 }
 
-export interface NewPlace {
+interface NewPlace {
   name: string;
   defaultReward: number;
   lat: number;
@@ -154,7 +154,7 @@ export interface AdminPhoto {
   } | null;
 }
 
-export interface PhotoFilters {
+interface PhotoFilters {
   /** Author name or e-mail. */
   search?: string;
   /** Part of the place name. */
@@ -189,7 +189,7 @@ export interface AdminUser {
   total_points: number | null;
 }
 
-export interface UserFilters {
+interface UserFilters {
   search?: string;
   role?: 'user' | 'admin' | null;
 }

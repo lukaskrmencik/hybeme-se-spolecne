@@ -1,4 +1,4 @@
-import React, { ComponentProps, Suspense, lazy, useEffect, useRef, useState } from 'react';
+import { Suspense, lazy, useEffect, useRef, useState } from 'react';
 import { Image, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { LandingIcon, LandingIconName } from './LandingIcon';
 import { useRouter } from 'expo-router';

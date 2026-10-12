@@ -13,11 +13,10 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
-        web: __DIR__.'/../routes/web.php',
         api: __DIR__.'/../routes/api.php',
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
-    )   
+    )
     ->withMiddleware(function (Middleware $middleware): void {
         // In production the app sits behind the server's nginx, which passes the real scheme and host.
         // The container port is bound to 127.0.0.1 only, so no one else can send these headers.

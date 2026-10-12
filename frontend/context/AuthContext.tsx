@@ -4,12 +4,12 @@ import { jwtDecode } from 'jwt-decode';
 import { apiFetch, ApiError, onSessionExpired, onTokenRefreshed } from '../services/api';
 import { getToken, saveToken, removeToken } from '../services/storage';
 
-export interface LoginCredentials {
+interface LoginCredentials {
   email: string;
   password: string;
 }
 
-export interface RegisterData extends LoginCredentials {
+interface RegisterData extends LoginCredentials {
   name: string;
   password_confirmation: string;
   /** Agreement to the terms and privacy policy (the backend refuses the registration without it). */
@@ -17,7 +17,7 @@ export interface RegisterData extends LoginCredentials {
 }
 
 /** The account exists but its e-mail is not confirmed yet; a code was sent to it. */
-export interface VerificationRequired {
+interface VerificationRequired {
   email: string;
   /** Seconds until another code can be requested. */
   resendIn: number;

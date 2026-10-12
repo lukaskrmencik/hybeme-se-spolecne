@@ -1,7 +1,7 @@
 import { Linking } from 'react-native';
 
 /** Route planning of Mapy.com, set per sport in the administration. */
-export type MapyRouteType = 'foot_fast' | 'foot_hiking' | 'bike_road' | 'bike_mountain';
+type MapyRouteType = 'foot_fast' | 'foot_hiking' | 'bike_road' | 'bike_mountain';
 
 export const ROUTE_TYPES: { value: MapyRouteType; label: string; short: string }[] = [
   { value: 'foot_fast', label: 'Pěšky – nejkratší cesta', short: 'pěšky' },
@@ -25,7 +25,7 @@ interface Point {
  * On a phone it opens the Mapy.com app when installed (navigation starts right away in versions from
  * April 2024), otherwise the website. Coordinates go as "lon,lat".
  */
-export function mapyRouteUrl(destination: Point, from: Point | null, routeType: string | null | undefined): string {
+function mapyRouteUrl(destination: Point, from: Point | null, routeType: string | null | undefined): string {
   const type = ROUTE_TYPES.some((t) => t.value === routeType) ? routeType : 'foot_fast';
   const coords = (p: Point) => `${p.lng.toFixed(6)},${p.lat.toFixed(6)}`;
   const params = [

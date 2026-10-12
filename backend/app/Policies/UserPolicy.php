@@ -29,14 +29,6 @@ class UserPolicy
     }
 
     /**
-     * Determine whether the user can create models.
-     */
-    public function create(User $user): bool
-    {
-        return true;
-    }
-
-    /**
      * Determine whether the user can update the model.
      */
     public function update(User $user, User $model): bool
@@ -61,18 +53,5 @@ class UserPolicy
     public function changeRole(User $user, User $model): bool
     {
         return $user->role === 'admin' && $user->id !== $model->id;
-    }
-
-    public function restore(User $user, User $model): bool
-    {
-        return $user->role === 'admin';
-    }
-
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
-    public function forceDelete(User $user, User $model): bool
-    {
-        return $user->role === 'admin';
     }
 }

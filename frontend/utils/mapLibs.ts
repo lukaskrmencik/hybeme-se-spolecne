@@ -13,9 +13,9 @@ export function mapLibsHead(withFont: boolean, withOfflineMap = false, inline: M
   if (Platform.OS === 'web') {
     const font = withFont
       ? `<style>
-    @font-face { font-family: Nunito; font-weight: 700; font-display: swap; src: url(/fonts/Nunito-Bold.ttf) format('truetype'); }
-    @font-face { font-family: Nunito; font-weight: 800; font-display: swap; src: url(/fonts/Nunito-ExtraBold.ttf) format('truetype'); }
-    @font-face { font-family: Nunito; font-weight: 900; font-display: swap; src: url(/fonts/Nunito-Black.ttf) format('truetype'); }
+    @font-face { font-family: Nunito; font-weight: 700; font-display: swap; src: url(/fonts/nunito-bold.woff2) format('woff2'); }
+    @font-face { font-family: Nunito; font-weight: 800; font-display: swap; src: url(/fonts/nunito-extrabold.woff2) format('woff2'); }
+    @font-face { font-family: Nunito; font-weight: 900; font-display: swap; src: url(/fonts/nunito-black.woff2) format('woff2'); }
   </style>`
       : '';
     const offlineMap = withOfflineMap ? '<script src="/vendor/protomaps-leaflet/protomaps-leaflet.js"></script>' : '';

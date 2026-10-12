@@ -2,7 +2,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { useFocusEffect } from 'expo-router';
 import { apiFetch, getErrorMessage, resolveMediaUrl } from '../services/api';
 
-export type LeaderboardPeriod = 'all' | 'week';
+type LeaderboardPeriod = 'all' | 'week';
 
 export interface LeaderboardEntry {
     id: number;

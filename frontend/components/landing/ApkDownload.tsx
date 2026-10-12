@@ -7,7 +7,7 @@ import { colors, radius } from '../../utils/theme';
  * The Android installer, for phones that want a real app before it is on Google Play.
  * The file is not in git: it is copied to frontend/public/download/ on the server and the deploy publishes it.
  */
-export const APK_URL = '/download/hybeme-se-spolecne.apk';
+const APK_URL = '/download/hybeme-se-spolecne.apk';
 
 const STEPS = [
   'Klepni na „Stáhnout APK“ a počkej, než se soubor stáhne.',
