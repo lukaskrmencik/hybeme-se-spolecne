@@ -20,7 +20,9 @@
       "predictiveBackGestureEnabled": false,
       "package": "cz.hybemesespolecne.app",
       "blockedPermissions": [
-        "android.permission.SYSTEM_ALERT_WINDOW"
+        "android.permission.SYSTEM_ALERT_WINDOW",
+        "android.permission.USE_BIOMETRIC",
+        "android.permission.USE_FINGERPRINT"
       ]
     },
     "web": {
