@@ -8,22 +8,12 @@ use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 
-/**
- * Six-digit code sent by e-mail after registration. Without it the account cannot sign in,
- * so people have to register with an address they really own.
- */
 class EmailVerificationService
 {
     public const VALID_MINUTES = 15;
     public const MAX_ATTEMPTS = 5;
-    /** A new code can be requested this long after the previous one. */
     public const RESEND_SECONDS = 60;
 
-    /**
-     * Creates a new code (replacing the old one) and e-mails it.
-     *
-     * @return int seconds until another code may be sent; 0 when this one was sent
-     */
     public function send(User $user): int
     {
         $existing = $user->verificationCode;
@@ -36,7 +26,6 @@ class EmailVerificationService
 
         $code = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
 
-        // A fresh hash always differs, so updated_at moves too; the resend timer counts from it.
         EmailVerificationCode::updateOrCreate(
             ['user_id' => $user->id],
             [
@@ -51,9 +40,6 @@ class EmailVerificationService
         return 0;
     }
 
-    /**
-     * @return string|null an error message for the user, null when the e-mail is now verified
-     */
     public function verify(User $user, string $code): ?string
     {
         if ($user->hasVerifiedEmail()) {

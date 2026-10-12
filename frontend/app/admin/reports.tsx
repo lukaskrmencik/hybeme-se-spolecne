@@ -45,7 +45,6 @@ const RESOLUTION_LABEL: Record<ReportResolution, string> = {
   dismissed: 'Ponecháno beze změny',
 };
 
-/** Open reports about the same thing (the same photo, avatar or name) are handled as one case. */
 interface Case {
   key: string;
   first: AdminReport;
@@ -86,12 +85,10 @@ export default function AdminReports() {
 
   const cases = useMemo(() => (status === 'open' ? toCases(items ?? []) : (items ?? []).map((r) => ({ key: String(r.id), first: r, reports: [r] }))), [items, status]);
 
-  /** Runs the action, closes the case and removes it from the list. */
   const act = async (c: Case, action: () => Promise<void>, resolution: ReportResolution, done: string) => {
     setBusyKey(c.key);
     try {
       await action();
-      // A deleted account takes its reports with it; anything else is closed explicitly.
       if (resolution !== 'deleted_user') await resolveReport(c.first.id, resolution);
       setItems((list) => list?.filter((r) => !c.reports.some((x) => x.id === r.id)) ?? list);
       showToast(done, undefined, 'success');

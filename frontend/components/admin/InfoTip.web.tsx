@@ -6,10 +6,6 @@ import { colors } from '../../utils/theme';
 
 const WIDTH = 260;
 
-/**
- * Web: the bubble is put straight into <body> with a fixed position under the icon, so no line, icon or
- * section of the form (or a dialog) can be drawn over it.
- */
 export function InfoTip({ text }: { text: string }) {
   const iconRef = useRef<View>(null);
   const [pos, setPos] = useState<{ left: number; top: number } | null>(null);
@@ -23,7 +19,6 @@ export function InfoTip({ text }: { text: string }) {
   };
   const hide = () => setPos(null);
 
-  // A fixed bubble would stay behind while the page scrolls, so it closes instead.
   useEffect(() => {
     if (!pos) return;
     window.addEventListener('scroll', hide, true);
@@ -60,7 +55,6 @@ export function InfoTip({ text }: { text: string }) {
 const styles = StyleSheet.create({
   tip: {
     position: 'fixed' as 'absolute',
-    // Above dialogs too (react-native-web puts them at 9999).
     zIndex: 2147483000,
     width: WIDTH,
     backgroundColor: colors.navy,

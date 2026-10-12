@@ -6,11 +6,9 @@ interface SportChipsProps {
   sports: Sport[];
   selectedId: number | undefined;
   onSelect: (id: number) => void;
-  /** `float` sits on the map with shadows, `inline` is flat for use inside a card. */
   variant?: 'float' | 'inline';
 }
 
-/** Sport picker, floating above the map or inside the visit card. The chosen sport drives the points on every pin. */
 export const SportChips = ({ sports, selectedId, onSelect, variant = 'float' }: SportChipsProps) => {
   const inline = variant === 'inline';
   if (!sports.length) return null;

@@ -5,11 +5,9 @@ interface AvatarProps {
     name: string;
     url?: string | null;
     size?: number;
-    /** Overrides the pale blue initials background. */
     background?: string;
 }
 
-/** Mock sizes: 15 px in the 38 px list avatar, 22 px in the 60 px profile avatar. */
 const initialsSize = (size: number) => (size <= 40 ? 15 : size >= 60 ? 22 : Math.round(size * 0.37));
 
 export const Avatar = ({ name, url, size = 44, background }: AvatarProps) => {
@@ -24,7 +22,6 @@ export const Avatar = ({ name, url, size = 44, background }: AvatarProps) => {
     const radius = size / 2;
 
     if (url && Platform.OS === 'web') {
-        // A plain img on the web: the browser loads it only when it scrolls into view (long leaderboards).
         return (
             <img
                 src={url}

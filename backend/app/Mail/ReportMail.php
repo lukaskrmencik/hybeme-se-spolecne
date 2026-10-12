@@ -9,7 +9,6 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-/** Tells the admins that something was reported, with a link straight to the administration. */
 class ReportMail extends Mailable
 {
     use Queueable, SerializesModels;

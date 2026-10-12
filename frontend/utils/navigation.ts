@@ -1,6 +1,5 @@
 import { Linking } from 'react-native';
 
-/** Route planning of Mapy.com, set per sport in the administration. */
 type MapyRouteType = 'foot_fast' | 'foot_hiking' | 'bike_road' | 'bike_mountain';
 
 export const ROUTE_TYPES: { value: MapyRouteType; label: string; short: string }[] = [
@@ -20,11 +19,6 @@ interface Point {
   lng: number;
 }
 
-/**
- * Route link of Mapy.com (https://developer.mapy.com/further-uses-of-mapycz/mapy-cz-url/).
- * On a phone it opens the Mapy.com app when installed (navigation starts right away in versions from
- * April 2024), otherwise the website. Coordinates go as "lon,lat".
- */
 function mapyRouteUrl(destination: Point, from: Point | null, routeType: string | null | undefined): string {
   const type = ROUTE_TYPES.some((t) => t.value === routeType) ? routeType : 'foot_fast';
   const coords = (p: Point) => `${p.lng.toFixed(6)},${p.lat.toFixed(6)}`;

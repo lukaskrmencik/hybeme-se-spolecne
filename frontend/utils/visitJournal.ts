@@ -2,17 +2,14 @@ import { PublicVisit, Visit } from '../types/user';
 import { resolveMediaUrl } from '../services/api';
 import { formatVisitTime } from './dates';
 
-/** A visit as the journal shows it, the same for the own history and another player's profile. */
 export interface JournalVisit {
   id: number;
   placeId: number;
   placeName: string;
-  /** [lat, lng] */
   position: [number, number] | null;
   sportName: string;
   reward: number;
   isCombination: boolean;
-  /** 0 = start of a chain, 1.. = steps of the chain, null = a visit on its own. */
   order: number | null;
   when: string;
   photos: { id: number; url: string }[];
@@ -59,10 +56,6 @@ export function fromPublicVisit(v: PublicVisit): JournalVisit {
   };
 }
 
-/**
- * Groups visits (newest first) into combination chains and visits on their own, newest first.
- * A chain starts with order 0 and goes on with the combination visits after it; its visits are oldest first.
- */
 export function groupJournal(visits: JournalVisit[]): JournalEntry[] {
   const entries: JournalEntry[] = [];
   let chain: JournalVisit[] | null = null;
@@ -80,7 +73,6 @@ export function groupJournal(visits: JournalVisit[]): JournalEntry[] {
       chain.push(visit);
     } else {
       closeChain();
-      // A combination whose start is not in the list (e.g. hidden) still begins a chain of its own.
       if (visit.order === 0 || visit.isCombination) chain = [visit];
       else entries.push({ kind: 'single', key: `s${visit.id}`, visit });
     }

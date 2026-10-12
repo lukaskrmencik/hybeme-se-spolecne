@@ -1,7 +1,3 @@
-// Writes dist/precache.json: every script and stylesheet of the web build. The service worker downloads them all
-// when it installs, so the app opens offline on any screen: the pages are split into separate scripts, and a
-// page's own HTML lists only the ones it needs itself.
-// Run after `expo export`: node scripts/precache-list.cjs dist
 const fs = require('fs');
 const path = require('path');
 

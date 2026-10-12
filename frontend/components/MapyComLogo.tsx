@@ -1,11 +1,9 @@
 import Svg, { Circle, Defs, LinearGradient, Path, Stop } from 'react-native-svg';
 
-/** Mapy.com app symbol (assets/images/logos/mapy-com-symbol-aplikace-rgb-1.svg), drawn inline so it stays sharp. */
 export function MapyComLogo({ size = 24 }: { size?: number }) {
   return (
     <Svg width={size} height={size} viewBox="0 0 249.45 249.45" accessibilityLabel="Mapy.com">
       <Defs>
-        {/* The original rotates the circle by -45° and its gradient by +45°, which together make it vertical. */}
         <LinearGradient id="mapyComGradient" x1="0" y1="0" x2="0" y2="1">
           <Stop offset="0" stopColor="#34d313" />
           <Stop offset="1" stopColor="#1eae00" />

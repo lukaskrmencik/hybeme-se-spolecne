@@ -16,7 +16,6 @@ const TONE: Record<ToastTone, { icon: React.ComponentProps<typeof Ionicons>['nam
 
 function ToastItem({ toast, onDone }: { toast: Toast; onDone: () => void }) {
   const anim = useRef(new Animated.Value(0)).current;
-  // The parent passes a new callback on every render, the timer must not restart because of it.
   const onDoneRef = useRef(onDone);
   onDoneRef.current = onDone;
 
@@ -49,7 +48,6 @@ function ToastItem({ toast, onDone }: { toast: Toast; onDone: () => void }) {
   );
 }
 
-/** Renders toasts from showToast() over the whole app. Tapping one hides it. */
 export function ToastHost() {
   const insets = useSafeAreaInsets();
   const [toasts, setToasts] = useState<Toast[]>([]);

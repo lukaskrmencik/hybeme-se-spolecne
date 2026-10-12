@@ -20,11 +20,6 @@ const nameFromToken = (token: string | null): string | null => {
   }
 };
 
-/**
- * Sign-in for the administration, shown at /admin instead of a "no access" page:
- * for visitors who are not signed in, and for those signed in with an account that is not an admin.
- * Signing in here replaces the current session.
- */
 export function AdminSignIn() {
   const { token, login, loginWithGoogle } = useAuth();
   const router = useRouter();
@@ -35,7 +30,6 @@ export function AdminSignIn() {
   const passwordRef = useRef<TextInput>(null);
   const currentName = nameFromToken(token);
 
-  // The Google sign-in on the web leaves the page; afterwards the app brings the admin back here.
   useEffect(() => rememberAfterLogin('/admin'), []);
 
   const handleError = (err: unknown) => {

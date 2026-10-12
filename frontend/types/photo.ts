@@ -5,14 +5,11 @@ export interface VisitPhoto {
   created_at?: string;
 }
 
-/** Photo shown in the gallery of a place. */
 export interface PlacePhoto {
   id: number;
-  /** Visit the photo belongs to; lets the app recognise the user's own photos. */
   visitId?: number;
   url: string;
   author: string | null;
   takenAt: string | null;
-  /** Added by an admin in the administration, not by a visitor; cannot be reported. */
   official?: boolean;
 }

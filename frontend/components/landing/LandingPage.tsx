@@ -10,17 +10,11 @@ import { LegalLinks } from '../legal/LegalLinks';
 import { LEGAL } from '../../constants/legal';
 import { colors, radius, shadows } from '../../utils/theme';
 
-// Only the desktop shows the code, phones do not download the QR and SVG libraries at all.
 const QRCode = lazy(() => import('react-native-qrcode-svg'));
 
 const logo = require('../../assets/images/web/logo-hss-128.png');
 const heroPhoto = require('../../assets/images/benatky-zamek.webp');
 
-/**
- * On the web the photo is a plain <img> in the prerendered HTML: react-native-web's Image shows its picture only
- * once the app's JavaScript runs, which made the largest element of the page appear many seconds late.
- * Sized copies in public/images, the phone gets the small one.
- */
 function HeroPhoto() {
   if (Platform.OS !== 'web') {
     return <Image source={heroPhoto} resizeMode="cover" style={[StyleSheet.absoluteFill, styles.heroPhoto]} />;
@@ -39,13 +33,11 @@ function HeroPhoto() {
   );
 }
 
-/** The hero photo is CC BY-SA 3.0, which requires naming the author and the licence. */
 const PHOTO_CREDIT = {
   text: 'Foto zámku: Zdeněk Fiedler, CC BY-SA 3.0',
   url: 'https://commons.wikimedia.org/wiki/File:Benatky_zamek.jpg',
 };
 
-/** Same breakpoint as the desktop gate in the root layout. */
 export const DESKTOP_MIN_WIDTH = 1024;
 
 type DeviceTab = 'android' | 'ios';
@@ -71,7 +63,6 @@ const STEPS: Record<DeviceTab, string[]> = {
   ],
 };
 
-/** Chrome on Android fires this when the site can be installed; prompt() opens the system dialog. */
 interface InstallPromptEvent extends Event {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
@@ -131,10 +122,7 @@ function Button({
   );
 }
 
-/** Public front page of the web: what the app is, who runs it, how to install it, and the way in. */
 export function LandingPage() {
-  // The page is rendered into the HTML at build time, without a screen or an address. The first render in the
-  // browser must match that HTML, so the screen width and the address are used only once the page is running.
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
   const screen = useWindowDimensions();
@@ -146,7 +134,6 @@ export function LandingPage() {
   const { canInstall, install } = useInstallPrompt();
   const [device, setDevice] = useState<DeviceTab>('android');
   const scrollRef = useRef<ScrollView>(null);
-  // onLayout gives the position inside the parent: the guide sits in the sheet, which sits below the hero.
   const sheetY = useRef(0);
   const guideY = useRef(0);
 
@@ -159,7 +146,6 @@ export function LandingPage() {
 
   return (
     <ScrollView ref={scrollRef} role="main" style={styles.page} contentContainerStyle={styles.pageContent}>
-      {/* Hero over a photo of the castle */}
       <View style={styles.hero}>
         <HeroPhoto />
         <View style={[StyleSheet.absoluteFill, styles.heroShade]} />
@@ -167,7 +153,6 @@ export function LandingPage() {
           <View style={[styles.heroText, wide && styles.heroTextWide]}>
             <View style={styles.brand}>
               <Image source={logo} style={styles.brandLogo} accessibilityLabel="Hýbeme se společně" />
-              {/* The name is the main heading: people search for it, the slogan below only looks bigger. */}
               <Text role="heading" aria-level={1} style={styles.brandName}>
                 Hýbeme se společně
               </Text>
@@ -208,7 +193,6 @@ export function LandingPage() {
       </View>
 
       <View style={styles.sheet} onLayout={(e) => (sheetY.current = e.nativeEvent.layout.y)}>
-        {/* About: who is behind the app, also the words people search for (the school, the town). */}
         <View style={[styles.inner, styles.about, wide && styles.aboutWide]}>
           <View style={wide ? styles.aboutTextWide : undefined}>
             <Text role="heading" aria-level={2} style={styles.aboutTitle}>
@@ -224,7 +208,6 @@ export function LandingPage() {
           </View>
         </View>
 
-        {/* How it works */}
         <View style={[styles.inner, styles.section]}>
           <Text role="heading" aria-level={2} style={styles.sectionTitle}>Jak to funguje</Text>
           <View style={[styles.how, wide && styles.howWide]}>
@@ -238,7 +221,6 @@ export function LandingPage() {
           </View>
         </View>
 
-        {/* Public leaderboards */}
         <View style={styles.band}>
           <View style={[styles.inner, wide && styles.boardWide]}>
             <View style={wide ? styles.boardText : undefined}>
@@ -253,7 +235,6 @@ export function LandingPage() {
           </View>
         </View>
 
-        {/* Install guide */}
         <View
           style={[styles.inner, styles.section, wide && styles.installWide]}
           onLayout={(e) => (guideY.current = e.nativeEvent.layout.y)}
@@ -370,7 +351,6 @@ const styles = StyleSheet.create({
   buttonGlass: { backgroundColor: 'rgba(255,255,255,0.12)', borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.35)' },
   buttonText: { color: colors.white, fontSize: 16, fontWeight: '900' },
 
-  // The page slides over the bottom of the photo like a sheet.
   sheet: { backgroundColor: colors.background, borderTopLeftRadius: 28, borderTopRightRadius: 28, marginTop: -28 },
 
   about: { paddingTop: 32, paddingBottom: 8, gap: 20 },

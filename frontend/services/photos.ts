@@ -9,7 +9,6 @@ import { LocalPhoto, QueuedPhoto } from '../types/visit';
 import { VisitPhoto } from '../types/photo';
 
 const QUEUE_KEY = 'offline_photo_queue';
-/** The backend accepts at most 2 MB, a phone photo shrunk to this size and JPEG 0.7 has a few hundred kB. */
 const MAX_SIDE = 1600;
 const UPLOAD_TIMEOUT_MS = 60_000;
 export const MAX_PHOTOS_PER_VISIT = 5;
@@ -17,7 +16,6 @@ export const MAX_PHOTOS_PER_VISIT = 5;
 const isWeb = Platform.OS === 'web';
 const randomName = () => `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`;
 
-/** Shrinks the picked photo and keeps it where it survives until the upload (also offline). */
 export async function preparePhoto(asset: ImagePickerAsset, maxSide = MAX_SIDE): Promise<LocalPhoto> {
   let context = ImageManipulator.manipulate(asset.uri);
   const longest = Math.max(asset.width || 0, asset.height || 0);
@@ -31,7 +29,6 @@ export async function preparePhoto(asset: ImagePickerAsset, maxSide = MAX_SIDE):
     return { uri: `data:image/jpeg;base64,${result.base64}`, width: result.width, height: result.height };
   }
 
-  // The manipulator writes into the cache, which the system may clear before an offline visit is sent.
   const dir = new Directory(Paths.document, 'visit_photos');
   if (!dir.exists) dir.create({ intermediates: true, idempotent: true });
   const source = new File(result.uri);
@@ -39,21 +36,16 @@ export async function preparePhoto(asset: ImagePickerAsset, maxSide = MAX_SIDE):
   await source.copy(target);
   try {
     source.delete();
-  } catch {
-    // Leftovers in the cache are harmless.
-  }
+  } catch {}
   return { uri: target.uri, width: result.width, height: result.height };
 }
 
-/** Deletes the stored copy of a photo that was uploaded, rejected or removed by the user. */
 export function discardLocalPhoto(photo: LocalPhoto): void {
   if (isWeb || !photo.uri.startsWith('file:')) return;
   try {
     const file = new File(photo.uri);
     if (file.exists) file.delete();
-  } catch {
-    // Nothing to clean up.
-  }
+  } catch {}
 }
 
 function photoExists(photo: LocalPhoto): boolean {
@@ -89,7 +81,6 @@ async function writeQueue(queue: QueuedPhoto[]): Promise<void> {
   await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(queue));
 }
 
-/** Throws when the device has no room for them (web storage is limited to a few MB). */
 export async function enqueuePhotos(
   userId: number | null,
   visitId: number,
@@ -107,11 +98,8 @@ export async function enqueuePhotos(
 
 export interface PhotoFlushResult {
   uploaded: number;
-  /** Refused by the server, mostly by the image moderation. */
   rejected: string[];
-  /** The stored file disappeared from the device. */
   lost: number;
-  /** Places whose gallery got new photos. */
   placeIds: number[];
 }
 
@@ -140,21 +128,18 @@ async function runFlush(userId: number | null): Promise<PhotoFlushResult> {
         done.add(entry.id);
         discardLocalPhoto(entry.photo);
       } else {
-        // Offline or a server error: the rest waits for the next attempt.
         break;
       }
     }
   }
 
   if (done.size > 0) {
-    // Re-read so photos enqueued while uploading are not overwritten.
     const latest = await readQueue();
     await writeQueue(latest.filter((q) => !done.has(q.id)));
   }
   return result;
 }
 
-// Uploads run one after another, so the same photo is never sent twice by overlapping flushes.
 let chain: Promise<unknown> = Promise.resolve();
 
 export function flushPhotoQueue(userId: number | null): Promise<PhotoFlushResult> {
@@ -166,7 +151,6 @@ export function flushPhotoQueue(userId: number | null): Promise<PhotoFlushResult
   return run;
 }
 
-/** Removes one of the user's own photos (the server checks the visit is theirs). */
 export async function deleteVisitPhoto(photoId: number): Promise<void> {
   await apiFetch(`visits/photo/${photoId}`, { method: 'DELETE' });
 }

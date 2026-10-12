@@ -1,4 +1,3 @@
-{{-- Colours and font follow the app (frontend/utils/theme.ts). Tables and inline styles keep it intact in Gmail and Outlook. --}}
 <!DOCTYPE html>
 <html lang="cs">
 <head>
@@ -8,7 +7,6 @@
     <title>Ověřovací kód</title>
 </head>
 <body style="margin:0; padding:0; background-color:#F5F7F2; font-family:Nunito, 'Segoe UI', Arial, sans-serif; color:#133F63;">
-    {{-- Inbox preview line --}}
     <div style="display:none; max-height:0; overflow:hidden; opacity:0;">
         Tvůj kód pro dokončení registrace je {{ $code }}. Platí {{ $validMinutes }} minut.
     </div>
@@ -17,7 +15,6 @@
         <tr>
             <td align="center" style="padding:32px 16px;">
                 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:480px; background-color:#ffffff; border-radius:20px; overflow:hidden; box-shadow:0 4px 14px rgba(19,63,99,0.08);">
-                    {{-- Green stripe from the logo --}}
                     <tr>
                         <td style="height:6px; background-color:#8BB53C; font-size:0; line-height:0;">&nbsp;</td>
                     </tr>

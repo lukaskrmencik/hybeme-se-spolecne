@@ -9,7 +9,6 @@ export interface LeaderboardEntry {
     name: string;
     avatar_url: string | null;
     total_points: number;
-    /** Equal points share a place (1, 1, 3). */
     rank: number;
 }
 
@@ -17,7 +16,6 @@ interface LeaderboardResponse {
     leaderboard: LeaderboardEntry[];
     current_user: LeaderboardEntry | null;
     total_users?: number;
-    /** Y-m-d, only for the weekly board. */
     week_start?: string | null;
     week_end?: string | null;
 }
@@ -36,7 +34,6 @@ export interface LeaderboardWeek {
     podium: WeekPodiumEntry[];
 }
 
-// Aggregates from the SQL query may arrive as strings depending on the DB driver.
 const normalize = (e: LeaderboardEntry): LeaderboardEntry => ({
     ...e,
     id: Number(e.id),
@@ -45,7 +42,6 @@ const normalize = (e: LeaderboardEntry): LeaderboardEntry => ({
     avatar_url: e.avatar_url ? resolveMediaUrl(e.avatar_url) : null,
 });
 
-/** Overall or this week's board; refreshed whenever the tab gets focus. */
 export function useLeaderboard(period: LeaderboardPeriod) {
     const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
     const [currentUser, setCurrentUser] = useState<LeaderboardEntry | null>(null);
@@ -62,7 +58,7 @@ export function useLeaderboard(period: LeaderboardPeriod) {
             if (pullToRefresh) setRefreshing(true);
             try {
                 const res = await apiFetch<LeaderboardResponse>(`users/leaderboard${period === 'week' ? '?period=week' : ''}`);
-                if (id !== requestId.current) return; // the other board was picked meanwhile
+                if (id !== requestId.current) return;
                 setEntries((res.leaderboard ?? []).map(normalize));
                 setCurrentUser(res.current_user ? normalize(res.current_user) : null);
                 setTotalUsers(res.total_users != null ? Number(res.total_users) : null);
@@ -80,7 +76,6 @@ export function useLeaderboard(period: LeaderboardPeriod) {
         [period]
     );
 
-    // Switching the board shows a spinner instead of the other board's numbers.
     useEffect(() => {
         setLoading(true);
         setEntries([]);
@@ -97,7 +92,6 @@ export function useLeaderboard(period: LeaderboardPeriod) {
     return { entries, currentUser, totalUsers, week, loading, refreshing, error, refresh };
 }
 
-/** Finished weeks, newest first, with their top three places. Loaded only when `enabled`. */
 export function useLeaderboardWeeks(enabled: boolean) {
     const [weeks, setWeeks] = useState<LeaderboardWeek[] | null>(null);
     const [refreshing, setRefreshing] = useState(false);

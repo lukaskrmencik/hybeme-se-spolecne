@@ -7,7 +7,6 @@ import { showToast } from '../utils/alert';
 import { colors, radius } from '../utils/theme';
 
 interface ReportDialogProps {
-  /** What is being reported; `null` keeps the dialog closed. */
   target: ReportTarget | null;
   onClose: () => void;
 }
@@ -18,7 +17,6 @@ const OPTIONS: Record<ReportType, { label: string; text: string }> = {
   name: { label: 'Nevhodné jméno', text: 'Jméno je vulgární, urážlivé nebo se za někoho vydává.' },
 };
 
-/** Lets anyone report a photo, a profile photo or a name to the admins. */
 export function ReportDialog({ target, onClose }: ReportDialogProps) {
   const types: ReportType[] =
     target?.kind === 'photo' ? ['visit_photo'] : target?.kind === 'user' ? [...(target.hasAvatar ? ['avatar' as const] : []), 'name'] : [];
@@ -29,8 +27,6 @@ export function ReportDialog({ target, onClose }: ReportDialogProps) {
   useEffect(() => {
     setType(types.length === 1 ? types[0] : null);
     setNote('');
-    // Reset whenever another thing is reported.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [target]);
 
   const send = async () => {

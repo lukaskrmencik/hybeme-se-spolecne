@@ -32,8 +32,6 @@ class AntiCheatService
 
         $totalTimeInSeconds = $lastVisitTime->diffInSeconds($visitTime);
 
-        // A place scores once per cooldown, as a regular visit or as a combination alike.
-        // Otherwise a new combination chain could collect the same places again right away.
         $cooldownResult = $this->checkPlaceCooldown($visitData, $user, $visitTime);
         if ($cooldownResult->isCheating) {
             return $cooldownResult;
@@ -46,7 +44,6 @@ class AntiCheatService
                 return $combinationResult;
             }
 
-            // A failed combination is saved as a regular visit, so it must pass the regular rules too.
             $regularResult = $this->checkRegularVisit($visitData, $user, $visitTime, $totalTimeInSeconds);
 
             return $regularResult->isCheating ? $regularResult : $combinationResult;
@@ -65,8 +62,6 @@ class AntiCheatService
                 $alreadyVisitedInThisCombination = true;
             }
 
-            // The first visit of a chain is never flagged as a combination
-            // (it may still be standalone until this new visit joins it).
             if (!$existingVisit->is_combination) {
                 break;
             }

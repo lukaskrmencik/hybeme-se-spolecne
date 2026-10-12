@@ -21,7 +21,6 @@ const FLUSH_BOOT_DELAY_MS = 2_500;
 
 interface UserStatsContextValue {
   profile: UserProfile | null;
-  /** Server visits + visits waiting in the offline queue, newest first, with combination orders. */
   visits: Visit[];
   lastVisit: Visit | null;
   totalPoints: number;
@@ -31,13 +30,11 @@ interface UserStatsContextValue {
   refreshStats: () => Promise<void>;
   addConfirmedVisit: (visit: CreatedVisit, place: Place, sport: Sport) => void;
   flushNow: () => Promise<void>;
-  /** Uploads photos of a saved visit, they wait in a queue while offline. */
   uploadVisitPhotos: (visitId: number, placeId: number, photos: LocalPhoto[]) => Promise<void>;
 }
 
 const UserStatsContext = createContext<UserStatsContextValue | undefined>(undefined);
 
-/** Visits from the offline queue carry negative client ids. */
 export const isPendingVisit = (visit: Visit): boolean => visit.id < 0;
 
 function queuedToVisit(q: QueuedVisit, userId: number): Visit | null {
@@ -58,7 +55,6 @@ function queuedToVisit(q: QueuedVisit, userId: number): Visit | null {
 
 export function UserStatsProvider({ children }: { children: React.ReactNode }) {
   const { token, userId } = useAuth();
-  // A refreshed token is the same session, so the effects below follow only signing in and out.
   const signedIn = !!token;
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [queuedVisits, setQueuedVisits] = useState<QueuedVisit[]>([]);
@@ -83,9 +79,7 @@ export function UserStatsProvider({ children }: { children: React.ReactNode }) {
     try {
       const res = await apiFetch<{ data: UserProfile }>(`users/${id}`);
       if (userIdRef.current === id) storeProfile(res.data);
-    } catch {
-      // Offline: keep showing the cached profile.
-    } finally {
+    } catch {} finally {
       setLoading(false);
     }
   }, [storeProfile]);
@@ -106,9 +100,7 @@ export function UserStatsProvider({ children }: { children: React.ReactNode }) {
         const raw = await AsyncStorage.getItem(STORAGE_KEY_USER);
         const cached: UserProfile | null = raw ? JSON.parse(raw) : null;
         if (active && cached?.id === userId) setProfile(cached);
-      } catch {
-        // Corrupted cache is simply ignored.
-      }
+      } catch {}
       if (active) await Promise.all([reloadQueue(), refreshStats()]);
     })();
 
@@ -160,7 +152,6 @@ export function UserStatsProvider({ children }: { children: React.ReactNode }) {
         'danger'
       );
     }
-    // Photos go after the visits, they need the server id of their visit.
     reportPhotos(await flushPhotoQueue(id));
   }, [refreshStats, reportPhotos]);
 

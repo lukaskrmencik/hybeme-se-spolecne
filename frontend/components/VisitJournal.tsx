@@ -14,13 +14,9 @@ import { colors, radius, shadows } from '../utils/theme';
 const THUMB = 56;
 
 interface VisitJournalProps {
-  /** Newest first. */
   visits: JournalVisit[];
-  /** Own history: photos can be added to a visit, and they are not offered for reporting. */
   own?: boolean;
-  /** Adds photos to a saved visit; resolves when they are uploaded or queued. */
   onAddPhotos?: (visit: JournalVisit) => Promise<void>;
-  /** Deletes an own photo; offered in the photo viewer. */
   onDeletePhoto?: (photoId: number, visit: JournalVisit) => Promise<void>;
   header?: React.ReactElement;
   empty?: React.ReactElement;
@@ -67,7 +63,6 @@ function Photos({
   );
 }
 
-/** Own visits and other players' profiles: combinations with their route, visits on their own, photos. */
 export function VisitJournal({ visits, own = false, onAddPhotos, onDeletePhoto, header, empty, refreshControl }: VisitJournalProps) {
   const entries = useMemo(() => groupJournal(visits), [visits]);
   const [viewer, setViewer] = useState<{ photos: PlacePhoto[]; index: number; visit: JournalVisit } | null>(null);
@@ -319,7 +314,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  // Without photos only a small link, so the history of old visits does not fill up with empty boxes.
   addLink: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingVertical: 2 },
   addPhotoText: { color: colors.primary, fontSize: 13, fontWeight: '800' },
 });

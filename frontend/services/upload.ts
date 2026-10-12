@@ -1,13 +1,6 @@
 import { Platform } from 'react-native';
 import { File } from 'expo-file-system';
 
-/**
- * Adds a local file to a multipart form.
- * The fetch of Expo SDK 57 (installed as the global fetch on phones) rejects React Native's old
- * `{ uri, name, type }` descriptor and the request then failed before it was sent, which the app
- * reported as "no internet". It accepts any part that has `bytes()`, so the file is read here.
- * The web gets a real Blob (from a data: or blob: URL, or the picked File itself).
- */
 export async function appendFile(
   form: FormData,
   field: string,

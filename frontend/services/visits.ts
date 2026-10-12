@@ -13,7 +13,6 @@ interface SubmitVisitInput {
   isCombination: boolean;
   timestamp: string;
   expectedReward: number;
-  /** Stored with a queued visit; for a saved one the caller uploads them. */
   photos?: LocalPhoto[];
 }
 
@@ -30,15 +29,8 @@ export interface CreatedVisit {
 
 type SubmitVisitResult =
   | { kind: 'saved'; visit: CreatedVisit }
-  /** `photosDropped`: the photos did not fit into the device storage (the web allows only a few MB). */
   | { kind: 'queued'; photosDropped: boolean };
 
-/**
- * Throws ApiError when the server rejects the visit. Any other failure
- * (offline, timeout, 5xx, expired session) stores the visit in the offline queue.
- * Flush the queue before calling: while older visits are still queued, the new one is
- * queued behind them, because the backend rejects visits older than the latest one.
- */
 export async function submitVisit(input: SubmitVisitInput): Promise<SubmitVisitResult> {
   const submission = toSubmission({
     place_id: input.place.id,

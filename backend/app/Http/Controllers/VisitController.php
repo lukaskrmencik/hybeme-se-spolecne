@@ -19,20 +19,14 @@ class VisitController extends Controller
 {
     use AuthorizesRequests;
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request, AntiCheatService $antiCheatService)
     {
         $this->authorize('create', Visit::class);
 
         $user = $request->user();
 
-        // Without a key (local development) the app sends the visit as plain JSON.
         $payloadKey = config('general.visitPayloadKey');
         if ($payloadKey) {
-            // Plain JSON comes from an app version before sealing. A 5xx makes that version keep the visit
-            // in its offline queue (a 4xx would throw it away), the updated app then sends it sealed.
             if (!$request->has('p')) {
                 return response()->error('Aktualizujte prosím aplikaci, návštěva zatím čeká v telefonu.', 503);
             }
@@ -56,8 +50,6 @@ class VisitController extends Controller
             return response()->error('Čas návštěvy nemůže být v budoucnosti.', 400);
         }
 
-        // Visits saved offline wait in the phone a day or two at most. An older one would let anyone
-        // write a combination after the fact, with times made up to match the speeds.
         $maxAgeHours = config('general.maxVisitAgeHours');
         if (Carbon::parse($validatedData['timestamp'])->isBefore(now()->subHours($maxAgeHours))) {
             return response()->error("Návštěva je starší než {$maxAgeHours} hodin, proto ji už nelze zapsat.", 400);
@@ -117,10 +109,6 @@ class VisitController extends Controller
         ], 201);
     }
 
-    /**
-     * All visit photos for the admin, newest first. Filters: search (author name or e-mail),
-     * place (place name), user_id, place_id, from / to (upload date, Y-m-d).
-     */
     public function photos(Request $request)
     {
         $this->authorize('viewAny', Visit::class);

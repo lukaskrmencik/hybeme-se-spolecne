@@ -6,7 +6,6 @@ import { colors, radius } from '../utils/theme';
 
 type PinTone = 'open' | 'wait' | 'done';
 
-/** Same look as the pins drawn in LeafletMapView. */
 function SamplePin({ tone, combo, label }: { tone: PinTone; combo?: boolean; label?: string }) {
   const fg = colors.white;
   return (
@@ -45,7 +44,6 @@ const ROWS: { pin: React.ReactNode; title: string; text: string }[] = [
   },
 ];
 
-/** Small card explaining the pin colours, toggled from the map toolbar. */
 export function MapLegend({ onClose }: { onClose: () => void }) {
   return (
     <View style={styles.card}>
@@ -95,7 +93,6 @@ const styles = StyleSheet.create({
     borderColor: colors.white,
     boxShadow: '0px 2px 6px rgba(19, 63, 99, 0.25)',
   },
-  // Keep in sync with the pin CSS in LeafletMapView.
   pinOpen: { backgroundColor: colors.primary },
   pinWait: { backgroundColor: colors.warn },
   pinDone: { backgroundColor: colors.muted },

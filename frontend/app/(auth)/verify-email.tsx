@@ -29,7 +29,6 @@ export default function VerifyEmailScreen() {
         return () => clearTimeout(timer);
     }, [resendIn]);
 
-    // Without an e-mail (e.g. a reloaded page) there is nothing to verify.
     useEffect(() => {
         if (!email) router.replace('/login');
     }, [email, router]);
@@ -43,7 +42,6 @@ export default function VerifyEmailScreen() {
         setErrorMsg(null);
         setLoading(true);
         try {
-            // The root layout moves to the map once the token is stored.
             await verifyEmail(email, value);
         } catch (err) {
             setErrorMsg(getErrorMessage(err, 'Ověření se nezdařilo.'));
@@ -56,7 +54,6 @@ export default function VerifyEmailScreen() {
     const onChangeCode = (text: string) => {
         const digits = text.replace(/\D/g, '').slice(0, CODE_LENGTH);
         setCode(digits);
-        // Pasted or autofilled codes go through right away.
         if (digits.length === CODE_LENGTH) void submit(digits);
     };
 

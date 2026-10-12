@@ -44,7 +44,6 @@ export default function LoginScreen() {
         setErrorMsg(null);
         setLoading(true);
         try {
-            // The root layout moves to the map once the token is stored.
             await loginWithGoogle(idToken);
         } catch (err) {
             setErrorMsg(getErrorMessage(err, 'Přihlášení přes Google se nezdařilo.'));

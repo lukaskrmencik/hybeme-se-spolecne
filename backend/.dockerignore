@@ -1,4 +1,3 @@
-# Only the app itself goes into the production image.
 .git
 .env
 .env.*

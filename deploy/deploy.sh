@@ -1,6 +1,4 @@
 #!/usr/bin/env bash
-# Deploys the current master on the server: the backend in Docker, the web as static files for nginx.
-# Run from anywhere: ./deploy/deploy.sh   (needs backend/.env.production and frontend/.env.local on the server)
 set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -18,22 +16,18 @@ cd "$REPO_DIR"
 if [[ -z "${DEPLOY_UPDATED:-}" ]]; then
     echo "==> Stahuji novou verzi"
     git pull --ff-only
-    # Bash keeps running the version of this script it started with; start again so changes to it apply now.
     DEPLOY_UPDATED=1 exec "$REPO_DIR/deploy/deploy.sh" "$@"
 fi
 
 echo "==> Backend"
-# --force-recreate: .env.production is mounted as a single file, a container would keep an edited copy's old version.
 "${COMPOSE[@]}" up -d --build --force-recreate --wait
 "${COMPOSE[@]}" exec -T app php artisan migrate --force
 "${COMPOSE[@]}" exec -T app php artisan optimize
 
 echo "==> Offline mapa"
-# Without it the app still works offline, only without a map background; a failure must not stop the deploy.
 "$REPO_DIR/deploy/offline-map.sh" || echo "Offline mapu se nepodařilo připravit, web se nasadí bez ní." >&2
 
 echo "==> Web"
-# Built in a throwaway Node container, so the server needs no Node.js. Files stay owned by this user.
 docker run --rm \
     --user "$(id -u):$(id -g)" \
     -e HOME=/tmp \

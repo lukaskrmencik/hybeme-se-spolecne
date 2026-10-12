@@ -1,14 +1,6 @@
 import { Platform } from 'react-native';
 import type { MapLibs } from '../services/offlineMapFiles';
 
-/**
- * <head> tags that load Leaflet (and the Nunito font for the pins) inside the map frames, and on the web
- * the renderer of the offline map (protomaps-leaflet) when asked for.
- * The web takes them from our own server (public/vendor, public/fonts): no request to a foreign CDN, so
- * no visitor's IP goes to unpkg / Google, and the service worker keeps them for offline use. A srcdoc
- * iframe resolves "/…" against the app's address. The native WebView has no address: it gets the copies
- * the app downloaded from our server inline (they work without signal), or the CDN until it has them.
- */
 export function mapLibsHead(withFont: boolean, withOfflineMap = false, inline: MapLibs | null = null): string {
   if (Platform.OS === 'web') {
     const font = withFont

@@ -8,7 +8,6 @@ import { LEGAL } from '../constants/legal';
 const DESCRIPTION =
   'Školní aplikace z Benátek nad Jizerou: navštěvuj zajímavá místa na Benátecku pěšky, během nebo na kole, sbírej body a poměř síly s ostatními v žebříčku. Zdarma, přímo v telefonu.';
 
-// Tells search engines what the site is: its name (shown above the result in Google) and the app itself.
 const STRUCTURED_DATA = {
   '@context': 'https://schema.org',
   '@graph': [
@@ -44,7 +43,6 @@ const STRUCTURED_DATA = {
   ],
 };
 
-/** The web shows the landing page at the root; the native app goes straight in. */
 export default function IndexScreen() {
   const { token } = useAuth();
   if (Platform.OS === 'web') {

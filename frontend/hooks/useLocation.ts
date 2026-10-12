@@ -8,19 +8,14 @@ export interface GpsPosition {
   accuracy: number | null;
 }
 
-/**
- * denied  – not allowed yet, but the app may ask again (the prompt was dismissed)
- * blocked – refused for good: the system / browser will not show the prompt again, only its settings can change it
- */
 export type LocationStatus = 'pending' | 'granted' | 'denied' | 'blocked' | 'error';
 
-/** The browser's own answer; expo-location cannot tell "dismissed" from "refused" on the web. */
 async function browserPermission(): Promise<PermissionState | null> {
   if (Platform.OS !== 'web' || typeof navigator === 'undefined' || !navigator.permissions?.query) return null;
   try {
     return (await navigator.permissions.query({ name: 'geolocation' as PermissionName })).state;
   } catch {
-    return null; // older Safari cannot query geolocation
+    return null;
   }
 }
 
@@ -30,7 +25,6 @@ export function useLocation() {
   const subscription = useRef<Location.LocationSubscription | null>(null);
   const mounted = useRef(true);
 
-  /** `ask` shows the permission prompt when it is still allowed; otherwise it only checks the current state. */
   const start = useCallback(async (ask: boolean) => {
     if (subscription.current) return;
     try {
@@ -61,7 +55,6 @@ export function useLocation() {
       if (!mounted.current) sub.remove();
       else subscription.current = sub;
     } catch {
-      // In the browser a dismissed or refused prompt ends up here; the browser says which one it was.
       const webState = await browserPermission();
       if (mounted.current) setStatus(webState === 'denied' ? 'blocked' : webState === 'prompt' ? 'denied' : 'error');
     }
@@ -71,12 +64,10 @@ export function useLocation() {
     mounted.current = true;
     void start(true);
 
-    // Back from the system settings: the permission may be allowed now.
     const appSub = AppState.addEventListener('change', (state) => {
       if (state === 'active' && !subscription.current) void start(false);
     });
 
-    // The browser reports a change made in its site settings right away.
     let webStatus: PermissionStatus | null = null;
     const onChange = () => {
       if (webStatus?.state === 'granted') void start(false);
@@ -100,7 +91,6 @@ export function useLocation() {
     };
   }, [start]);
 
-  /** "Povolit polohu": asks again when the system still allows it, otherwise re-checks the settings. */
   const retry = useCallback(() => start(true), [start]);
 
   return { position, status, retry };

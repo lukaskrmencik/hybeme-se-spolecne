@@ -10,9 +10,7 @@ export class ApiError extends Error {
     error_message: string;
     errors?: Record<string, string[]>;
     isNetworkError: boolean;
-    /** Machine-readable reason from the backend, e.g. `email_not_verified`. */
     code?: string;
-    /** The `data` part of an error response, when the backend sends one. */
     data?: any;
 
     constructor(
@@ -30,7 +28,6 @@ export class ApiError extends Error {
         this.data = extra.data;
     }
 
-    /** Server rejected the request itself (validation, anti-cheat, ...); retrying won't help. */
     get isClientError(): boolean {
         return this.status_code >= 400 && this.status_code < 500 && this.status_code !== 401;
     }
@@ -49,10 +46,6 @@ export const getBaseUrl = (): string => {
 
 const LOCAL_HOSTS = /^(https?:\/\/)(localhost|127\.0\.0\.1)(:\d+)?(?=\/)/i;
 
-/**
- * Files on the backend get absolute URLs from APP_URL. In development that is often
- * http://localhost, which a phone cannot reach, so point it at the host the API is called on.
- */
 export function resolveMediaUrl(url: string): string {
     if (!LOCAL_HOSTS.test(url)) return url;
     const origin = /^https?:\/\/[^/]+/i.exec(getBaseUrl())?.[0];
@@ -61,7 +54,6 @@ export function resolveMediaUrl(url: string): string {
 
 const sessionListeners = new Set<() => void>();
 
-/** Fires when the token is gone for good (refresh failed) so the auth state can log the user out. */
 export function onSessionExpired(fn: () => void): () => void {
     sessionListeners.add(fn);
     return () => {
@@ -71,7 +63,6 @@ export function onSessionExpired(fn: () => void): () => void {
 
 const refreshListeners = new Set<(token: string) => void>();
 
-/** Fires with the new token after a refresh, so the auth state (role, user id) follows it. */
 export function onTokenRefreshed(fn: (token: string) => void): () => void {
     refreshListeners.add(fn);
     return () => {
@@ -80,7 +71,6 @@ export function onTokenRefreshed(fn: (token: string) => void): () => void {
 }
 
 interface ApiOptions extends RequestInit {
-    /** Uploads over mobile data need longer than the default 15 s. */
     timeoutMs?: number;
 }
 
@@ -104,7 +94,6 @@ async function readJson(response: Response): Promise<any> {
     }
 }
 
-// Refreshing blacklists the old token, so parallel 401s must share one refresh call.
 let refreshInFlight: Promise<string | null> | null = null;
 
 async function refreshToken(expiredToken: string): Promise<string | null> {

@@ -5,20 +5,11 @@ namespace App\Services;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
 
-/**
- * Checks a Google ID token from the app (Google Identity Services on the web, native sign-in on Android).
- * Google's tokeninfo endpoint verifies the signature and expiry, we check that the token was issued
- * for one of our OAuth clients and that the e-mail is verified.
- */
 class GoogleTokenVerifier
 {
     private const TOKENINFO_URL = 'https://oauth2.googleapis.com/tokeninfo';
     private const ISSUERS = ['accounts.google.com', 'https://accounts.google.com'];
 
-    /**
-     * @return array{sub: string, email: string, name: ?string, picture: ?string}|null null when the token is not valid for us
-     * @throws RuntimeException when Google cannot be reached or no client id is configured
-     */
     public function verify(string $idToken): ?array
     {
         $clientIds = config('services.google.client_ids');

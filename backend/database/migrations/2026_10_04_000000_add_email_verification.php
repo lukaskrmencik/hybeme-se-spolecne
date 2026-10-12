@@ -7,16 +7,12 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
             $table->timestamp('email_verified_at')->nullable()->after('email');
         });
 
-        // Accounts from before the verification existed keep working.
         DB::table('users')->update(['email_verified_at' => now()]);
 
         Schema::create('email_verification_codes', function (Blueprint $table) {
@@ -29,9 +25,6 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('email_verification_codes');

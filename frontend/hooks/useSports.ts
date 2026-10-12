@@ -3,7 +3,6 @@ import { Sport } from '../types/sport';
 import { useCachedResource } from './useCachedResource';
 
 const CACHE_KEY = 'cache_sports_v2';
-// Always refreshed in the background (see useCachedResource); this only spaces out repeated fetches.
 const MIN_REFRESH_MS = 30 * 1000;
 const EMPTY: Sport[] = [];
 

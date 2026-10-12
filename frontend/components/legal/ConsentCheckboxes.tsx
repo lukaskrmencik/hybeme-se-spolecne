@@ -4,9 +4,7 @@ import { useRouter } from 'expo-router';
 import { colors } from '../../utils/theme';
 
 export interface Consent {
-  /** Terms of use + privacy policy. */
   terms: boolean;
-  /** 15 or older, or a parent / legal guardian agreed (čl. 8 GDPR, § 7 zákona č. 110/2019 Sb.). */
   age: boolean;
 }
 
@@ -27,7 +25,6 @@ function Box({ checked, onPress, children }: { checked: boolean; onPress: () => 
   );
 }
 
-/** The two agreements needed to use the app, with links to the full texts. */
 export function ConsentCheckboxes({
   value,
   onChange,

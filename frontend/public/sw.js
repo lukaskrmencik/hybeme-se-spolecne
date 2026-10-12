@@ -1,11 +1,5 @@
-// Service worker: keeps the app itself on the phone, so it opens without signal.
-// API calls are never touched: the app has its own offline queue for visits.
-// Mapy.com tiles are not stored (their terms); instead the OpenStreetMap map of the area (offline-map) is
-// downloaded once in the background and shown when there is no signal. Leaflet and the font come from /vendor and /fonts.
-
 const VERSION = 'v5';
 const CACHE = `hybeme-${VERSION}`;
-// Pages the installed app opens on; any of them boots the whole app.
 const SHELL = [
   '/map',
   '/login',
@@ -21,7 +15,6 @@ const SHELL = [
   '/fonts/nunito-extrabold.woff2',
   '/fonts/nunito-black.woff2',
 ];
-// Its own cache, so a new app version does not throw away 20+ MB that would have to be downloaded again.
 const MAP_CACHE = 'offline-map';
 const MAP_URL = '/offline-map/area.pmtiles';
 
@@ -30,10 +23,8 @@ self.addEventListener('install', (event) => {
     (async () => {
       const cache = await caches.open(CACHE);
       await cache.addAll(SHELL);
-      // The bundles have hashed names; take them from the page so the first offline start works too.
       const html = await (await cache.match('/map')).text();
       const assets = [...html.matchAll(/(?:src|href)="(\/_expo\/[^"]+)"/g)].map((m) => m[1]);
-      // One missing file must not stop the installation, the rest is cached on first use anyway.
       await Promise.allSettled([...new Set(assets)].map((asset) => cache.add(asset)));
       await precacheBuild();
       await self.skipWaiting();
@@ -47,17 +38,11 @@ self.addEventListener('activate', (event) => {
       const keys = await caches.keys();
       await Promise.all(keys.filter((k) => k.startsWith('hybeme-') && k !== CACHE).map((k) => caches.delete(k)));
       await self.clients.claim();
-      // A new version may come with the map's download fixed; start it now, not on the next app start.
       syncOfflineMap();
     })()
   );
 });
 
-/**
- * Each screen has its own script, loaded only when the screen is opened. The build lists all of them
- * (scripts/precache-list.cjs); the missing ones are downloaded so every screen opens offline too.
- * Runs at install and on every app start, because a deploy brings new scripts without a new service worker.
- */
 async function precacheBuild() {
   try {
     const list = await (await fetch('/precache.json', { cache: 'no-store' })).json();
@@ -67,9 +52,7 @@ async function precacheBuild() {
     const missing = [];
     for (const asset of wanted) if (!(await cache.match(asset))) missing.push(asset);
     await Promise.allSettled(missing.map((asset) => cache.add(asset)));
-  } catch {
-    // Offline, or a build without the list: the screens are cached the first time they are opened.
-  }
+  } catch {}
 }
 
 async function cacheFirst(request) {
@@ -83,12 +66,9 @@ async function cacheFirst(request) {
   return response;
 }
 
-// The offline map: downloaded when missing, again only when the server has a new one (its ETag changes).
 let mapSync = null;
 let mapBlob = null;
 
-// Every PMTiles file starts with these bytes. A missing file makes nginx answer with the landing page
-// (200, HTML), which must never be kept as the map.
 async function isMapFile(response) {
   return response.headers.get('content-type')?.startsWith('text/html') !== true &&
     (await (await response.blob()).slice(0, 7).text()) === 'PMTiles';
@@ -98,12 +78,10 @@ function syncOfflineMap() {
   if (!mapSync) {
     mapSync = (async () => {
       try {
-        // The user asked the browser to save data: 20+ MB is not worth it then.
         if (self.navigator.connection && self.navigator.connection.saveData) return;
         const cache = await caches.open(MAP_CACHE);
         const head = await fetch(MAP_URL, { method: 'HEAD', cache: 'no-store' });
         if (!head.ok || head.headers.get('content-type')?.startsWith('text/html')) {
-          // Not on the server (yet); a wrong copy from before is dropped.
           const cached = await cache.match(MAP_URL);
           if (cached && !(await isMapFile(cached))) await cache.delete(MAP_URL);
           return;
@@ -115,12 +93,9 @@ function syncOfflineMap() {
         if (!response.ok) return;
         await cache.put(MAP_URL, response);
         mapBlob = null;
-        // Checked on the stored copy, which lives on disk: no need to hold the whole file in memory.
         const stored = await cache.match(MAP_URL);
         if (!stored || !(await isMapFile(stored))) await cache.delete(MAP_URL);
-      } catch {
-        // No signal or an interrupted download; the next start tries again.
-      } finally {
+      } catch {} finally {
         mapSync = null;
       }
     })();
@@ -128,7 +103,6 @@ function syncOfflineMap() {
   return mapSync;
 }
 
-// The map reads the file in pieces (HTTP Range requests); the stored copy answers them the same way the server does.
 async function offlineMap(request) {
   const cached = await caches.match(MAP_URL, { cacheName: MAP_CACHE });
   if (!cached) return fetch(request);
@@ -156,7 +130,6 @@ self.addEventListener('message', (event) => {
   if (event.data === 'sync-offline-map') event.waitUntil(Promise.all([syncOfflineMap(), precacheBuild()]));
 });
 
-// Pages: always the newest version when online, the stored one when not.
 async function networkFirstPage(request) {
   const cache = await caches.open(CACHE);
   try {
@@ -174,7 +147,6 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(request.url);
 
   if (url.origin === self.location.origin) {
-    // The Android installer goes straight to the network, it must not end up in the cache.
     if (['/api/', '/storage/', '/download/'].some((prefix) => url.pathname.startsWith(prefix))) return;
     if (url.pathname === MAP_URL) {
       event.respondWith(offlineMap(request));

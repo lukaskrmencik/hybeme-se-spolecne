@@ -5,7 +5,6 @@ import { getBaseUrl } from '../../services/api';
 import type { GoogleSignInButtonProps } from './GoogleSignInButton';
 
 const GIS_SRC = 'https://accounts.google.com/gsi/client';
-/** Google renders its button at most 400 px wide. */
 const MAX_WIDTH = 400;
 
 interface GoogleIdentity {
@@ -37,7 +36,6 @@ function loadGis(): Promise<void> {
 
 let initialized = false;
 
-/** Takes the error the backend sent back in the URL fragment, and removes it from the address bar. */
 function takeRedirectError(): string | null {
   const params = new URLSearchParams(window.location.hash.slice(1));
   const message = params.get('google_error');
@@ -46,16 +44,9 @@ function takeRedirectError(): string | null {
   return message || 'Přihlášení přes Google se nezdařilo.';
 }
 
-/**
- * Official "Sign in with Google" button (Google Identity Services) in redirect mode: the whole page
- * goes to Google and back instead of opening a popup window. Google posts the ID token straight to
- * the backend (auth/google/redirect), which returns to the login page with our token in the URL
- * fragment; AuthContext picks it up. `onIdToken` is used by the Android button only.
- */
 export function GoogleSignInButton({ onError, disabled }: GoogleSignInButtonProps) {
   const hostRef = useRef<View>(null);
   const [width, setWidth] = useState(0);
-  // Offline (e.g. the installed app without signal) Google cannot be reached; the button just stays hidden.
   const [unavailable, setUnavailable] = useState(false);
   const onErrorRef = useRef(onError);
   onErrorRef.current = onError;
@@ -71,7 +62,6 @@ export function GoogleSignInButton({ onError, disabled }: GoogleSignInButtonProp
     loadGis()
       .then(() => {
         const id = gis();
-        // On the web the View ref is the DOM element.
         const host = hostRef.current as unknown as HTMLElement | null;
         if (cancelled || !id || !host) return;
         if (!initialized) {

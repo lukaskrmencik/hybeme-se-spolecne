@@ -18,7 +18,6 @@ const ADMIN_SECTIONS: { href: string; label: string; icon: IconName }[] = [
   { href: '/admin/reports', label: 'Nahlášení', icon: 'flag-outline' },
 ];
 
-/** Number of reported things waiting for a decision (several reports of one thing count once). */
 function useOpenReports(pathname: string): number {
   const [count, setCount] = useState(0);
   useEffect(() => {
@@ -41,7 +40,6 @@ const NAV: { href: string; label: string; icon: IconName }[] = [
   ...ADMIN_SECTIONS,
 ];
 
-/** Frame of the administration: header with the way back to the app, and the section navigation. */
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -148,7 +146,6 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   sideItem: { flexDirection: 'row', alignItems: 'center', gap: 10, height: 44, paddingHorizontal: 12, borderRadius: radius.sm },
-  // Navy with a thin green edge: calmer than a green block for a working tool.
   sideItemActive: { backgroundColor: colors.navyBg, borderLeftWidth: 3, borderLeftColor: colors.accent, paddingLeft: 9 },
   sideTextActive: { color: colors.navy },
   content: { flex: 1 },

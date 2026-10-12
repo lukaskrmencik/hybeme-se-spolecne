@@ -7,11 +7,8 @@ import { loadMapLibs, MapLibs } from '../services/offlineMapFiles';
 import { colors, radius } from '../utils/theme';
 
 interface RouteMapProps {
-  /** [lat, lng] in the order they were visited. */
   points: [number, number][];
-  /** Without a height the map fills its parent (the full-screen view). */
   height?: number;
-  /** Can be moved and zoomed; the small map in the list is only a picture. */
   interactive?: boolean;
 }
 
@@ -45,7 +42,6 @@ const buildHtml = (points: [number, number][], tiles: TileSource, libs: MapLibs 
     var P = ${JSON.stringify(points)};
     var TILES = ${JSON.stringify(tiles)};
     var INTERACTIVE = ${interactive};
-    // In the list the map is only a picture of the route: it must not catch the scrolling of the list around it.
     var map = INTERACTIVE
       ? L.map('map', { zoomControl: true, attributionControl: false })
       : L.map('map', { zoomControl: false, attributionControl: false, dragging: false, touchZoom: false,
@@ -69,9 +65,7 @@ const buildHtml = (points: [number, number][], tiles: TileSource, libs: MapLibs 
 </body>
 </html>`;
 
-/** Small, still map of a combination: the visited places numbered in order and joined by a line. */
 export function RouteMap({ points, height, interactive = false }: RouteMapProps) {
-  // Native: the map libraries downloaded to the phone, so the map also draws without signal.
   const [libs, setLibs] = useState<MapLibs | null | undefined>(Platform.OS === 'web' ? null : undefined);
   useEffect(() => {
     if (Platform.OS !== 'web') void loadMapLibs().then(setLibs);
@@ -80,7 +74,6 @@ export function RouteMap({ points, height, interactive = false }: RouteMapProps)
   const key = JSON.stringify(points);
   const html = useMemo(
     () => (libs === undefined ? '' : buildHtml(points, tileSource(), libs, interactive)),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [key, libs, interactive]
   );
 
@@ -88,7 +81,6 @@ export function RouteMap({ points, height, interactive = false }: RouteMapProps)
   return (
     <View style={[styles.wrap, height != null ? { height } : styles.fill, interactive && styles.square]}>
       {!html ? null : Platform.OS === 'web' ? (
-        // The small map takes no pointer events: the wheel and touches then scroll the list, a tap opens the big map.
         <iframe srcDoc={html} title="Mapa kombinace" style={{ width: '100%', height: '100%', border: 'none', pointerEvents: touch }} />
       ) : (
         <View style={styles.fill} pointerEvents={touch}>

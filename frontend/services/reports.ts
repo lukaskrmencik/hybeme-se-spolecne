@@ -7,7 +7,6 @@ export type ReportTarget =
   | { kind: 'photo'; photoId: number }
   | { kind: 'user'; userId: number; name: string; hasAvatar: boolean };
 
-/** Reports content to the admins. Returns false when this user already reported the same thing. */
 export async function reportContent(type: ReportType, target: ReportTarget, note: string): Promise<boolean> {
   const res = await apiFetch<{ data: { already_reported?: boolean } }>('reports', {
     method: 'POST',
@@ -20,8 +19,6 @@ export async function reportContent(type: ReportType, target: ReportTarget, note
   });
   return !res.data?.already_reported;
 }
-
-// ---- Administration --------------------------------------------------------
 
 export interface AdminReport {
   id: number;
@@ -53,7 +50,6 @@ export async function fetchReports(status: 'open' | 'resolved'): Promise<{ items
   return { items, total: res.data.total_items };
 }
 
-/** Closes the report together with every other open report about the same thing. */
 export async function resolveReport(id: number, resolution: ReportResolution): Promise<void> {
   await apiFetch(`reports/${id}/resolve`, { method: 'POST', body: JSON.stringify({ resolution }) });
 }

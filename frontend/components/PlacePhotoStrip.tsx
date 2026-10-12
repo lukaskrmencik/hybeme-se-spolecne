@@ -8,16 +8,13 @@ import { colors, radius } from '../utils/theme';
 
 const THUMB = 64;
 
-/** Photos other visitors took at the place, as one compact row of thumbnails. */
 export function PlacePhotoStrip({ placeId }: { placeId: number }) {
   const { photos } = usePlacePhotos(placeId);
   const { visits } = useUserStats();
-  // Own photos cannot be reported, so they get no report button.
   const myVisitIds = useMemo(() => new Set(visits.map((v) => v.id)), [visits]);
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   const count = photos?.length ?? 0;
 
-  // Without photos the section takes no room at all, not even while loading or offline.
   if (count === 0) return null;
 
   const body = (

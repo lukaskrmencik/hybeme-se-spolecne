@@ -3,10 +3,6 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { LandingIcon } from './LandingIcon';
 import { colors, radius } from '../../utils/theme';
 
-/**
- * The Android installer, for phones that want a real app before it is on Google Play.
- * The file is not in git: it is copied to frontend/public/download/ on the server and the deploy publishes it.
- */
 const APK_URL = '/download/hybeme-se-spolecne.apk';
 
 const STEPS = [
@@ -16,12 +12,10 @@ const STEPS = [
   'Klepni na „Instalovat“. Pokud se ozve Play Protect, zvol „Další podrobnosti“ a „Přesto nainstalovat“.',
 ];
 
-/** Size of the published installer in bytes, `null` while unknown or when there is none yet. */
 function useApk() {
   const [apk, setApk] = useState<{ size: number } | null>(null);
   useEffect(() => {
     let cancelled = false;
-    // Without the file nginx answers with the landing page, so a 200 alone does not mean it is there.
     fetch(APK_URL, { method: 'HEAD', cache: 'no-store' })
       .then((res) => {
         const type = res.headers.get('content-type') ?? '';
@@ -37,7 +31,6 @@ function useApk() {
   return apk;
 }
 
-/** Second way to get the app on Android: the installer file with a guide, until it is on Google Play. */
 export function ApkDownload({ onDesktop }: { onDesktop: boolean }) {
   const apk = useApk();
   const [open, setOpen] = useState(false);

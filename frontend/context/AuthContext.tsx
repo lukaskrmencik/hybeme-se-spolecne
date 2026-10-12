@@ -12,18 +12,14 @@ interface LoginCredentials {
 interface RegisterData extends LoginCredentials {
   name: string;
   password_confirmation: string;
-  /** Agreement to the terms and privacy policy (the backend refuses the registration without it). */
   terms: boolean;
 }
 
-/** The account exists but its e-mail is not confirmed yet; a code was sent to it. */
 interface VerificationRequired {
   email: string;
-  /** Seconds until another code can be requested. */
   resendIn: number;
 }
 
-/** Login refused because the e-mail is not verified yet (a new code was sent). */
 export function getVerificationRequired(err: unknown): VerificationRequired | null {
   if (!(err instanceof ApiError) || err.code !== 'email_not_verified' || !err.data?.email) return null;
   return { email: String(err.data.email), resendIn: Number(err.data.resend_in) || 60 };
@@ -35,12 +31,9 @@ interface AuthContextType {
   isAdmin: boolean;
   isLoading: boolean;
   login: (credentials: LoginCredentials) => Promise<void>;
-  /** Creates the account and sends a verification code; signing in follows after verifyEmail. */
   register: (data: RegisterData) => Promise<VerificationRequired>;
   verifyEmail: (email: string, code: string) => Promise<void>;
-  /** Returns seconds until the next code can be requested. */
   resendVerificationCode: (email: string) => Promise<number>;
-  /** Exchanges a Google ID token for our own token; creates the account on first sign-in. */
   loginWithGoogle: (idToken: string) => Promise<void>;
   logout: (options?: { localOnly?: boolean }) => Promise<void>;
 }
@@ -51,10 +44,6 @@ interface TokenResponse {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-/**
- * The web Google sign-in returns from Google to the login page with our token in the URL fragment
- * (see GoogleSignInButton.web). Takes it and removes it from the address bar and the history.
- */
 function takeGoogleRedirectToken(): string | null {
   if (Platform.OS !== 'web' || typeof window === 'undefined') return null;
   const params = new URLSearchParams(window.location.hash.slice(1));
@@ -64,7 +53,6 @@ function takeGoogleRedirectToken(): string | null {
   return token;
 }
 
-/** The role is in the token claims; the backend checks it again on every admin request. */
 function isAdminToken(token: string | null): boolean {
   if (!token) return false;
   try {
@@ -153,9 +141,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (!options?.localOnly) {
       try {
         await apiFetch('auth/logout', { method: 'POST' });
-      } catch {
-        // Logging out locally must work offline too; the token simply expires on its own.
-      }
+      } catch {}
     }
     await removeToken();
     setToken(null);

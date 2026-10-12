@@ -2,15 +2,10 @@
 
 namespace App\Services;
 
-/**
- * Profile photos are shown at most about 100 px big, but the leaderboard loads dozens of them at once.
- * The app shrinks them before uploading; this also covers older app versions and photos uploaded before that.
- */
 class AvatarImage
 {
     public const MAX_SIDE = 512;
 
-    /** Shrinks the file in place when it is bigger than MAX_SIDE. Returns whether it was changed. */
     public static function shrink(string $path, int $maxSide = self::MAX_SIDE): bool
     {
         if (!function_exists('imagecreatefromstring') || !is_file($path)) {
@@ -48,7 +43,6 @@ class AvatarImage
         return $saved;
     }
 
-    /** GD drops the EXIF data, so a phone photo stored sideways with a rotation flag must be turned now. */
     private static function applyExifOrientation(\GdImage $image, string $path): \GdImage
     {
         if (!function_exists('exif_read_data')) {

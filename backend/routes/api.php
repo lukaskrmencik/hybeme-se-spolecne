@@ -8,7 +8,6 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\VisitController;
 use Illuminate\Support\Facades\Route;
 
-// Public routes
 Route::group(['prefix' => 'auth', 'middleware' => 'throttle:20,1'], function () {
     Route::post('login', [AuthController::class, 'login']);
     Route::post('register', [AuthController::class, 'register']);
@@ -22,7 +21,6 @@ Route::group(['prefix' => 'auth', 'middleware' => 'throttle:20,1'], function () 
 Route::get('users/leaderboard', [UserController::class, 'leaderboard']);
 Route::get('users/leaderboard/weeks', [UserController::class, 'leaderboardWeeks']);
 
-// Protected routes
 Route::group(['middleware' => 'auth:api'], function () {
     Route::post('auth/logout', [AuthController::class, 'logout']);
 
@@ -59,11 +57,9 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::delete('/photo/{visitsPhoto}', [VisitController::class, 'deletePhoto']);
     });
 
-    // Reporting inappropriate content; listing and resolving is for admins.
     Route::post('reports', [ReportController::class, 'store'])->middleware('throttle:10,1');
     Route::get('reports', [ReportController::class, 'index']);
     Route::post('reports/{report}/resolve', [ReportController::class, 'resolve']);
 
-    // Admin: every visit photo with filters (deleting is visits/photo/{id}).
     Route::get('photos', [VisitController::class, 'photos']);
 });

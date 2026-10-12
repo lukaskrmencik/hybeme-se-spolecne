@@ -6,9 +6,6 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-/**
- * A user's report of inappropriate content: a visit photo, a profile photo or a name.
- */
 class Report extends Model
 {
     public const TYPES = ['visit_photo', 'avatar', 'name'];
@@ -60,7 +57,6 @@ class Report extends Model
         return $query->where('status', 'open');
     }
 
-    /** Reports about the same thing: the same photo, or the same user's avatar / name. */
     public function scopeSameTarget(Builder $query, string $type, int $userId, ?int $photoId): Builder
     {
         return $query->where('type', $type)

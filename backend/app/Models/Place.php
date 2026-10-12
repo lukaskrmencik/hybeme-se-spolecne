@@ -12,11 +12,6 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class Place extends Model
 {
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array
-     */
     protected $fillable = [
         'name',
         'coordinates',
@@ -25,11 +20,6 @@ class Place extends Model
         'is_active',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
@@ -57,7 +47,6 @@ class Place extends Model
         return $this->hasManyThrough(VisitsPhoto::class, Visit::class);
     }
 
-    /** Photos added by an admin, oldest first (the admin decides the order by adding them). */
     public function adminPhotos(): HasMany
     {
         return $this->hasMany(PlacePhoto::class)->orderBy('id');

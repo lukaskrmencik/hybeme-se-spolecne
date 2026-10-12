@@ -9,10 +9,6 @@ import { Consent, ConsentCheckboxes, consentComplete } from './ConsentCheckboxes
 
 const logo = require('../../assets/images/logos/logo_hss_mark.png');
 
-/**
- * Accounts that have not agreed to the current terms (older accounts, new Google sign-ins, or after the
- * terms changed) see this instead of the app until they agree.
- */
 export function TermsGate({ children }: { children: React.ReactNode }) {
   const { profile, refreshStats } = useUserStats();
   const { logout } = useAuth();
@@ -20,7 +16,6 @@ export function TermsGate({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  // Without a profile (still loading, or offline without a stored copy) there is nothing to decide yet.
   if (!profile || profile.terms_version === LEGAL.termsVersion) return <>{children}</>;
 
   const accept = async () => {

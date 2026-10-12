@@ -18,7 +18,6 @@ const TABS: { name: string; title: string; icon: IconName; iconActive: IconName 
 
 const logo = require('../../../assets/images/logos/logo_hss_mark.png');
 
-// Tab bar from the mock: 1 px border, 8 px above, a 48 px item, 14 px below.
 const TAB_ITEM_HEIGHT = 48;
 const TAB_PAD_TOP = 8;
 const TAB_PAD_BOTTOM = 14;
@@ -42,7 +41,6 @@ function PointsBadge() {
     );
 }
 
-/** Shared header of the tabs. The leaderboard has its own hero header instead. */
 function AppBar({ title }: { title: string }) {
     const insets = useSafeAreaInsets();
     return (

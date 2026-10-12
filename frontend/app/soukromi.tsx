@@ -2,9 +2,6 @@ import { LegalPage, LegalSection } from '../components/legal/LegalPage';
 import { LEGAL } from '../constants/legal';
 import { Seo } from '../components/Seo';
 
-// Keep in sync with what the app really does. Checked in the code (October 2026): the GPS position never
-// leaves the phone, a visit sends only the place, sport and time; photos are moderated on our own server.
-
 const SUMMARY = [
   'Ukládáme jen to, co aplikace potřebuje: účet, návštěvy, body a fotky, které přidáš.',
   'Tvoje GPS poloha zůstává v telefonu. Na server posíláme jen to, které místo jsi navštívil(a) a kdy.',

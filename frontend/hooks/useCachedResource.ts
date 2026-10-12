@@ -8,14 +8,8 @@ interface CacheEntry<T> {
   data: T;
 }
 
-/** While the app is open, data is refreshed this often even without leaving it. */
 const BACKGROUND_REFRESH_MS = 5 * 60 * 1000;
 
-/**
- * Stale-while-revalidate: shows the stored copy at once (fast start, works offline) and always
- * fetches a fresh one in the background, on start and whenever the app comes back to the foreground.
- * `minIntervalMs` only stops repeated fetches within a few seconds of each other.
- */
 export function useCachedResource<T>(
   cacheKey: string,
   minIntervalMs: number,
@@ -47,9 +41,7 @@ export function useCachedResource<T>(
               lastFetchRef.current = cached.savedAt;
               setLoading(false);
             }
-          } catch {
-            // A broken cache is simply ignored.
-          }
+          } catch {}
         }
 
         if (!force && Date.now() - lastFetchRef.current < minIntervalMs) return;
@@ -61,7 +53,6 @@ export function useCachedResource<T>(
         setError(null);
         AsyncStorage.setItem(cacheKey, JSON.stringify({ savedAt: Date.now(), data: fresh })).catch(() => {});
       } catch (err) {
-        // Offline: keep showing the stored copy.
         if (!hasDataRef.current) setError(getErrorMessage(err, errorMessage));
       } finally {
         inFlightRef.current = false;

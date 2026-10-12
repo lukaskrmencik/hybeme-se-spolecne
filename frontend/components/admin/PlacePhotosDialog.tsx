@@ -13,7 +13,6 @@ import { colors } from '../../utils/theme';
 const HELP =
   'Fotky se v aplikaci zobrazí u místa jako první, před fotkami od návštěvníků. Hodí se hlavně pro místa, která ještě nikdo nevyfotil.';
 
-/** Photos of a place added by the admin, without visiting it. */
 export function PlacePhotosDialog({ place, onClose, onChanged }: { place: Place | null; onClose: () => void; onChanged: (count: number) => void }) {
   const [photos, setPhotos] = useState<PlaceAdminPhoto[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -55,7 +54,6 @@ export function PlacePhotosDialog({ place, onClose, onChanged }: { place: Place 
     setUploading(result.assets.length);
     for (const asset of result.assets) {
       try {
-        // Shrunk like visitors' photos: a photo from a camera would be several MB.
         const uploaded = await uploadPlaceAdminPhoto(placeId, await preparePhoto(asset));
         list = [...list, uploaded];
         update(list);

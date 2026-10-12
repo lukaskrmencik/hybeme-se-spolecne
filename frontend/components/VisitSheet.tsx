@@ -14,44 +14,34 @@ import { LocalPhoto } from '../types/visit';
 
 interface BlockInfo {
   text: string;
-  /** `info` is a temporary or neutral reason (too far, wait a bit), `danger` is a hard no. */
   tone: 'info' | 'danger';
 }
 
 interface VisitSheetProps {
-  /** `card` follows a tapped pin and can be closed, `cta` is only the big button for a place in range. */
   mode: 'card' | 'cta';
   place: Place | null;
   distance: number | null;
   sport: Sport | null;
   sports: Sport[];
   onSelectSport: (id: number) => void;
-  /** Shown under the sport picker when the combination needs a different sport. */
   sportHint: string | null;
   multiplier: number;
   hasLastVisit: boolean;
-  /** The switch can be used: the combination is valid now, or only needs time (saving then waits). */
   comboAvailable: boolean;
-  /** Why the switch is disabled. */
   comboReason: string | null;
   isCombination: boolean;
   onToggleCombination: (value: boolean) => void;
   allowed: boolean;
-  /** The user is close enough to visit the place; otherwise the card offers the way there instead. */
   inRange: boolean;
   blocked: BlockInfo | null;
-  /** Points for the current choice, they follow the switch and the sport live. */
   reward: number;
   comboReward: number;
   isSaving: boolean;
   onSave: () => void;
   onClose: () => void;
-  /** Opens the route to the place in Mapy.com. */
   onNavigate: () => void;
-  /** Photos the user attaches to the visit being saved. */
   photos: LocalPhoto[];
   onPhotosChange: (photos: LocalPhoto[]) => void;
-  /** Room left on the screen above the tab bar; the card scrolls inside it and keeps the button visible. */
   maxHeight?: number;
 }
 
@@ -139,7 +129,6 @@ function SaveButton({
   );
 }
 
-/** Instead of a greyed-out „Jsem tu!“ while the user is still away: the route to the place in Mapy.com. */
 function NavigateButton({ onNavigate, routeType }: { onNavigate: () => void; routeType?: string }) {
   return (
     <TouchableOpacity
@@ -159,7 +148,6 @@ function NavigateButton({ onNavigate, routeType }: { onNavigate: () => void; rou
   );
 }
 
-/** The sport is picked right where the visit is saved, so a wrong one is hard to miss. */
 function SportPicker({ sport, sports, onSelectSport, sportHint }: Pick<VisitSheetProps, 'sport' | 'sports' | 'onSelectSport' | 'sportHint'>) {
   if (sports.length === 0) return null;
   return (
@@ -193,7 +181,6 @@ function BlockNote({ blocked }: { blocked: BlockInfo }) {
   );
 }
 
-/** Bottom area of the map: the card for a tapped pin, or the big „Jsem tu!“ button for a place in range. */
 export function VisitSheet({
   mode,
   place,
@@ -392,7 +379,6 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   navigateButton: { backgroundColor: colors.mapyCom, boxShadow: '0px 6px 16px rgba(30, 174, 0, 0.3)' },
-  // A white ring keeps the green symbol visible on the green button.
   navigateLogo: { borderRadius: 999, borderWidth: 2, borderColor: colors.white },
   navigateMode: { color: 'rgba(255,255,255,0.85)', fontSize: 13, fontWeight: '800', flexShrink: 1 },
   tagNavyText: { color: colors.navy, fontSize: 12, fontWeight: '800' },

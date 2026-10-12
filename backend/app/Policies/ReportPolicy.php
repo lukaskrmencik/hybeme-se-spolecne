@@ -7,7 +7,6 @@ use App\Models\User;
 
 class ReportPolicy
 {
-    /** Any signed-in user may report content. */
     public function create(User $user): bool
     {
         return true;

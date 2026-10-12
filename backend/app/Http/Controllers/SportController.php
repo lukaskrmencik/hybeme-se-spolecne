@@ -11,9 +11,6 @@ class SportController extends Controller
 {
     use AuthorizesRequests;
 
-    /**
-     * Display a listing of the resource.
-     */
     public function index(Request $request)
     {
         $this->authorize('viewAny', Sport::class);
@@ -31,9 +28,6 @@ class SportController extends Controller
         return response()->success($sports);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
         $this->authorize('create', Sport::class);
@@ -70,9 +64,6 @@ class SportController extends Controller
         ], 201);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, Sport $sport)
     {
         $this->authorize('update', $sport);

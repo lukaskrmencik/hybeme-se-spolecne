@@ -6,9 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Photos of a place added by an admin, so a place has pictures before anyone has visited it.
-     */
     public function up(): void
     {
         Schema::create('place_photos', function (Blueprint $table) {
@@ -19,9 +16,6 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('place_photos');

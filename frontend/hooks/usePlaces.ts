@@ -3,7 +3,6 @@ import { Place, PlacesApiResponse } from '../types/place';
 import { useCachedResource } from './useCachedResource';
 
 const CACHE_KEY = 'cache_places_v2';
-// Always refreshed in the background (see useCachedResource); this only spaces out repeated fetches.
 const MIN_REFRESH_MS = 30 * 1000;
 const PER_PAGE = 100;
 const MAX_PAGES = 50;

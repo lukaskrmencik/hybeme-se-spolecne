@@ -7,17 +7,11 @@ export interface VisitEligibility {
   allowed: boolean;
   reason: string | null;
   kind: 'combination_repeat' | 'cooldown' | 'min_interval' | null;
-  /** Minutes until the block lifts, when it is temporary. */
   waitMinutes?: number;
 }
 
 export const ALLOWED: VisitEligibility = { allowed: true, reason: null, kind: null };
 
-/**
- * Mirrors User::visitsCombinations() on the backend: walks visits oldest-first and assigns
- * combination_order (0 = start of a chain, 1.. = combination steps, null = standalone visit).
- * Returns visits sorted newest-first.
- */
 export function withCombinationOrders(visits: Visit[]): Visit[] {
   const ascending = [...visits].sort((a, b) => parseVisitTime(a.timestamp) - parseVisitTime(b.timestamp));
   let order: number | null = null;
@@ -41,12 +35,6 @@ export function withCombinationOrders(visits: Visit[]): Visit[] {
   return result.reverse();
 }
 
-/**
- * `visits` must be sorted newest-first (see withCombinationOrders). Rules mirror AntiCheatService:
- * 1. A place scores once per cooldown (72 h), as a single visit or as a combination.
- * 2. A combination cannot return to a place already in the current chain.
- * 3. Single visits need a pause after the previous visit; a combination is checked by speed instead.
- */
 export function checkVisitEligibility(
   place: Place,
   visits: Visit[],

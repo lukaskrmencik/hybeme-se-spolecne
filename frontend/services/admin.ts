@@ -4,7 +4,6 @@ import { Place, PlacesApiResponse } from '../types/place';
 import { LocalPhoto } from '../types/visit';
 import { Sport } from '../types/sport';
 
-/** Paged list as the backend returns it (response()->pagination). */
 interface Page<T> {
   page: number;
   totalPages: number;
@@ -30,10 +29,6 @@ function query(params: Record<string, string | number | null | undefined>): stri
   return parts.length ? `?${parts.join('&')}` : '';
 }
 
-/**
- * Turns a 422 from Laravel into a sentence for a non-technical admin.
- * `labels` names the fields as the form shows them.
- */
 export function describeValidationError(err: unknown, labels: Record<string, string>, fallback: string): string {
   if (!(err instanceof ApiError)) return err instanceof Error ? err.message : fallback;
   if (!err.errors) return err.error_message || fallback;
@@ -46,9 +41,6 @@ export function describeValidationError(err: unknown, labels: Record<string, str
   return lines.join('\n') || fallback;
 }
 
-// ---- Places -------------------------------------------------------------
-
-/** Active and inactive places, all pages. */
 export async function fetchAllPlaces(): Promise<Place[]> {
   const all: Place[] = [];
   for (let page = 1; page <= 50; page++) {
@@ -66,14 +58,12 @@ interface NewPlace {
   lng: number;
 }
 
-/** Returns the id of the new place. */
 export async function createPlace(place: NewPlace): Promise<number> {
   const res = await apiFetch<{ data: { id: number } }>('places', {
     method: 'POST',
     body: JSON.stringify({
       name: place.name,
       default_reward: place.defaultReward,
-      // GeoJSON order is [longitude, latitude].
       coordinates: { type: 'Point', coordinates: [place.lng, place.lat] },
     }),
   });
@@ -89,7 +79,6 @@ export interface PlaceAdminPhoto {
   photo_url: string;
 }
 
-/** Photos of the place added in the administration (visitors' photos are under Fotografie). */
 export async function fetchPlaceAdminPhotos(placeId: number): Promise<PlaceAdminPhoto[]> {
   const res = await apiFetch<{ data: { admin_photos?: PlaceAdminPhoto[] } }>(`places/${placeId}`);
   return (res.data.admin_photos ?? []).map((p) => ({ ...p, photo_url: resolveMediaUrl(p.photo_url) }));
@@ -105,8 +94,6 @@ export async function uploadPlaceAdminPhoto(placeId: number, photo: LocalPhoto):
 export async function deletePlaceAdminPhoto(photoId: number): Promise<void> {
   await apiFetch(`places/photos/${photoId}`, { method: 'DELETE' });
 }
-
-// ---- Sports -------------------------------------------------------------
 
 export async function fetchAllSports(): Promise<Sport[]> {
   const res = await apiFetch<{ data: Sport[] }>('sports?only_active=0');
@@ -129,7 +116,6 @@ export async function createSport(sport: NewSport): Promise<void> {
   await apiFetch('sports', { method: 'POST', body: JSON.stringify(sport) });
 }
 
-/** How the navigation to a place plans the route for this sport. Does not affect points or history. */
 export async function setSportRouteType(id: number, routeType: string): Promise<void> {
   await apiFetch(`sports/${id}`, { method: 'PATCH', body: JSON.stringify({ mapy_route_type: routeType }) });
 }
@@ -137,8 +123,6 @@ export async function setSportRouteType(id: number, routeType: string): Promise<
 export async function setSportActive(id: number, active: boolean): Promise<void> {
   await apiFetch(`sports/${id}`, { method: 'PATCH', body: JSON.stringify({ is_active: active }) });
 }
-
-// ---- Photos -------------------------------------------------------------
 
 export interface AdminPhoto {
   id: number;
@@ -155,11 +139,8 @@ export interface AdminPhoto {
 }
 
 interface PhotoFilters {
-  /** Author name or e-mail. */
   search?: string;
-  /** Part of the place name. */
   place?: string;
-  /** Y-m-d */
   from?: string | null;
 }
 
@@ -173,8 +154,6 @@ export async function fetchPhotos(page: number, filters: PhotoFilters, perPage =
 export async function deletePhoto(id: number): Promise<void> {
   await apiFetch(`visits/photo/${id}`, { method: 'DELETE' });
 }
-
-// ---- Users --------------------------------------------------------------
 
 export interface AdminUser {
   id: number;
@@ -201,7 +180,6 @@ export async function fetchUsers(page: number, filters: UserFilters, perPage = 2
   return toPage(res, (u) => ({ ...u, avatar_url: u.avatar_url ? resolveMediaUrl(u.avatar_url) : null }));
 }
 
-/** The user gets (or loses) the administration; their own role cannot be changed. */
 export async function setUserRole(id: number, role: 'user' | 'admin'): Promise<void> {
   await apiFetch(`users/${id}/role`, { method: 'PATCH', body: JSON.stringify({ role }) });
 }

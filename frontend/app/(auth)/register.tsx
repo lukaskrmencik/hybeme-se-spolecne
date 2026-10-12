@@ -10,7 +10,6 @@ import { Consent, ConsentCheckboxes, consentComplete } from '../../components/le
 type Field = 'name' | 'email' | 'password' | 'password_confirmation';
 type FieldErrors = Partial<Record<Field, string>>;
 
-/** Mirrors the backend rule Password::min(8)->letters()->mixedCase()->numbers(). */
 function validate(name: string, email: string, password: string, confirmation: string): FieldErrors {
     const errors: FieldErrors = {};
     if (!name.trim()) errors.name = 'Vyplň jméno.';
@@ -77,7 +76,6 @@ export default function RegisterScreen() {
         setErrorMsg(null);
         setLoading(true);
         try {
-            // The root layout moves to the map once the token is stored.
             await loginWithGoogle(idToken);
         } catch (err) {
             setErrorMsg(getErrorMessage(err, 'Přihlášení přes Google se nezdařilo.'));

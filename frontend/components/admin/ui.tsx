@@ -19,7 +19,6 @@ export { InfoTip };
 
 type IconName = ComponentProps<typeof Ionicons>['name'];
 
-/** One admin screen: title, a sentence of what it is for, optional buttons on the right, content. */
 export function AdminPage({
   title,
   description,
@@ -96,7 +95,6 @@ export function Button({
   );
 }
 
-/** Heading of a group of fields: an icon, the name and optionally an explanation behind the „i“. */
 export function FormSection({ icon, title, help, children }: { icon: IconName; title: string; help?: string; children: React.ReactNode }) {
   return (
     <View style={styles.formSection}>
@@ -110,7 +108,6 @@ export function FormSection({ icon, title, help, children }: { icon: IconName; t
   );
 }
 
-/** Text field with a label, an optional explanation behind the „i“ and an error. */
 export function Field({
   label,
   help,
@@ -126,7 +123,6 @@ export function Field({
   help?: string;
   error?: string | null;
   suffix?: string;
-  /** Shares a row with other fields (inside adminStyles.wrapRow) and wraps below them on a phone. */
   half?: boolean;
 }) {
   const [focused, setFocused] = useState(false);
@@ -180,7 +176,6 @@ export function SearchBox({ value, onChange, placeholder }: { value: string; onC
   );
 }
 
-/** Row of pill buttons, exactly one selected. */
 export function Segmented<T extends string | number | null>({
   options,
   value,
@@ -275,10 +270,6 @@ interface ConfirmOptions {
   danger?: boolean;
 }
 
-/**
- * In-app confirmation dialog (the browser's confirm() is ugly and blocks the page).
- * `const [dialog, confirm] = useConfirm();` render `dialog`, then `if (await confirm({...}))`.
- */
 export function useConfirm(): [React.ReactNode, (options: ConfirmOptions) => Promise<boolean>] {
   const [options, setOptions] = useState<ConfirmOptions | null>(null);
   const resolver = useRef<((ok: boolean) => void) | null>(null);
@@ -317,13 +308,11 @@ export function useConfirm(): [React.ReactNode, (options: ConfirmOptions) => Pro
 export interface Column<T> {
   key: string;
   title: string;
-  /** Share of the row width on a computer. */
   flex?: number;
   align?: 'left' | 'right';
   render: (row: T) => React.ReactNode;
 }
 
-/** Table with a header on a computer; on a phone every row becomes a small card with labels. */
 export function DataTable<T>({
   columns,
   rows,
@@ -335,7 +324,6 @@ export function DataTable<T>({
   rows: T[];
   rowKey: (row: T) => string | number;
   actions?: (row: T) => React.ReactNode;
-  /** Width of the buttons column on a computer, wide enough to keep its buttons on one line. */
   actionsWidth?: number;
 }) {
   const { width } = useWindowDimensions();
@@ -403,7 +391,6 @@ export function StatCard({ label, value, note, icon }: { label: string; value: s
 export const adminStyles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   wrapRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 },
-  /** Fields side by side, aligned at the top (an error under one must not shift the others). */
   formRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-start', gap: 12 },
   muted: { color: colors.muted, fontSize: 13, fontWeight: '600' },
   strong: { color: colors.navy, fontSize: 15, fontWeight: '800' },

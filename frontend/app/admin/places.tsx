@@ -30,7 +30,6 @@ import { colors } from '../../utils/theme';
 
 type StatusFilter = 'all' | 'active' | 'inactive';
 
-/** "50.2931, 14.8291", "50.2931N, 14.8291E" or "50,2931; 14,8291" -> lat/lng. */
 function parseCoordinates(text: string): LatLng | null {
   const clean = text.replace(/[°NEne]/g, ' ').trim();
   const dot = /^(-?\d+(?:\.\d+)?)\s*[,;\s]\s*(-?\d+(?:\.\d+)?)$/.exec(clean);
@@ -279,7 +278,6 @@ export default function AdminPlaces() {
           onCancel={() => setAdding(false)}
           onCreated={async (id) => {
             setAdding(false);
-            // Straight on to the photos, so a new place does not stay without a picture.
             const list = await load();
             setPhotosPlace(list?.find((p) => p.id === id) ?? null);
           }}

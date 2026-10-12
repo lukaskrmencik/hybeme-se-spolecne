@@ -17,14 +17,11 @@ export interface LatLng {
 interface LocationPickerProps {
   value: LatLng | null;
   onChange: (value: LatLng) => void;
-  /** Places that already exist, shown as small dots so the same place is not added twice. */
   existing: { name: string; lat: number; lng: number; active: boolean }[];
 }
 
 interface PickerMapProps extends LocationPickerProps {
-  /** Fixed height; without it the map fills its parent. */
   height?: number;
-  /** Hint in the corner of the map; without it the map is only a preview (no zoom buttons either). */
   hint?: string;
 }
 
@@ -111,7 +108,6 @@ const buildHtml = (tiles: TileSource, lat: number, lng: number, colorsJson: stri
 </body>
 </html>`;
 
-/** Map where the admin clicks the spot of a new place; the pin can be dragged to adjust it. */
 function PickerMap({ value, onChange, existing, height, hint }: PickerMapProps) {
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const webViewRef = useRef<WebView | null>(null);
@@ -127,8 +123,6 @@ function PickerMap({ value, onChange, existing, height, hint }: PickerMapProps) 
         JSON.stringify({ primary: colors.primary, inactive: colors.inactive }),
         hint
       ),
-    // The map is built once; later changes go through messages.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     []
   );
 
@@ -158,7 +152,6 @@ function PickerMap({ value, onChange, existing, height, hint }: PickerMapProps) 
     [onChange, send]
   );
 
-  // A value typed in by hand moves the pin and the map; a click in the map only moves the pin.
   useEffect(() => {
     const fromMap = lastSent.current && value && lastSent.current.lat === value.lat && lastSent.current.lng === value.lng;
     send({ type: 'value', value, recenter: !fromMap });
@@ -189,9 +182,7 @@ function PickerMap({ value, onChange, existing, height, hint }: PickerMapProps) 
           onMessage={(e) => {
             try {
               handle(JSON.parse(e.nativeEvent.data));
-            } catch {
-              // ignore foreign messages
-            }
+            } catch {}
           }}
           style={styles.wrap}
         />
@@ -200,7 +191,6 @@ function PickerMap({ value, onChange, existing, height, hint }: PickerMapProps) 
   );
 }
 
-/** Below this width the form scrolls under the finger, so the map opens full screen instead of being used inline. */
 const COMPACT_WIDTH = 700;
 
 export function LocationPicker(props: LocationPickerProps) {
@@ -214,7 +204,6 @@ export function LocationPicker(props: LocationPickerProps) {
     <>
       <View style={styles.preview}>
         <PickerMap {...props} height={190} />
-        {/* Covers the map: in the scrolling form a drag would move the map and the page at once. */}
         <Pressable
           style={[StyleSheet.absoluteFill, styles.previewCover]}
           onPress={() => setOpen(true)}

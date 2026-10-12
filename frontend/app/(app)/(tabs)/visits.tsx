@@ -63,7 +63,6 @@ export default function VisitsScreen() {
     const deletePhoto = useCallback(
         async (photoId: number, visit: JournalVisit) => {
             await deleteVisitPhoto(photoId);
-            // The place's gallery on the map must not keep showing it.
             invalidatePlacePhotos(visit.placeId);
             await refreshStats();
         },
@@ -105,7 +104,6 @@ export default function VisitsScreen() {
                 </View>
             </View>
 
-            {/* Only when something waits: an empty queue is nothing the user needs to know about. */}
             {pendingCount > 0 && (
                 <View style={styles.syncCard}>
                     <View style={styles.syncIcon}>

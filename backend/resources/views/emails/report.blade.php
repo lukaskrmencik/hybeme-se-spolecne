@@ -1,4 +1,3 @@
-{{-- Same look as the verification e-mail (colours from frontend/utils/theme.ts). --}}
 <!DOCTYPE html>
 <html lang="cs">
 <head>

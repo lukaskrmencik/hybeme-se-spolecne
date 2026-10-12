@@ -19,7 +19,6 @@ function fontFor(style: unknown): string {
   return FAMILIES[String(flat.fontWeight ?? '400')] ?? 'Nunito-Regular';
 }
 
-/** Routes every Text and TextInput through Nunito, picking the file by fontWeight. */
 function patch(Component: { render?: (...args: unknown[]) => React.ReactElement }) {
   const original = Component.render;
   if (!original || (original as { patched?: boolean }).patched) return;
@@ -36,8 +35,6 @@ function patch(Component: { render?: (...args: unknown[]) => React.ReactElement 
   Component.render = render;
 }
 
-// react-native-web rejects the style rewrite (CSSStyleDeclaration). On web the font
-// comes from the stylesheet in +html.tsx; native needs an explicit family per text node.
 if (Platform.OS !== 'web') {
   patch(Text as never);
   patch(TextInput as never);
@@ -51,7 +48,6 @@ const files = {
   black: require('../assets/fonts/Nunito-Black.ttf'),
 };
 
-// The web gets Nunito from the stylesheet in app/+html.tsx (smaller WOFF2 files, there before any JavaScript).
 export const nunitoFonts: Record<string, number> =
   Platform.OS === 'web'
     ? {}

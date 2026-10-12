@@ -9,17 +9,14 @@ import { mapLibsHead } from '../utils/mapLibs';
 import { OFFLINE_MAP, OfflineMap } from '../constants/offlineMap';
 import { MapLibs, hasOfflineMapFile, loadMapLibs, readOfflineMapBytes } from '../services/offlineMapFiles';
 
-/** Where the offline map comes from: a URL (web, the service worker answers it) or the app over the bridge (native). */
 type OfflineSource = OfflineMap & { bridge: boolean };
 
-/** Same meaning as PlaceState: green = points now, white with a clock = points later, grey tick = done. */
 export type PlaceTone = 'open' | 'wait' | 'done';
 
 export interface PlaceStatus {
   inactive: boolean;
   reason: string | null;
   reward: number | null;
-  /** The reward is a combination reward (possibly one that only needs time). */
   combo?: boolean;
   tone?: PlaceTone;
 }
@@ -31,7 +28,6 @@ export interface ActivePlace {
 
 export interface MapSelection {
   id: number | null;
-  /** Zoom to the place, used when it was picked from search rather than tapped on the map. */
   focus?: boolean;
 }
 
@@ -57,11 +53,9 @@ type MapMessage =
   | { type: 'center' };
 
 export interface TileSource {
-  /** `{r}` becomes `@2x` on high-density screens, where Mapy.com serves sharper tiles. */
   url: string;
   maxZoom: number;
   attribution: string;
-  /** Mapy.com requires its logo, linking to mapy.com, on top of the map. */
   mapyLogo: boolean;
 }
 
@@ -109,7 +103,6 @@ const buildHtml = (
     .place-marker { background: transparent; border: none; }
     .pin { position:absolute; left:0; top:0; transform: translate(-50%, -100%); cursor:pointer; }
     .pin-in { display:flex; flex-direction:column; align-items:center; transform-origin: 50% 100%; transition: transform .15s ease; }
-    /* App theme colours: green = now, warn (also used for things waiting to be sent) = soon, muted = done. */
     .pill { position:relative; z-index:1; display:flex; align-items:center; gap:4px; height:28px; padding:0 11px; border-radius:14px;
       border:2.5px solid #fff; box-shadow:0 3px 8px rgba(10,30,50,.45); font-weight:900; font-size:13px; line-height:1; white-space:nowrap; }
     .tail { position:relative; z-index:0; width:10px; height:10px; margin-top:-7px; transform:rotate(45deg);
@@ -119,7 +112,6 @@ const buildHtml = (
     .t-done .pill, .t-done .tail { background:${colors.muted}; color:${colors.white}; }
     .t-done .pill { padding:0 8px; }
     .pill svg { flex-shrink:0; }
-    /* The selected pin keeps its colour and gets a navy ring, which contrasts with all three. */
     .pin.sel .pin-in { transform: scale(1.22); }
     .pin.sel .pill { box-shadow:0 0 0 3px ${colors.navy}, 0 4px 12px rgba(10,30,50,.5); }
     .pin.sel .tail { box-shadow:2px 2px 0 1.5px ${colors.navy}; }
@@ -167,9 +159,6 @@ const buildHtml = (
       mapyLogo = new MapyLogo();
     }
 
-    // Without signal the Mapy.com tiles fail; the map then switches to the stored OpenStreetMap map of
-    // the area and goes back once the tiles load again.
-    // In the app the file is on the phone: the page asks for its pieces and the app answers via __mapBytes.
     var pendingBytes = {}, nextBytesId = 1;
     window.__mapBytes = function (id, base64) {
       var request = pendingBytes[id];
@@ -220,7 +209,6 @@ const buildHtml = (
       failedTiles++;
       if (!navigator.onLine || failedTiles >= 3) showOffline(true);
     });
-    // Back online: try one Mapy.com tile first, so a weak signal does not flip the map back and forth.
     function tryOnline() {
       if (!showingOffline || !navigator.onLine) return;
       var z = Math.min(Math.round(map.getZoom()), TILES.maxZoom);
@@ -251,7 +239,6 @@ const buildHtml = (
       else window.parent.postMessage(m, '*');
     }
 
-    // Colour says when (now / later / done), the link icon says the points are for a combination.
     function pinLabel(tone, reward, combo) {
       if (tone === 'done') return CHECK;
       if (reward == null) return '&ndash;';
@@ -268,7 +255,6 @@ const buildHtml = (
     }
 
     function applyStatus(rawId) {
-      // Object.keys() hands over strings, selectedId and active.id are numbers.
       var id = Number(rawId);
       var mk = markers[id];
       if (!mk) return;
@@ -307,7 +293,6 @@ const buildHtml = (
       Object.keys(markers).forEach(applyStatus);
     }
 
-    // One place is emphasised at a time: the tapped one, otherwise the one in range.
     function focusId() {
       if (selectedId != null) return selectedId;
       return active.inRange ? active.id : null;
@@ -415,7 +400,6 @@ export const LeafletMapView = memo(function LeafletMapView({
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const readyRef = useRef(false);
 
-  // Native: the map libraries downloaded to the phone (undefined while they are being read).
   const [libs, setLibs] = useState<MapLibs | null | undefined>(Platform.OS === 'web' ? null : undefined);
   useEffect(() => {
     if (Platform.OS !== 'web') void loadMapLibs().then(setLibs);
@@ -530,9 +514,7 @@ export const LeafletMapView = memo(function LeafletMapView({
                 return;
               }
               handleMapEvent(msg);
-            } catch {
-              // ignore foreign messages
-            }
+            } catch {}
           }}
           style={styles.container}
         />

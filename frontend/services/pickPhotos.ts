@@ -6,7 +6,6 @@ import { showToast } from '../utils/alert';
 
 type Source = 'camera' | 'gallery';
 
-/** On a phone the user picks the camera or the gallery; the web has only the file picker. */
 function chooseSource(): Promise<Source | null> {
   if (Platform.OS === 'web') return Promise.resolve('gallery');
   return new Promise((resolve) => {
@@ -23,7 +22,6 @@ function chooseSource(): Promise<Source | null> {
   });
 }
 
-/** Up to `limit` photos, already shrunk for the upload; empty when the user cancels. */
 export async function pickPhotos(limit: number): Promise<LocalPhoto[]> {
   if (limit <= 0) return [];
   const source = await chooseSource();

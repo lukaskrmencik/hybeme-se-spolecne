@@ -7,22 +7,12 @@ use Illuminate\Support\Facades\Response;
 
 class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
     public function register(): void
     {
-        //
     }
 
-    /**
-     * Bootstrap any application services.
-     */
     public function boot(): void
     {
-        //custom responce macros
-
-        //return response()->success(["user" => "lukas"],200);
         Response::macro('success', function ($data = [], $status = 200) {
             return Response::json([
                 'status' => 'success',
@@ -31,7 +21,6 @@ class AppServiceProvider extends ServiceProvider
             ], $status);
         });
 
-        //return response()->error('Error message', 400);
         Response::macro('error', function ($message, $status = 400) {
             return Response::json([
                 'status' => 'error',
@@ -40,8 +29,6 @@ class AppServiceProvider extends ServiceProvider
             ], $status);
         });
 
-        //$users = User::paginate(10);
-        //return response()->pagination($users,200);
         Response::macro('pagination', function ($paginator, $status = 200) {
             return Response::json([
                 'status' => 'success',

@@ -17,12 +17,7 @@ import { PartnerLogos } from '../../../components/PartnerLogos';
 import { LegalLinks } from '../../../components/legal/LegalLinks';
 import { colors, radius } from '../../../utils/theme';
 
-/**
- * The photo is shrunk and turned into a JPEG first, like visit photos: straight from the gallery it was
- * often over the server's 2 MB, or a HEIC, and the server refused it as invalid data.
- */
 async function buildAvatarForm(asset: ImagePicker.ImagePickerAsset): Promise<{ form: FormData; photo: LocalPhoto }> {
-    // A profile photo is shown at most about 100 px big; the leaderboard loads dozens of them.
     const photo = await preparePhoto(asset, 512);
     const form = new FormData();
     await appendFile(form, 'avatar', { uri: photo.uri, name: `avatar-${Date.now()}.jpg`, type: 'image/jpeg' });
@@ -133,7 +128,6 @@ export default function AccountScreen() {
         setDeleting(true);
         try {
             await apiFetch(`users/${profile.id}`, { method: 'DELETE' });
-            // The server already invalidated the token.
             await logout({ localOnly: true });
         } catch (err) {
             showToast('Nepovedlo se', getErrorMessage(err, 'Účet se nepodařilo smazat.'), 'danger');
@@ -286,7 +280,6 @@ const styles = StyleSheet.create({
         borderColor: colors.border,
     },
     statValue: { fontSize: 21, fontWeight: '900', color: colors.navy },
-    // The mock puts this label on a 22 px line, 4 px below the number.
     statLabel: { fontSize: 12, lineHeight: 16, color: colors.muted, fontWeight: '700', marginTop: 4, marginBottom: 2 },
     list: {
         backgroundColor: colors.surface,

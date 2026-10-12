@@ -35,7 +35,6 @@ async function writeQueue(queue: QueuedVisit[]): Promise<void> {
   await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(queue));
 }
 
-/** Entries without user_id come from older app versions and are treated as belonging to whoever is logged in. */
 const belongsTo = (entry: QueuedVisit, userId: number | null) =>
   entry.user_id == null || entry.user_id === userId;
 
@@ -69,20 +68,13 @@ interface FlushResult {
   dropped: DroppedVisit[];
 }
 
-/**
- * Finds the server id of a visit that is already saved. When a request times out after the server
- * stored the visit, the visit is queued anyway; sending it again is refused ("earlier than the last
- * visit"), which must not be reported as a rejected visit.
- */
 type ExistingVisitLookup = (entry: QueuedVisit) => Promise<number | null>;
 
-/** Looks the visit up among the user's visits on the server, downloaded once per flush. */
 export function createExistingVisitLookup(userId: number): ExistingVisitLookup {
   let serverVisits: Promise<Visit[]> | null = null;
   return async (entry) => {
     serverVisits ??= apiFetch<{ data: UserProfile }>(`users/${userId}`).then((res) => res.data.visitsCombinations ?? []);
     const sent = parseVisitTime(entry.timestamp);
-    // The server keeps whole seconds only.
     const match = (await serverVisits).find(
       (v) => v.place_id === entry.place_id && Math.abs(parseVisitTime(v.timestamp) - sent) < 2000
     );
@@ -90,7 +82,6 @@ export function createExistingVisitLookup(userId: number): ExistingVisitLookup {
   };
 }
 
-/** Hands the photos of an accepted visit over to the photo queue. */
 async function passPhotos(userId: number, entry: QueuedVisit, visitId: number): Promise<void> {
   if (!entry.photos?.length) return;
   try {
@@ -100,10 +91,6 @@ async function passPhotos(userId: number, entry: QueuedVisit, visitId: number): 
   }
 }
 
-/**
- * Sends queued visits of the given user oldest-first. Stops at the first network/server
- * failure so later visits are never submitted before earlier ones (anti-cheat checks order).
- */
 export async function flushQueue(
   userId: number | null,
   findExisting?: ExistingVisitLookup
@@ -148,7 +135,6 @@ export async function flushQueue(
     }
   } finally {
     if (processed.size > 0) {
-      // Re-read so visits enqueued while flushing are not overwritten.
       const latest = await readQueue();
       await writeQueue(latest.filter((q) => !processed.has(q.id)));
       emit();

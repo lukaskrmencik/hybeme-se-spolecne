@@ -7,7 +7,6 @@ import { colors, radius } from '../../utils/theme';
 
 const logo = require('../../assets/images/logos/logo_hss_mark.png');
 
-/** A paragraph, or a bulleted list. */
 export type LegalBlock = string | { list: string[] };
 
 export interface LegalSection {
@@ -15,7 +14,6 @@ export interface LegalSection {
   blocks: LegalBlock[];
 }
 
-/** Highlights the parts the school still has to fill in ([DOPLNIT …]). */
 function RichText({ text, style }: { text: string; style: object }) {
   const parts = text.split(/(\[DOPLNIT[^\]]*\])/g);
   return (
@@ -42,7 +40,6 @@ export function LegalPage({
   title: string;
   summary: string[];
   sections: LegalSection[];
-  /** Link to the other legal page. */
   other: { href: '/soukromi' | '/podminky'; label: string };
 }) {
   const router = useRouter();

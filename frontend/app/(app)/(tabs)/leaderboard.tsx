@@ -21,14 +21,12 @@ const TABS: { value: Tab; label: string }[] = [
     { value: 'history', label: 'Historie' },
 ];
 
-/** Gold, silver and bronze for the weekly podium. */
 const MEDALS: Record<number, { bg: string; fg: string }> = {
     1: { bg: '#F4D35E', fg: '#6B5100' },
     2: { bg: '#D5DBE1', fg: '#46525C' },
     3: { bg: '#E3A774', fg: '#6A3A12' },
 };
 
-/** "2026-09-28" -> "28. 9."; with the year for the end of a range. */
 function formatDay(ymd: string, withYear = false): string {
     const [y, m, d] = ymd.split('-').map(Number);
     return withYear ? `${d}. ${m}. ${y}` : `${d}. ${m}.`;
@@ -142,7 +140,6 @@ export default function LeaderboardScreen() {
         <View style={styles.container}>
             {focused && <StatusBar style="light" />}
             <View style={[styles.head, { paddingTop: insets.top + 18 }]}>
-                {/* Moves down with the status bar, so on a phone it stays clear of the points as on the web. */}
                 <View style={[styles.arc, { top: insets.top - 60 }]} />
                 <Text style={styles.headTitle}>Žebříček</Text>
                 {currentUser?.rank ? (
@@ -158,7 +155,6 @@ export default function LeaderboardScreen() {
                         </View>
                     </View>
                 ) : (
-                    // Without points there is no place yet: invite to the first visit instead of showing "#–".
                     <View style={styles.me}>
                         <View style={styles.meInvite}>
                             <Text style={styles.meInviteTitle}>

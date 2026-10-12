@@ -6,50 +6,31 @@ use App\Models\User;
 
 class UserPolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
     public function viewAny(User $user): bool
     {
         return $user->role === 'admin';
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
     public function view(User $user, User $model): bool
     {
         return $user->id === $model->id || $user->role === 'admin';
     }
 
-    /** The public profile (visits, combinations, photos) opened from the leaderboard; for every signed-in user. */
     public function viewProfile(User $user, User $model): bool
     {
         return true;
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
     public function update(User $user, User $model): bool
     {
         return $user->id === $model->id || $user->role === 'admin';
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
     public function delete(User $user, User $model): bool
     {
         return $user->id === $model->id || $user->role === 'admin';
     }
 
-    /**
-     * Determine whether the user can restore the model.
-     */
-    /**
-     * Only an admin may change roles, and never their own: an admin cannot lock themselves out.
-     */
     public function changeRole(User $user, User $model): bool
     {
         return $user->role === 'admin' && $user->id !== $model->id;

@@ -17,9 +17,6 @@ class PlaceController extends Controller
 {
     use AuthorizesRequests;
 
-    /**
-     * Display a listing of the resource.
-     */
     public function index(Request $request)
     {
         $this->authorize('viewAny', Place::class);
@@ -53,9 +50,6 @@ class PlaceController extends Controller
         return response()->pagination($places);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
         $this->authorize('create', Place::class);
@@ -81,9 +75,6 @@ class PlaceController extends Controller
         ], 201);
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(Place $place)
     {
         $this->authorize('view', $place);
@@ -101,9 +92,6 @@ class PlaceController extends Controller
         ]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, Place $place)
     {
         $this->authorize('update', $place);
@@ -135,7 +123,6 @@ class PlaceController extends Controller
         ]);
     }
 
-    /** Admin: a photo of the place without visiting it, e.g. before anyone else has taken one. */
     public function uploadAdminPhoto(Request $request, Place $place)
     {
         $this->authorize('update', $place);

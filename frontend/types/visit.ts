@@ -17,14 +17,11 @@ export interface QueuedVisit extends VisitSubmission {
   sport_name?: string;
   place?: Place;
   sport?: Sport;
-  /** Uploaded once the visit itself is accepted. */
   photos?: LocalPhoto[];
   createdAt: number;
 }
 
-/** Photo picked for a visit, already shrunk and stored on the device until it is uploaded. */
 export interface LocalPhoto {
-  /** file:// on native, data: URI on the web (blob: URLs would not survive a reload). */
   uri: string;
   width: number;
   height: number;

@@ -1,6 +1,5 @@
 import { Platform } from 'react-native';
 
-/** Whoever opens the developer tools is most likely a pupil looking for a way to cheat. */
 const DEVELOPER_EMAIL = 'krmencik.lukas@gmail.com';
 
 const NOTE = `Ahoj, koukáš pod kapotu? To je super, přesně tak začínají programátoři.
@@ -11,7 +10,6 @@ Mám pro tebe lepší výzvu: zahraj si na etického hackera. Zkus přijít na t
 
 Hodně štěstí! Lukáš, vývojář aplikace`;
 
-/** Prints the note once in the browser console. */
 export function printConsoleNote(): void {
   if (Platform.OS !== 'web' || typeof window === 'undefined') return;
   console.log('%cStop, hackere! ✋', 'color:#2e9e4f;font-size:28px;font-weight:900;');

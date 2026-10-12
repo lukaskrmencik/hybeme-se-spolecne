@@ -7,7 +7,6 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-// Shrinks profile photos uploaded before the app and the server did it themselves (see App\Services\AvatarImage).
 Artisan::command('avatars:shrink', function () {
     $changed = 0;
     \App\Models\User::whereNotNull('avatar_url')->each(function ($user) use (&$changed) {

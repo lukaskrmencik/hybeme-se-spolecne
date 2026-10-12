@@ -6,14 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Sport extends Model
 {
-    /** Route planning types of Mapy.com used for navigation to a place. */
     public const MAPY_ROUTE_TYPES = ['foot_fast', 'foot_hiking', 'bike_road', 'bike_mountain'];
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array
-     */
     protected $fillable = [
         'name',
         'icon_url',
@@ -28,11 +22,6 @@ class Sport extends Model
         'is_active',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [

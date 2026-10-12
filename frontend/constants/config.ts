@@ -14,9 +14,7 @@ export const config = {
   routingCoefficient: num(process.env.EXPO_PUBLIC_ROUTING_COEFFICIENT, 1.23),
   placeCooldownHours: num(process.env.EXPO_PUBLIC_PLACE_COOLDOWN_HOURS, 72),
   minVisitIntervalMinutes: num(process.env.EXPO_PUBLIC_MIN_VISIT_INTERVAL_MINUTES, 5),
-  /** Web OAuth client id. Android asks for ID tokens issued to it too, so the backend checks one audience. */
   googleWebClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || '',
-  /** Mapy.com tiles; without a key the map falls back to OpenStreetMap. */
   mapyApiKey: process.env.EXPO_PUBLIC_MAPY_API_KEY || '',
   mapyMapset: process.env.EXPO_PUBLIC_MAPY_MAPSET || 'outdoor',
 } as const;

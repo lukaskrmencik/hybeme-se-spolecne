@@ -6,7 +6,6 @@ import { colors, radius } from '../utils/theme';
 
 const isIos = () => typeof navigator !== 'undefined' && /iphone|ipad|ipod/i.test(navigator.userAgent);
 
-/** Where to allow the location once the browser stopped asking (it never asks again after a refusal). */
 function webSteps(): string[] {
   if (isIos()) {
     return [
@@ -22,10 +21,6 @@ function webSteps(): string[] {
   ];
 }
 
-/**
- * Red notice on the map when the location is missing, with the way to fix it: ask again when the system
- * still lets us, otherwise open the settings (native app) or show where to allow it (web).
- */
 export function LocationBanner({ status, onRetry }: { status: LocationStatus; onRetry: () => void }) {
   const [help, setHelp] = useState(false);
   if (status !== 'denied' && status !== 'blocked' && status !== 'error') return null;

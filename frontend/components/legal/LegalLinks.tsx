@@ -2,7 +2,6 @@ import { StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { colors } from '../../utils/theme';
 
-/** "Podmínky používání · Ochrana osobních údajů", for footers. */
 export function LegalLinks({ onDark = false }: { onDark?: boolean }) {
   const router = useRouter();
   const color = onDark ? 'rgba(255,255,255,0.75)' : colors.muted;

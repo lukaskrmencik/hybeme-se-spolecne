@@ -1,6 +1,4 @@
 #!/usr/bin/env bash
-# Daily database dump and photo archive, the last 14 of each are kept. Cron (crontab -e):
-#   30 3 * * * /mnt/HC_Volume_107027704/hybeme-se-spolecne/deploy/backup-db.sh >> /mnt/HC_Volume_107027704/backups/backup.log 2>&1
 set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -18,8 +16,6 @@ echo "$(date '+%F %T') záloha $file ($(du -h "$file" | cut -f1))"
 
 ls -1t "$BACKUP_DIR"/db-*.sql.gz | tail -n +15 | xargs -r rm --
 
-# Uploaded photos and avatars: a daily archive, kept 14 days like the database. A deleted account or
-# photo must disappear from the backups too (the privacy policy promises at most 14 days).
 photos="$BACKUP_DIR/photos-$(date +%Y-%m-%d_%H%M).tar.gz"
 docker run --rm \
     -v hybeme-se-spolecne_storage:/src:ro \
@@ -27,4 +23,4 @@ docker run --rm \
 echo "$(date '+%F %T') fotky $photos ($(du -h "$photos" | cut -f1))"
 
 ls -1t "$BACKUP_DIR"/photos-*.tar.gz | tail -n +15 | xargs -r rm --
-rm -rf "$BACKUP_DIR/storage"   # the former never-deleted mirror
+rm -rf "$BACKUP_DIR/storage"

@@ -15,10 +15,6 @@ class ReportController extends Controller
 {
     use AuthorizesRequests;
 
-    /**
-     * A user reports a visit photo, a profile photo or a name. The admins get one e-mail per reported
-     * thing (not per report), and the same user cannot report the same thing twice while it is open.
-     */
     public function store(Request $request)
     {
         $this->authorize('create', Report::class);
@@ -85,10 +81,6 @@ class ReportController extends Controller
         return response()->success(['id' => $report->id], 201);
     }
 
-    /**
-     * Admin list. status=open (default) or resolved. Each item carries open_count, the number of open
-     * reports about the same thing, so the admin handles them at once.
-     */
     public function index(Request $request)
     {
         $this->authorize('viewAny', Report::class);
@@ -120,7 +112,6 @@ class ReportController extends Controller
         return response()->pagination($reports);
     }
 
-    /** Admin: closes the report and every other open report about the same thing. */
     public function resolve(Request $request, Report $report)
     {
         $this->authorize('update', $report);
@@ -149,7 +140,6 @@ class ReportController extends Controller
             try {
                 Mail::to($email)->send(new ReportMail($report));
             } catch (\Throwable $e) {
-                // The report is saved either way and waits in the administration.
                 report($e);
             }
         }

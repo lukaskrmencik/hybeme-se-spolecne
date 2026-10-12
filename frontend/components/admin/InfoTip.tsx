@@ -3,7 +3,6 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { colors } from '../../utils/theme';
 
-/** Phone (native): a tap shows the explanation under the label, in the flow, so nothing can cover it. */
 export function InfoTip({ text }: { text: string }) {
   const [open, setOpen] = useState(false);
   return (

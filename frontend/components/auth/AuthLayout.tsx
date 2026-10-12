@@ -29,7 +29,6 @@ interface AuthLayoutProps {
   footerPrompt: string;
   footerAction: string;
   onFooterPress: () => void;
-  /** Gets the Google ID token from the „Pokračovat přes Google“ button. */
   onGoogleIdToken?: (idToken: string) => Promise<void>;
   onGoogleError?: (message: string) => void;
   children: React.ReactNode;

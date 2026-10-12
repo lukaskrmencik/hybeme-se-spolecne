@@ -22,7 +22,6 @@ import { colors } from '../../utils/theme';
 
 type Period = 'all' | 'today' | 'week' | 'month';
 
-/** Y-m-d of the first day the period covers. */
 function periodStart(period: Period): string | null {
   if (period === 'all') return null;
   const d = new Date();
@@ -70,7 +69,7 @@ export default function AdminPhotos() {
       setError(null);
       try {
         const res = await fetchPhotos(nextPage, filters);
-        if (id !== requestId.current) return; // an older filter answered late
+        if (id !== requestId.current) return;
         setPhotos((prev) => (nextPage === 1 ? res.items : [...(prev ?? []), ...res.items]));
         setPage(res.page);
         setTotalPages(res.totalPages);

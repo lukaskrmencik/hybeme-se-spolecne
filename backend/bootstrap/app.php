@@ -18,12 +18,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        // In production the app sits behind the server's nginx, which passes the real scheme and host.
-        // The container port is bound to 127.0.0.1 only, so no one else can send these headers.
         $middleware->trustProxies(at: '*');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*'),
         );
@@ -71,7 +68,6 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $exceptions->render(function (Throwable $e, Request $request) {
             if ($request->is('api/*')) {
-
                 $message = config('app.debug')
                     ? $e->getMessage()
                     : 'Došlo k interní chybě serveru.';
@@ -79,5 +75,4 @@ return Application::configure(basePath: dirname(__DIR__))
                 return response()->error($message, 500);
             }
         });
-
     })->create();

@@ -16,7 +16,6 @@ interface PhotoAttachProps {
   disabled?: boolean;
 }
 
-/** Photos the user adds to the visit: straight from the camera on a phone, or from the gallery. */
 export function PhotoAttach({ photos, onChange, disabled }: PhotoAttachProps) {
   const [preparing, setPreparing] = useState(0);
   const room = MAX_PHOTOS_PER_VISIT - photos.length - preparing;
@@ -144,7 +143,6 @@ const styles = StyleSheet.create({
   addDisabled: { opacity: 0.45 },
   addText: { fontSize: 14, fontWeight: '800', color: colors.primary },
   counter: { minWidth: 30, textAlign: 'right', fontSize: 12, fontWeight: '800', color: colors.muted },
-  // Room on top and right for the remove badge, which sticks out of the thumbnail.
   thumbs: { gap: 10, paddingTop: 6, paddingRight: 6 },
   thumb: { width: THUMB, height: THUMB, borderRadius: radius.sm, backgroundColor: colors.background },
   preparing: { alignItems: 'center', justifyContent: 'center' },

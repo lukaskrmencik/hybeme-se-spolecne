@@ -18,11 +18,6 @@ import { printConsoleNote } from '../utils/consoleNote';
 SplashScreen.preventAutoHideAsync().catch(() => {});
 printConsoleNote();
 
-/**
- * Public pages of the web are rendered into the HTML at build time, so search engines (and visitors on a slow
- * connection) get their text without running the app. They must not wait for fonts or the sign-in state:
- * the build has neither, and the first render in the browser has to match the HTML.
- */
 const PRERENDERED_PAGES = ['/', '/podminky', '/soukromi'];
 const isPrerendered = (pathname: string) => Platform.OS === 'web' && PRERENDERED_PAGES.includes(pathname);
 
@@ -33,7 +28,6 @@ function InitialLayout() {
   const pathname = usePathname();
   const { width } = useWindowDimensions();
   const group = segments[0];
-  // The app needs a phone (GPS). On a computer only the landing page at the root is shown.
   const isDesktopWeb = Platform.OS === 'web' && width >= DESKTOP_MIN_WIDTH;
 
   useEffect(() => {
@@ -53,7 +47,6 @@ function InitialLayout() {
     );
   }
 
-  // The administration works on a computer too, and its admins need to sign in there.
   const desktopAllowed =
     pathname === '/' ||
     pathname.startsWith('/admin') ||
@@ -74,7 +67,6 @@ export default function RootLayout() {
     if (fontsLoaded) SplashScreen.hideAsync().catch(() => {});
   }, [fontsLoaded]);
 
-  // The app keeps the offline map on the phone itself (the web has the service worker for it).
   useEffect(() => {
     void syncOfflineMapFiles();
   }, []);
@@ -88,7 +80,6 @@ export default function RootLayout() {
       .finally(() => setWebFontsReady(true));
   }, [fontsLoaded]);
 
-  // Default title of every page; the public pages set their own (components/Seo).
   const defaultHead = (
     <Head>
       <title>Hýbeme se společně</title>

@@ -20,9 +20,6 @@ class UserController extends Controller
 {
     use AuthorizesRequests;
 
-    /**
-     * Display a listing of the resource.
-     */
     public function index(Request $request)
     {
         $this->authorize('viewAny', User::class);
@@ -35,7 +32,6 @@ class UserController extends Controller
             $perPage = config('pagination.per_page_default');
         }
 
-        // Newest first, with a short summary of the activity for the admin list.
         $query = User::query()
             ->withCount('visits')
             ->withSum('visits as total_points', 'reward')
@@ -59,9 +55,6 @@ class UserController extends Controller
         return response()->pagination($users);
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(User $user)
     {
         $this->authorize('view', $user);
@@ -80,11 +73,6 @@ class UserController extends Controller
         ]);
     }
 
-    /**
-     * What other players see after tapping someone in the leaderboard: name, points and visits with their
-     * combinations and photos. No e-mail, only the day of each visit, and nothing from the last
-     * publicVisitDelayHours hours, so the profile cannot be used to find out where somebody is right now.
-     */
     public function profile(Request $request, User $user)
     {
         $this->authorize('viewProfile', $user);
@@ -92,7 +80,6 @@ class UserController extends Controller
         $own = $request->user()->id === $user->id;
         $visibleBefore = now()->subHours(config('general.publicVisitDelayHours', 24));
 
-        // Orders are computed over all visits, so a chain keeps its numbers when its newest part is still hidden.
         $visits = $user->visitsCombinations()
             ->filter(fn (Visit $v) => $own || $v->timestamp->lt($visibleBefore))
             ->sortByDesc('timestamp')
@@ -125,9 +112,6 @@ class UserController extends Controller
         ]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, User $user)
     {
         $this->authorize('update', $user);
@@ -149,10 +133,6 @@ class UserController extends Controller
         ]);
     }
 
-    /**
-     * The user agrees to the current terms of use and privacy policy (also for users who signed up
-     * before they existed, or through Google). Only for one's own account: consent cannot be given for others.
-     */
     public function acceptTerms(Request $request, User $user)
     {
         abort_unless($request->user()->id === $user->id, 403);
@@ -174,7 +154,6 @@ class UserController extends Controller
         ]);
     }
 
-    /** Admin: makes a user an admin, or back an ordinary user. */
     public function updateRole(Request $request, User $user)
     {
         $this->authorize('changeRole', $user);
@@ -194,7 +173,6 @@ class UserController extends Controller
         ]);
     }
 
-    /** Removes the profile photo (the user themselves, or an admin after a report). */
     public function deleteAvatar(User $user)
     {
         $this->authorize('update', $user);
@@ -249,9 +227,6 @@ class UserController extends Controller
         ]);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(User $user)
     {
         $this->authorize('delete', $user);
@@ -280,7 +255,6 @@ class UserController extends Controller
             try {
                 JWTAuth::invalidate(JWTAuth::getToken());
             } catch (\Exception $e) {
-                //
             }
         }
 
@@ -289,13 +263,8 @@ class UserController extends Controller
         ]);
     }
 
-    /** Weeks run Monday to Sunday in Czech time. */
     private const LEADERBOARD_TZ = 'Europe/Prague';
 
-    /**
-     * Leaderboard of everybody (default) or of the current week (?period=week).
-     * Only users with points are ranked; equal points share a place (1, 1, 3).
-     */
     public function leaderboard(Request $request)
     {
         $leaderboardMaxUsers = config('general.leaderboardMaxUsers', 20);
@@ -318,7 +287,6 @@ class UserController extends Controller
         ]);
     }
 
-    /** Finished weeks, newest first, each with its top three places (more people when they share one). */
     public function leaderboardWeeks()
     {
         $currentWeekStart = now(self::LEADERBOARD_TZ)->startOfWeek(Carbon::MONDAY)->toDateString();
@@ -361,7 +329,6 @@ class UserController extends Controller
         return response()->json(['success' => true, 'weeks' => $weeks]);
     }
 
-    /** Users with points in the period (or ever), with a shared place for equal points. */
     private function rankedUsers(?Carbon $from, ?Carbon $to): \Illuminate\Support\Collection
     {
         $where = '';

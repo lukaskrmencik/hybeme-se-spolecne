@@ -1,11 +1,5 @@
 import { VisitSubmission } from '../types/visit';
 
-/**
- * Visits go to the server sealed with AES-256-GCM (see App\Services\VisitPayload on the backend).
- * The key ships inside the app, so it does not stop a determined cheater. It only keeps the format of a
- * visit out of sight of anyone who opens the network tab in the browser.
- * The key is not in git: EXPO_PUBLIC_VISIT_KEY in .env.local (and in the EAS environment for builds).
- */
 const KEY = decodeKey(process.env.EXPO_PUBLIC_VISIT_KEY);
 
 function decodeKey(base64: string | undefined): Uint8Array | null {
@@ -30,16 +24,13 @@ function nonce(): Uint8Array {
   if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
     crypto.getRandomValues(bytes);
   } else {
-    // Hermes may lack crypto; a nonce only has to differ between visits, not be secret.
     for (let i = 0; i < bytes.length; i++) bytes[i] = Math.floor(Math.random() * 256);
   }
   return bytes;
 }
 
-/** Body of POST /visits. Without a key (local development) the visit goes as plain JSON. */
 export async function sealVisit(submission: VisitSubmission): Promise<string> {
   if (!KEY) return JSON.stringify(submission);
-  // Loaded on the first visit sent, not with the app (the landing page has no use for it).
   const { gcm } = await import('@noble/ciphers/aes.js');
   const iv = nonce();
   const sealed = gcm(KEY, iv).encrypt(new TextEncoder().encode(JSON.stringify(submission)));

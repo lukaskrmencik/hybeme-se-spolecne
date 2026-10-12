@@ -9,9 +9,7 @@ export interface CombinationPrediction {
   valid: boolean;
   speed: number;
   message: string;
-  /** Why the combination is not possible. `fast` is temporary, it passes with time. */
   kind: 'ok' | 'no_last' | 'sport' | 'time' | 'fast' | 'slow';
-  /** For `fast`: minutes until the speed to the place drops under the sport limit. */
   waitMinutes: number | null;
 }
 
@@ -34,7 +32,6 @@ export function getCombinationMultiplier(sport: Sport, level: number): number {
   return 1;
 }
 
-/** Same formula as calc_combination_reward() on the backend. */
 export function calculateReward(place: Place, sport: Sport | null, lastVisit: Visit | null, isCombination: boolean): number {
   const base = Number(place.default_reward) || 0;
   if (!isCombination || !lastVisit?.place || !sport) return base;
@@ -42,11 +39,9 @@ export function calculateReward(place: Place, sport: Sport | null, lastVisit: Vi
   const multiplier = getCombinationMultiplier(sport, getCombinationLevel(lastVisit));
   const km = distanceBetween(place, lastVisit.place) / 1000;
   const reward = Math.floor((base + km * config.pointsPerKm) * multiplier);
-  // A NaN would travel to the map as null and show a dash instead of points.
   return Number.isFinite(reward) ? reward : base;
 }
 
-/** Predicts whether AntiCheatService would accept the visit as a combination. */
 export function predictCombination(place: Place, sport: Sport, lastVisit: Visit | null, nowMs: number): CombinationPrediction {
   if (!lastVisit?.place) {
     return { valid: false, speed: 0, kind: 'no_last', waitMinutes: null, message: 'Není předchozí návštěva.' };

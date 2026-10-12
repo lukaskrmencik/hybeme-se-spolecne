@@ -2,14 +2,8 @@
 
 namespace App\Services;
 
-/**
- * Visits come from the app sealed with AES-256-GCM: {"p": base64(nonce[12] . ciphertext . tag[16])}.
- * The key is in the app too, so this is no real protection. It only hides the format from whoever looks
- * at the requests in the browser, which is the easiest way to forge a visit.
- */
 class VisitPayload
 {
-    /** The fields of the visit, or null when the payload is missing or was not sealed with our key. */
     public static function open(mixed $sealed, string $base64Key): ?array
     {
         if (!is_string($sealed)) {

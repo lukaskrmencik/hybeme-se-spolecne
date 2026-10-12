@@ -14,7 +14,6 @@ const TABS: { value: Tab; label: string }[] = [
   { value: 'history', label: 'Historie' },
 ];
 
-/** Rows shown before „Zobrazit všechny“. */
 const PREVIEW_ROWS = 10;
 const HISTORY_WEEKS = 4;
 
@@ -51,7 +50,6 @@ const day = (ymd: string, withYear = false) => {
   return withYear ? `${d}. ${m}. ${y}` : `${d}. ${m}.`;
 };
 
-/** Public leaderboards on the landing page; the API serves them without signing in. */
 export function LandingLeaderboard() {
   const [tab, setTab] = useState<Tab>('all');
   const [entries, setEntries] = useState<Entry[] | null>(null);

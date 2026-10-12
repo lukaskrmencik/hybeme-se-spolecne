@@ -31,11 +31,6 @@ class AuthController extends Controller
         return response()->success(["token" => $token]);
     }
 
-    /**
-     * Creates the account and e-mails a verification code; the token comes after the code is confirmed
-     * (verifyEmail). Registering again with an unverified e-mail updates that account and sends a new code,
-     * so a typo or a lost e-mail never locks the address.
-     */
     public function register(Request $request, EmailVerificationService $verification)
     {
         $validatedData = $request->validate([
@@ -51,7 +46,6 @@ class AuthController extends Controller
                     ->mixedCase()
                     ->numbers(),
             ],
-            // Agreement to the terms and privacy policy, incl. that a parent agreed for a child under 15.
             'terms' => 'accepted',
         ], [
             'terms.accepted' => 'Pro registraci je potřeba souhlasit s podmínkami používání.',
@@ -107,7 +101,6 @@ class AuthController extends Controller
         return response()->success(["token" => $token]);
     }
 
-    /** Always answers the same way, so it cannot be used to find out which e-mails are registered. */
     public function resendVerificationCode(Request $request, EmailVerificationService $verification)
     {
         $validatedData = $request->validate([
@@ -133,7 +126,6 @@ class AuthController extends Controller
         return response()->success(['resend_in' => EmailVerificationService::RESEND_SECONDS]);
     }
 
-    /** Sends a code (unless one went out a moment ago) and tells the app to show the code screen. */
     private function verificationRequired(User $user, EmailVerificationService $verification, ?string $message, int $status)
     {
         try {
@@ -156,7 +148,6 @@ class AuthController extends Controller
         ], $status);
     }
 
-    /** Signs in with a Google ID token sent by the app (the Android sign-in). */
     public function google(Request $request, GoogleTokenVerifier $verifier)
     {
         $validatedData = $request->validate([
@@ -180,18 +171,11 @@ class AuthController extends Controller
         return response()->success(["token" => $token]);
     }
 
-    /**
-     * Web sign-in without a popup: Google Identity Services in redirect mode posts the ID token here
-     * as a form, and the browser is sent back to the app with our token in the URL fragment
-     * (a fragment never reaches any server or log). Errors go back the same way.
-     */
     public function googleRedirect(Request $request, GoogleTokenVerifier $verifier)
     {
         $back = rtrim((string) config('services.google.web_redirect_url'), '/');
         $fail = fn (string $message) => redirect()->away($back . '#google_error=' . rawurlencode($message));
 
-        // Double-submit check from Google: the cookie is set on the app's page, the same value comes in the form.
-        // A browser may drop the cookie on this cross-site post, so only a mismatch is refused.
         $cookie = $request->cookies->get('g_csrf_token');
         $field = $request->input('g_csrf_token');
         if ($cookie !== null && $cookie !== $field) {
@@ -214,7 +198,6 @@ class AuthController extends Controller
             return $fail('Přihlášení přes Google se nepodařilo ověřit.');
         }
 
-        // The browser is on a full-page redirect here, so even an unexpected failure must lead back to the app.
         try {
             $token = auth('api')->login($this->findOrCreateGoogleUser($google));
         } catch (\Throwable $e) {
@@ -225,9 +208,6 @@ class AuthController extends Controller
         return redirect()->away($back . '#google_token=' . rawurlencode($token));
     }
 
-    /**
-     * An account with the same (Google-verified) e-mail is linked, otherwise a new one is created without a password.
-     */
     private function findOrCreateGoogleUser(array $google): User
     {
         $user = User::where('provider_name', 'google')->where('provider_id', $google['sub'])->first()
@@ -245,8 +225,6 @@ class AuthController extends Controller
             ]);
         }
 
-        // Google has verified the e-mail. An unverified account with it was registered by someone who never
-        // proved owning the address, so its password must not keep working (pre-account hijacking).
         if (!$user->hasVerifiedEmail()) {
             $user->password = null;
             $user->email_verified_at = now();
@@ -269,8 +247,6 @@ class AuthController extends Controller
     {
         try {
             $guard = auth('api');
-            // Refreshing checks and blacklists the old token, but the new one would lose the custom
-            // claims (role, name), so it is swapped for a fresh token with the current user data.
             $refreshed = $guard->refresh(true, true);
             $user = User::find($guard->setToken($refreshed)->getPayload()->get('sub'));
             $guard->invalidate(true);
@@ -279,7 +255,6 @@ class AuthController extends Controller
             }
 
             return response()->success(["token" => $guard->login($user)]);
-
         } catch (\Exception $e) {
             return response()->error('Chyba tokenu, přihlašte se manuálně.', 401);
         }
@@ -290,5 +265,4 @@ class AuthController extends Controller
         auth('api')->logout();
         return response()->success(["message" => "Odhlášení proběhlo úspěšně."]);
     }
-
 }

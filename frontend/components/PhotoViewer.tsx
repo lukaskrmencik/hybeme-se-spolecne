@@ -12,16 +12,12 @@ import { colors } from '../utils/theme';
 
 interface PhotoViewerProps {
   photos: PlacePhoto[];
-  /** Index of the photo to open, `null` keeps the viewer closed. */
   index: number | null;
   onClose: () => void;
-  /** Whether the photo can be reported to the admins; not shown when missing (e.g. in the administration). */
   canReport?: (photo: PlacePhoto) => boolean;
-  /** Deletes the photo (own photos); the viewer closes after it. */
   onDelete?: (photo: PlacePhoto) => Promise<void>;
 }
 
-/** Full-screen gallery, swiping goes to the next photo. */
 export function PhotoViewer({ photos, index, onClose, canReport, onDelete }: PhotoViewerProps) {
   const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();

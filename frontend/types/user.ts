@@ -16,14 +16,12 @@ export interface Visit {
   photos?: VisitPhoto[];
 }
 
-/** Another player's profile opened from the leaderboard (UserController::profile). */
 export interface PublicVisit {
   id: number;
   place_id: number;
   reward: number;
   is_combination: boolean;
   combination_order: number | null;
-  /** Only the day, Y-m-d. */
   date: string;
   place: { id: number; name: string; coordinates: { type: 'Point'; coordinates: [number, number] } } | null;
   sport: { id: number; name: string } | null;
@@ -36,7 +34,6 @@ export interface PublicProfile {
   avatar_url: string | null;
   total_points: number;
   visits_count: number;
-  /** Visits of the last day are left out for other players. */
   hidden_recent: boolean;
   visits: PublicVisit[];
 }
@@ -48,7 +45,6 @@ export interface UserProfile {
   email: string;
   avatar_url?: string | null;
   totalPoints: number;
-  /** Version of the terms the user agreed to; null for accounts that have not agreed yet. */
   terms_version?: string | null;
   terms_accepted_at?: string | null;
   visitsCombinations: Visit[];

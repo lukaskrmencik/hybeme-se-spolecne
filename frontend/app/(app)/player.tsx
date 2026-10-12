@@ -13,10 +13,6 @@ import { formatNumber } from '../../utils/format';
 import { plural } from '../../utils/plural';
 import { colors, radius, typography } from '../../utils/theme';
 
-/**
- * Another player's visits and combinations, opened from the leaderboard.
- * The id is in the query (/player?id=9), so the page is one static file the web server finds without extra rules.
- */
 export default function UserProfileScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();

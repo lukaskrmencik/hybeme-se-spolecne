@@ -1,17 +1,14 @@
 import { Image, StyleSheet, Text, View } from 'react-native';
 import { colors } from '../utils/theme';
 
-// Downsized copies: the logos are shown about 100 px wide, the originals are up to 1745 px.
 const school = require('../assets/images/web/logo-skola-320.png');
 const schoolLight = require('../assets/images/web/logo-skola-w-320.png');
 const sponsor = require('../assets/images/web/skoenergo-300.png');
 
 interface PartnerLogosProps {
-  /** Light labels and the white school logo, for a dark background. */
   onDark?: boolean;
 }
 
-/** School and main sponsor, labels on one line and logos in equal boxes. */
 export function PartnerLogos({ onDark = false }: PartnerLogosProps) {
   return (
     <View style={styles.row}>

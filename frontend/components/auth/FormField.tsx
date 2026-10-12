@@ -7,7 +7,6 @@ interface FormFieldProps extends TextInputProps {
     label: string;
     icon?: ComponentProps<typeof Ionicons>['name'];
     error?: string | null;
-    /** Renders an eye toggle and hides the value by default. */
     password?: boolean;
 }
 
