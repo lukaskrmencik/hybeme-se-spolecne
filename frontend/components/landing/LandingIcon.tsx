@@ -3,10 +3,6 @@ import { Platform } from 'react-native';
 
 const GLYPHS = {
   'arrow-forward': 0xf133,
-  'logo-google-playstore': 0xf3f6,
-  'download-outline': 0xf2ba,
-  'chevron-up': 0xf241,
-  'chevron-down': 0xf232,
 } as const;
 
 export type LandingIconName = keyof typeof GLYPHS;

@@ -147,7 +147,7 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(request.url);
 
   if (url.origin === self.location.origin) {
-    if (['/api/', '/storage/', '/download/'].some((prefix) => url.pathname.startsWith(prefix))) return;
+    if (['/api/', '/storage/'].some((prefix) => url.pathname.startsWith(prefix))) return;
     if (url.pathname === MAP_URL) {
       event.respondWith(offlineMap(request));
       return;

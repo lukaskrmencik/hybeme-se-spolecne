@@ -5,7 +5,7 @@ import { useRouter } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
 import { PartnerLogos } from '../PartnerLogos';
 import { LandingLeaderboard } from './LandingLeaderboard';
-import { ApkDownload } from './ApkDownload';
+import { PlayBadge } from './PlayBadge';
 import { LegalLinks } from '../legal/LegalLinks';
 import { LEGAL } from '../../constants/legal';
 import { colors, radius, shadows } from '../../utils/theme';
@@ -162,14 +162,18 @@ export function LandingPage() {
             </Text>
             <Text style={styles.heroLead}>Navštěvuj zajímavá místa v okolí, sbírej body a poměř síly s ostatními.</Text>
 
-            {!isDesktop && (
+            {!isDesktop && device === 'android' && (
+              <View style={[styles.heroActions, styles.heroActionsRow]}>
+                <PlayBadge height={54} />
+                <View style={styles.fill}>
+                  <Button label={token ? 'Pokračovat' : 'V prohlížeči'} variant="glass" onPress={openApp} />
+                </View>
+              </View>
+            )}
+            {!isDesktop && device === 'ios' && (
               <View style={styles.heroActions}>
                 <Button label={token ? 'Pokračovat do aplikace' : 'Otevřít aplikaci'} icon="arrow-forward" onPress={openApp} />
-                <Button
-                  label={canInstall ? 'Nainstalovat na plochu' : 'Jak ji dát na plochu'}
-                  variant="glass"
-                  onPress={canInstall ? () => void install() : toGuide}
-                />
+                <Button label="Jak ji dát na plochu" variant="glass" onPress={toGuide} />
               </View>
             )}
           </View>
@@ -187,6 +191,10 @@ export function LandingPage() {
                 {appHost ? ' nebo zadej ' : ''}
                 {appHost ? <Text style={styles.qrHost}>{appHost}</Text> : null}.
               </Text>
+              <View style={styles.qrStore}>
+                <Text style={styles.qrStoreText}>Na Androidu i z obchodu</Text>
+                <PlayBadge height={48} />
+              </View>
             </View>
           )}
         </View>
@@ -240,10 +248,11 @@ export function LandingPage() {
           onLayout={(e) => (guideY.current = e.nativeEvent.layout.y)}
         >
           <View style={wide ? styles.installText : undefined}>
-            <Text role="heading" aria-level={2} style={styles.sectionTitle}>Dej si ji na plochu</Text>
+            <Text role="heading" aria-level={2} style={styles.sectionTitle}>Nainstaluj si ji</Text>
             <Text style={styles.sectionLead}>
-              Bez obchodu, přímo z prohlížeče. Pak se otevírá jako každá jiná aplikace a návštěvu zapíšeš i bez
-              signálu.
+              {device === 'android'
+                ? 'Na Androidu nejsnáz z Google Play. Kdo nechce obchod, dá si ji na plochu přímo z prohlížeče.'
+                : 'Na iPhonu přímo z prohlížeče, bez obchodu. Pak se otevírá jako každá jiná aplikace a návštěvu zapíšeš i bez signálu.'}
             </Text>
           </View>
 
@@ -266,6 +275,13 @@ export function LandingPage() {
                 })}
               </View>
 
+              {device === 'android' && (
+                <View style={styles.store}>
+                  <PlayBadge height={56} />
+                  <Text style={styles.storeOr}>nebo bez obchodu, přímo z prohlížeče:</Text>
+                </View>
+              )}
+
               {STEPS[device].map((text, i) => (
                 <View key={text} style={styles.step}>
                   <Text style={styles.stepNumber}>{i + 1}</Text>
@@ -274,11 +290,9 @@ export function LandingPage() {
               ))}
 
               {device === 'android' && canInstall && (
-                <Button label="Nainstalovat jedním klepnutím" onPress={() => void install()} />
+                <Button label="Přidat na plochu jedním klepnutím" onPress={() => void install()} />
               )}
             </View>
-
-            {device === 'android' && <ApkDownload onDesktop={isDesktop} />}
           </View>
         </View>
 
@@ -310,6 +324,10 @@ const styles = StyleSheet.create({
   pressed: { opacity: 0.85 },
 
   qrPlaceholder: { width: 150, height: 150 },
+  qrStore: { alignItems: 'center', gap: 8, marginTop: 6, paddingTop: 14, borderTopWidth: 1, borderTopColor: colors.border, alignSelf: 'stretch' },
+  qrStoreText: { color: colors.muted, fontSize: 13, fontWeight: '700' },
+  store: { gap: 12, paddingBottom: 6, alignItems: 'flex-start' },
+  storeOr: { color: colors.muted, fontSize: 14, fontWeight: '700' },
   hero: { minHeight: 560, justifyContent: 'center', backgroundColor: colors.navy },
   heroPhoto: { width: '100%', height: '100%' },
   heroShade: { backgroundColor: 'rgba(12, 38, 61, 0.58)' },
@@ -324,6 +342,8 @@ const styles = StyleSheet.create({
   heroTitleWide: { fontSize: 58, lineHeight: 64, maxWidth: 640 },
   heroLead: { color: 'rgba(255,255,255,0.85)', fontSize: 18, lineHeight: 26, fontWeight: '600', maxWidth: 520 },
   heroActions: { gap: 10, marginTop: 12 },
+  heroActionsRow: { flexDirection: 'row', alignItems: 'center' },
+  fill: { flex: 1 },
 
   qrCard: {
     width: 300,
