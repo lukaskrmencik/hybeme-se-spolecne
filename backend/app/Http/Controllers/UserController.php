@@ -273,12 +273,14 @@ class UserController extends Controller
         $from = $week ? now(self::LEADERBOARD_TZ)->startOfWeek(Carbon::MONDAY) : null;
         $to = $from?->copy()->addWeek();
 
-        $ranked = $this->rankedUsers($from, $to);
+        $sportId = $this->leaderboardSport($request);
+        $ranked = $this->rankedUsers($from, $to, $sportId);
         $authUserId = auth('api')->id();
 
         return response()->json([
             'success' => true,
             'period' => $week ? 'week' : 'all',
+            'sport_id' => $sportId,
             'week_start' => $from?->toDateString(),
             'week_end' => $to?->copy()->subDay()->toDateString(),
             'leaderboard' => $ranked->filter(fn ($u) => $u->rank <= $leaderboardMaxUsers)->values(),
@@ -287,8 +289,10 @@ class UserController extends Controller
         ]);
     }
 
-    public function leaderboardWeeks()
+    public function leaderboardWeeks(Request $request)
     {
+        $sportId = $this->leaderboardSport($request);
+        $sportFilter = $sportId ? 'where v.sport_id = ?' : '';
         $currentWeekStart = now(self::LEADERBOARD_TZ)->startOfWeek(Carbon::MONDAY)->toDateString();
 
         $rows = DB::select("
@@ -297,6 +301,7 @@ class UserController extends Controller
                        v.user_id,
                        sum(v.reward)::int as points
                 from visits v
+                {$sportFilter}
                 group by 1, 2
                 having sum(v.reward) > 0
             ), ranked as (
@@ -308,7 +313,7 @@ class UserController extends Controller
             join users u on u.id = r.user_id
             where r.rank <= 3 and r.week_start < ?::date
             order by r.week_start desc, r.rank, u.name
-        ", [self::LEADERBOARD_TZ, $currentWeekStart]);
+        ", array_merge([self::LEADERBOARD_TZ], $sportId ? [$sportId] : [], [$currentWeekStart]));
 
         $weeks = collect($rows)
             ->groupBy(fn ($row) => (string) $row->week_start)
@@ -329,14 +334,26 @@ class UserController extends Controller
         return response()->json(['success' => true, 'weeks' => $weeks]);
     }
 
-    private function rankedUsers(?Carbon $from, ?Carbon $to): \Illuminate\Support\Collection
+    private function leaderboardSport(Request $request): ?int
     {
-        $where = '';
+        $request->validate(['sport_id' => ['nullable', 'integer', 'exists:sports,id']]);
+
+        return $request->filled('sport_id') ? (int) $request->input('sport_id') : null;
+    }
+
+    private function rankedUsers(?Carbon $from, ?Carbon $to, ?int $sportId = null): \Illuminate\Support\Collection
+    {
+        $conditions = [];
         $bindings = [];
         if ($from && $to) {
-            $where = 'where v.timestamp >= ? and v.timestamp < ?';
+            $conditions[] = 'v.timestamp >= ? and v.timestamp < ?';
             $bindings = [$from->toIso8601String(), $to->toIso8601String()];
         }
+        if ($sportId) {
+            $conditions[] = 'v.sport_id = ?';
+            $bindings[] = $sportId;
+        }
+        $where = $conditions ? 'where ' . implode(' and ', $conditions) : '';
 
         return collect(DB::select("
             select u.id, u.name, u.avatar_url,

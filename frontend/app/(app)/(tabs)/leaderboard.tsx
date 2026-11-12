@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { View, Text, StyleSheet, FlatList, ActivityIndicator, RefreshControl, TouchableOpacity, Pressable } from 'react-native';
+import { View, Text, StyleSheet, FlatList, ActivityIndicator, RefreshControl, TouchableOpacity, Pressable, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useIsFocused, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useAuth } from '../../../context/AuthContext';
 import { useLeaderboard, useLeaderboardWeeks, LeaderboardEntry, LeaderboardWeek } from '../../../hooks/useLeaderboard';
+import { useSports } from '../../../hooks/useSports';
 import { Avatar } from '../../../components/Avatar';
 import { colors, radius } from '../../../utils/theme';
 import { formatNumber } from '../../../utils/format';
@@ -36,8 +37,12 @@ const weekRange = (start: string, end: string) => `${formatDay(start)} – ${for
 
 export default function LeaderboardScreen() {
     const [tab, setTab] = useState<Tab>('all');
-    const board = useLeaderboard(tab === 'week' ? 'week' : 'all');
-    const history = useLeaderboardWeeks(tab === 'history');
+    const { sports } = useSports();
+    const [sportId, setSportId] = useState<number | null>(null);
+    const sport = sports.find((s) => s.id === sportId) ?? null;
+    const activeSportId = sport ? sport.id : null;
+    const board = useLeaderboard(tab === 'week' ? 'week' : 'all', activeSportId);
+    const history = useLeaderboardWeeks(tab === 'history', activeSportId);
     const { userId } = useAuth();
     const insets = useSafeAreaInsets();
     const focused = useIsFocused();
@@ -109,7 +114,8 @@ export default function LeaderboardScreen() {
     );
 
     const players = totalUsers != null ? `z ${formatNumber(totalUsers)} ${plural(totalUsers, ['hráče', 'hráčů', 'hráčů'])}` : '';
-    const who = tab === 'week' ? `Tento týden\n${players}` : `Tvoje pozice\n${players}`;
+    const scope = tab === 'week' ? 'Tento týden' : 'Tvoje pozice';
+    const who = `${sport ? `${scope} · ${sport.name}` : scope}\n${players}`;
 
     const tabs = (
         <View style={styles.tabs} accessibilityRole="tablist">
@@ -129,6 +135,32 @@ export default function LeaderboardScreen() {
             })}
         </View>
     );
+
+    const sportFilter =
+        sports.length > 1 ? (
+            <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                style={styles.sportsBar}
+                contentContainerStyle={styles.sports}
+                accessibilityLabel="Žebříček podle sportu"
+            >
+                {[{ id: null, name: 'Všechny sporty' }, ...sports.map((s) => ({ id: s.id as number | null, name: s.name }))].map((s) => {
+                    const active = s.id === activeSportId;
+                    return (
+                        <Pressable
+                            key={s.id ?? 'all'}
+                            onPress={() => setSportId(s.id)}
+                            style={[styles.sport, active && styles.sportActive]}
+                            accessibilityRole="button"
+                            accessibilityState={{ selected: active }}
+                        >
+                            <Text style={[styles.sportText, active && styles.sportTextActive]}>{s.name}</Text>
+                        </Pressable>
+                    );
+                })}
+            </ScrollView>
+        ) : null;
 
     const retry = (onPress: () => void) => (
         <TouchableOpacity style={styles.retryButton} onPress={onPress}>
@@ -158,19 +190,28 @@ export default function LeaderboardScreen() {
                     <View style={styles.me}>
                         <View style={styles.meInvite}>
                             <Text style={styles.meInviteTitle}>
-                                {tab === 'week' ? 'Tento týden ještě nemáš body' : 'Zatím nejsi v žebříčku'}
+                                {sport
+                                    ? `${sport.name}: ${tab === 'week' ? 'tento týden ještě nemáš body' : 'zatím nemáš body'}`
+                                    : tab === 'week'
+                                      ? 'Tento týden ještě nemáš body'
+                                      : 'Zatím nejsi v žebříčku'}
                             </Text>
                             <Text style={styles.meInviteText}>
-                                {tab === 'week'
-                                    ? 'Navštiv místo a zařaď se do týdenního pořadí.'
-                                    : 'Navštiv první místo a objevíš se tu.'}
+                                {sport
+                                    ? `Navštiv místo se sportem ${sport.name} a zařadíš se sem.`
+                                    : tab === 'week'
+                                      ? 'Navštiv místo a zařaď se do týdenního pořadí.'
+                                      : 'Navštiv první místo a objevíš se tu.'}
                             </Text>
                         </View>
                     </View>
                 )}
             </View>
 
-            {tabs}
+            <View style={styles.filters}>
+                {tabs}
+                {sportFilter}
+            </View>
 
             {tab === 'history' ? (
                 <FlatList
@@ -183,7 +224,11 @@ export default function LeaderboardScreen() {
                         <RefreshControl refreshing={history.refreshing} onRefresh={() => void history.refresh()} tintColor={colors.primary} />
                     }
                     renderItem={renderWeek}
-                    ListHeaderComponent={<Text style={styles.listHint}>Nejlepší tři z každého ukončeného týdne.</Text>}
+                    ListHeaderComponent={
+                        <Text style={styles.listHint}>
+                            Nejlepší tři z každého ukončeného týdne{sport ? ` · ${sport.name}` : ''}.
+                        </Text>
+                    }
                     ListEmptyComponent={
                         history.weeks == null && !history.error ? (
                             <ActivityIndicator style={styles.spinner} color={colors.primary} />
@@ -211,6 +256,8 @@ export default function LeaderboardScreen() {
                             <Text style={styles.listHint}>
                                 {weekRange(week.start, week.end)} · nový týden začíná vždy v pondělí
                             </Text>
+                        ) : sport && entries.length > 0 ? (
+                            <Text style={styles.listHint}>Jen body získané se sportem {sport.name}.</Text>
                         ) : null
                     }
                     ListEmptyComponent={
@@ -221,9 +268,11 @@ export default function LeaderboardScreen() {
                                 <Text style={styles.emptyText}>
                                     {error
                                         ? 'Žebříček se nepodařilo načíst.'
-                                        : tab === 'week'
-                                          ? 'Tento týden zatím nikdo nebodoval. Buď první!'
-                                          : 'Žebříček je zatím prázdný.'}
+                                        : sport
+                                          ? `${tab === 'week' ? 'Tento týden' : 'Zatím'} nikdo nebodoval se sportem ${sport.name}. Buď první!`
+                                          : tab === 'week'
+                                            ? 'Tento týden zatím nikdo nebodoval. Buď první!'
+                                            : 'Žebříček je zatím prázdný.'}
                                 </Text>
                                 {!!error && retry(() => void refresh())}
                             </View>
@@ -266,13 +315,27 @@ const styles = StyleSheet.create({
         paddingHorizontal: 14,
         paddingVertical: 10,
         backgroundColor: colors.surface,
-        borderBottomWidth: 1,
-        borderBottomColor: colors.border,
     },
     tab: { flex: 1, height: 36, borderRadius: radius.full, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background },
     tabActive: { backgroundColor: colors.navy },
     tabText: { color: colors.navy, fontSize: 13, fontWeight: '800' },
     tabTextActive: { color: colors.white },
+
+    filters: { backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.border },
+    sportsBar: { flexGrow: 0 },
+    sports: { gap: 6, paddingHorizontal: 14, paddingBottom: 10 },
+    sport: {
+        height: 30,
+        paddingHorizontal: 12,
+        borderRadius: radius.full,
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderWidth: 1.5,
+        borderColor: colors.border,
+    },
+    sportActive: { borderColor: colors.primary, backgroundColor: colors.primaryBg },
+    sportText: { color: colors.muted, fontSize: 12, fontWeight: '800' },
+    sportTextActive: { color: colors.primaryDark },
 
     list: { flex: 1 },
     content: { paddingVertical: 12, paddingHorizontal: 14 },

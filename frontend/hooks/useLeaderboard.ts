@@ -42,7 +42,12 @@ const normalize = (e: LeaderboardEntry): LeaderboardEntry => ({
     avatar_url: e.avatar_url ? resolveMediaUrl(e.avatar_url) : null,
 });
 
-export function useLeaderboard(period: LeaderboardPeriod) {
+function boardQuery(period: LeaderboardPeriod | null, sportId: number | null): string {
+    const params = [period === 'week' ? 'period=week' : '', sportId ? `sport_id=${sportId}` : ''].filter(Boolean);
+    return params.length ? `?${params.join('&')}` : '';
+}
+
+export function useLeaderboard(period: LeaderboardPeriod, sportId: number | null = null) {
     const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
     const [currentUser, setCurrentUser] = useState<LeaderboardEntry | null>(null);
     const [totalUsers, setTotalUsers] = useState<number | null>(null);
@@ -57,7 +62,7 @@ export function useLeaderboard(period: LeaderboardPeriod) {
             const id = ++requestId.current;
             if (pullToRefresh) setRefreshing(true);
             try {
-                const res = await apiFetch<LeaderboardResponse>(`users/leaderboard${period === 'week' ? '?period=week' : ''}`);
+                const res = await apiFetch<LeaderboardResponse>(`users/leaderboard${boardQuery(period, sportId)}`);
                 if (id !== requestId.current) return;
                 setEntries((res.leaderboard ?? []).map(normalize));
                 setCurrentUser(res.current_user ? normalize(res.current_user) : null);
@@ -73,13 +78,14 @@ export function useLeaderboard(period: LeaderboardPeriod) {
                 }
             }
         },
-        [period]
+        [period, sportId]
     );
 
     useEffect(() => {
         setLoading(true);
         setEntries([]);
-    }, [period]);
+        setCurrentUser(null);
+    }, [period, sportId]);
 
     useFocusEffect(
         useCallback(() => {
@@ -92,15 +98,18 @@ export function useLeaderboard(period: LeaderboardPeriod) {
     return { entries, currentUser, totalUsers, week, loading, refreshing, error, refresh };
 }
 
-export function useLeaderboardWeeks(enabled: boolean) {
+export function useLeaderboardWeeks(enabled: boolean, sportId: number | null = null) {
     const [weeks, setWeeks] = useState<LeaderboardWeek[] | null>(null);
     const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const requestId = useRef(0);
 
     const load = useCallback(async (pullToRefresh: boolean) => {
+        const id = ++requestId.current;
         if (pullToRefresh) setRefreshing(true);
         try {
-            const res = await apiFetch<{ weeks: LeaderboardWeek[] }>('users/leaderboard/weeks');
+            const res = await apiFetch<{ weeks: LeaderboardWeek[] }>(`users/leaderboard/weeks${boardQuery(null, sportId)}`);
+            if (id !== requestId.current) return;
             setWeeks(
                 (res.weeks ?? []).map((w) => ({
                     ...w,
@@ -115,11 +124,13 @@ export function useLeaderboardWeeks(enabled: boolean) {
             );
             setError(null);
         } catch (err) {
-            setError(getErrorMessage(err, 'Historii se nepodařilo načíst.'));
+            if (id === requestId.current) setError(getErrorMessage(err, 'Historii se nepodařilo načíst.'));
         } finally {
-            setRefreshing(false);
+            if (id === requestId.current) setRefreshing(false);
         }
-    }, []);
+    }, [sportId]);
+
+    useEffect(() => setWeeks(null), [sportId]);
 
     useFocusEffect(
         useCallback(() => {
