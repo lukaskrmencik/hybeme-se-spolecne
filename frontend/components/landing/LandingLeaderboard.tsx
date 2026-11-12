@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { apiFetch, resolveMediaUrl } from '../../services/api';
 import { Avatar } from '../Avatar';
 import { formatNumber } from '../../utils/format';
@@ -45,6 +45,13 @@ const toEntry = (e: { id: number | string; name: string; avatar_url: string | nu
   rank: Number(e.rank),
 });
 
+interface SportOption {
+  id: number;
+  name: string;
+}
+
+const sportQuery = (sportId: number | null) => (sportId ? `sport_id=${sportId}` : '');
+
 const day = (ymd: string, withYear = false) => {
   const [y, m, d] = ymd.split('-').map(Number);
   return withYear ? `${d}. ${m}. ${y}` : `${d}. ${m}.`;
@@ -58,13 +65,17 @@ export function LandingLeaderboard() {
   const [weeks, setWeeks] = useState<Week[] | null>(null);
   const [expanded, setExpanded] = useState(false);
   const [failed, setFailed] = useState(false);
+  const [sports, setSports] = useState<SportOption[]>([]);
+  const [sportId, setSportId] = useState<number | null>(null);
+  const sport = sports.find((s) => s.id === sportId) ?? null;
 
-  const load = useCallback(async (which: Tab) => {
+  const load = useCallback(async (which: Tab, sid: number | null) => {
     setFailed(false);
     try {
       if (which === 'history') {
+        const q = sportQuery(sid);
         const res = await apiFetch<{ weeks: { week_start: string; week_end: string; podium: Parameters<typeof toEntry>[0][] }[] }>(
-          'users/leaderboard/weeks'
+          `users/leaderboard/weeks${q ? `?${q}` : ''}`
         );
         setWeeks(res.weeks.slice(0, HISTORY_WEEKS).map((w) => ({ start: w.week_start, end: w.week_end, podium: w.podium.map(toEntry) })));
       } else {
@@ -73,7 +84,9 @@ export function LandingLeaderboard() {
           total_users: number;
           week_start?: string | null;
           week_end?: string | null;
-        }>(`users/leaderboard${which === 'week' ? '?period=week' : ''}`);
+          sports?: SportOption[];
+        }>(`users/leaderboard?${[which === 'week' ? 'period=week' : '', sportQuery(sid)].filter(Boolean).join('&')}`);
+        if (res.sports) setSports(res.sports.map((s) => ({ id: Number(s.id), name: s.name })));
         setEntries(res.leaderboard.map(toEntry));
         setTotal(Number(res.total_users) || 0);
         setWeek(res.week_start && res.week_end ? { start: res.week_start, end: res.week_end } : null);
@@ -85,9 +98,10 @@ export function LandingLeaderboard() {
 
   useEffect(() => {
     setEntries(null);
+    setWeeks(null);
     setExpanded(false);
-    void load(tab);
-  }, [tab, load]);
+    void load(tab, sportId);
+  }, [tab, sportId, load]);
 
   const shown = expanded ? entries ?? [] : (entries ?? []).slice(0, PREVIEW_ROWS);
 
@@ -96,7 +110,7 @@ export function LandingLeaderboard() {
     body = (
       <View style={styles.empty}>
         <Text style={styles.emptyText}>Žebříček se teď nepodařilo načíst.</Text>
-        <Pressable onPress={() => void load(tab)} style={styles.more} accessibilityRole="button">
+        <Pressable onPress={() => void load(tab, sportId)} style={styles.more} accessibilityRole="button">
           <Text style={styles.moreText}>Zkusit znovu</Text>
         </Pressable>
       </View>
@@ -106,7 +120,9 @@ export function LandingLeaderboard() {
       weeks == null ? (
         <ActivityIndicator style={styles.spinner} color={colors.primary} />
       ) : weeks.length === 0 ? (
-        <Text style={styles.emptyText}>Zatím neskončil žádný týden. První výsledky tu budou v pondělí.</Text>
+        <Text style={styles.emptyText}>
+          {sport ? `Zatím tu nejsou žádné ukončené týdny se sportem ${sport.name}.` : 'Zatím neskončil žádný týden. První výsledky tu budou v pondělí.'}
+        </Text>
       ) : (
         weeks.map((w) => (
           <View key={w.start} style={styles.week}>
@@ -136,7 +152,11 @@ export function LandingLeaderboard() {
   } else if (entries.length === 0) {
     body = (
       <Text style={styles.emptyText}>
-        {tab === 'week' ? 'Tento týden zatím nikdo nebodoval. Můžeš být první!' : 'Žebříček je zatím prázdný.'}
+        {sport
+          ? `${tab === 'week' ? 'Tento týden' : 'Zatím'} nikdo nebodoval se sportem ${sport.name}. Můžeš být první!`
+          : tab === 'week'
+            ? 'Tento týden zatím nikdo nebodoval. Můžeš být první!'
+            : 'Žebříček je zatím prázdný.'}
       </Text>
     );
   } else {
@@ -161,12 +181,14 @@ export function LandingLeaderboard() {
     );
   }
 
-  const subtitle =
+  const players = `${formatNumber(total)} ${plural(total, ['hráč', 'hráči', 'hráčů'])}`;
+  const base =
     tab === 'history'
       ? 'Nejlepší tři z posledních ukončených týdnů'
       : tab === 'week' && week
-        ? `${day(week.start)} – ${day(week.end, true)} · ${formatNumber(total)} ${plural(total, ['hráč', 'hráči', 'hráčů'])}`
-        : `${formatNumber(total)} ${plural(total, ['hráč', 'hráči', 'hráčů'])} s body`;
+        ? `${day(week.start)} – ${day(week.end, true)} · ${players}`
+        : `${players} s body`;
+  const subtitle = sport ? `${base} · jen ${sport.name.toLowerCase()}` : base;
 
   return (
     <View style={styles.card}>
@@ -186,6 +208,24 @@ export function LandingLeaderboard() {
           );
         })}
       </View>
+      {sports.length > 1 && (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.sportsBar} contentContainerStyle={styles.sports}>
+          {[{ id: null as number | null, name: 'Všechny sporty' }, ...sports].map((s) => {
+            const active = s.id === (sport ? sport.id : null);
+            return (
+              <Pressable
+                key={s.id ?? 'all'}
+                onPress={() => setSportId(s.id)}
+                style={[styles.sport, active && styles.sportActive]}
+                accessibilityRole="button"
+                accessibilityState={{ selected: active }}
+              >
+                <Text style={[styles.sportText, active && styles.sportTextActive]}>{s.name}</Text>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+      )}
       {!failed && (tab === 'history' || entries) && <Text style={styles.subtitle}>{subtitle}</Text>}
       {body}
     </View>
@@ -199,6 +239,20 @@ const styles = StyleSheet.create({
   tabActive: { backgroundColor: colors.navy },
   tabText: { color: colors.navy, fontSize: 14, fontWeight: '800' },
   tabTextActive: { color: colors.white },
+  sportsBar: { flexGrow: 0 },
+  sports: { gap: 6 },
+  sport: {
+    height: 32,
+    paddingHorizontal: 13,
+    borderRadius: radius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: colors.border,
+  },
+  sportActive: { borderColor: colors.primary, backgroundColor: colors.primaryBg },
+  sportText: { color: colors.muted, fontSize: 13, fontWeight: '800' },
+  sportTextActive: { color: colors.primaryDark },
   subtitle: { color: colors.muted, fontSize: 13, fontWeight: '700', marginLeft: 2 },
   spinner: { marginVertical: 28 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 9 },

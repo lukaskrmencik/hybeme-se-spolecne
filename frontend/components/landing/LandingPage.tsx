@@ -234,7 +234,7 @@ export function LandingPage() {
             <View style={wide ? styles.boardText : undefined}>
               <Text role="heading" aria-level={2} style={styles.sectionTitle}>Kdo se hýbe nejvíc</Text>
               <Text style={styles.sectionLead}>
-                Celkové pořadí, a k tomu každé pondělí nový týdenní žebříček. Do čela se může dostat kdokoli.
+                Celkové pořadí i zvlášť pro každý sport, a k tomu každé pondělí nový týdenní žebříček. Do čela se může dostat kdokoli.
               </Text>
             </View>
             <View style={wide ? styles.boardCard : styles.boardCardNarrow}>

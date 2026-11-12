@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Cheat;
+use App\Models\Sport;
 use App\Models\User;
 use App\Models\Visit;
 use App\Models\VisitsPhoto;
@@ -281,6 +282,7 @@ class UserController extends Controller
             'success' => true,
             'period' => $week ? 'week' : 'all',
             'sport_id' => $sportId,
+            'sports' => Sport::where('is_active', true)->orderBy('id')->get(['id', 'name']),
             'week_start' => $from?->toDateString(),
             'week_end' => $to?->copy()->subDay()->toDateString(),
             'leaderboard' => $ranked->filter(fn ($u) => $u->rank <= $leaderboardMaxUsers)->values(),
